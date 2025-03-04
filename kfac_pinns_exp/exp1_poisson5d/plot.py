@@ -17,8 +17,8 @@ from kfac_pinns_exp.wandb_utils import (
     show_sweeps,
 )
 
-entity = "kfac-pinns"  # team name on wandb
-project = "poisson5d_deepwide"  # name from the 'Projects' tab on wandb
+entity = "rla-pinns"  # team name on wandb
+project = "poisson5d"  # name from the 'Projects' tab on wandb
 
 # information for title
 equation = "poisson"
