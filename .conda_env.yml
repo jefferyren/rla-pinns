@@ -1,4 +1,4 @@
-name: kfac_pinns_exp
+name: rla_pinns
 channels:
   - pytorch
   - defaults

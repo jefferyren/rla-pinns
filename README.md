@@ -9,7 +9,7 @@ We recommend programming in a fresh virtual environment. You can set up the
 
 ```bash
 make conda-env
-conda activate kfac_pinns_exp
+conda activate rla_pinns
 ```
 
 If you don't use `conda`, set up your preferred environment and run
@@ -43,3 +43,4 @@ We use the [Google docstring
 convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)
 and `mkdocs` which allows using markdown syntax in a docstring to achieve
 formatting.
+

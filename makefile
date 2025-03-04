@@ -44,7 +44,7 @@ install:
 .PHONY: uninstall
 
 uninstall:
-	@pip uninstall kfac_pinns_exp
+	@pip uninstall rla_pinns
 
 .PHONY: install-dev
 
