@@ -1,0 +1,63 @@
+\documentclass{article}
+
+% use numbers for citations to save space
+\PassOptionsToPackage{numbers, compress}{natbib}
+
+% either empty (for submission), 'preprint', or 'final'
+\def\status{preprint}
+\usepackage[\status]{neurips_2024}
+
+\input{preamble/custom_early.tex}
+\input{preamble/neurips_2024.tex}
+% follow DL notation from the Goodfellow book
+\input{preamble/goodfellow.tex}
+\input{preamble/custom.tex}
+\input{preamble/metadata.tex}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  Physics-informed neural networks (PINNs) are infamous for being hard to train.
+  Recently, second-order methods based on natural gradient and Gauss-Newton methods have shown promising performance, improving the accuracy achieved by first-order methods by several orders of magnitude.
+  While promising, the proposed methods only scale to networks with a few thousand parameters due to the high computational cost to evaluate, store, and invert the curvature matrix.
+  We propose Kronecker-factored approximate curvature (KFAC) for PINN losses that greatly reduces the computational cost and allows scaling to much larger networks.
+  Our approach goes beyond the established KFAC for traditional deep learning problems as it captures contributions from a PDE's differential operator that are crucial for optimization.
+  To establish KFAC for such losses, we use Taylor-mode automatic differentiation to describe the differential operator's computation graph as a forward network with shared weights. This allows us to apply KFAC thanks to a recently developed general formulation for networks with weight sharing.
+  Empirically, we find that our KFAC-based optimizers are competitive with expensive second-order methods on small problems, scale more favorably to higher-dimensional neural networks and PDEs, and consistently outperform first-order methods and LBFGS.
+\end{abstract}
+
+\section{Introduction}\label{sec:introduction}
+\input{sections/introduction.tex}
+
+\section{Background}\label{sec:background}
+\input{sections/background_pinns.tex}
+\input{sections/background_engd.tex}
+\input{sections/background_kfac.tex}
+
+\section{Kronecker-Factored Approximate Curvature for
+  PINNs}\label{sec:kfac_pinns}
+\input{sections/contribution.tex}
+
+\section{Experiments}\label{sec:experiments}
+\input{sections/experiments.tex}
+
+\section{Discussion and Conclusion}\label{sec:conclusion}
+\input{sections/conclusion.tex}
+\input{sections/acknowledgements.tex}
+
+\bibliography{references}
+\bibliographystyle{icml2024.bst}
+
+\clearpage
+\appendix
+
+\input{sections/appendix.tex}
+\input{sections/checklist.tex}
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
