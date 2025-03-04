@@ -1,4 +1,4 @@
-"""Setup file for kfac_pinns_exp.
+"""Setup file for rla_pinns.
 
 Use setup.cfg to configure the project.
 """

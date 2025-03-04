@@ -6,9 +6,9 @@ from pytest import mark
 from torch import block_diag, eye, manual_seed, rand
 from torch.nn import Linear, Sequential, Tanh
 
-from kfac_pinns_exp.gramian_utils import autograd_gramian
-from kfac_pinns_exp.linops import GramianLinearOperator
-from kfac_pinns_exp.train import create_condition_data, create_interior_data
+from rla_pinns.gramian_utils import autograd_gramian
+from rla_pinns.linops import GramianLinearOperator
+from rla_pinns.train import create_condition_data, create_interior_data
 
 EQUATIONS = [
     "poisson",

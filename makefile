@@ -2,9 +2,9 @@
 
 help:
 	@echo "install"
-	@echo "        Install kfac_pinns_exp and dependencies"
+	@echo "        Install rla_pinns and dependencies"
 	@echo "uninstall"
-	@echo "        Unstall kfac_pinns_exp"
+	@echo "        Unstall rla_pinns"
 	@echo "lint"
 	@echo "        Run all linting commands"
 	@echo "install-dev"
@@ -28,7 +28,7 @@ help:
 	@echo "flake8"
 	@echo "        Run flake8 on the project"
 	@echo "conda-env"
-	@echo "        Create conda environment 'kfac_pinns_exp' with dev setup"
+	@echo "        Create conda environment 'rla_pinns' with dev setup"
 	@echo "darglint-check"
 	@echo "        Run darglint (docstring check) on the project"
 	@echo "pydocstyle-check"
@@ -60,10 +60,10 @@ install-test:
 .PHONY: test test-light
 
 test:
-	@pytest -vx --run-optional-tests=expensive --cov=kfac_pinns_exp --doctest-modules test kfac_pinns_exp
+	@pytest -vx --run-optional-tests=expensive --cov=rla_pinns --doctest-modules test rla_pinns
 
 test-light:
-	@pytest -vx --cov=kfac_pinns_exp --doctest-modules test kfac_pinns_exp
+	@pytest -vx --cov=rla_pinns --doctest-modules test rla_pinns
 
 .PHONY: lint
 
@@ -103,7 +103,7 @@ flake8:
 .PHONY: darglint-check
 
 darglint-check:
-	@darglint --verbosity 2 kfac_pinns_exp test
+	@darglint --verbosity 2 rla_pinns test
 
 .PHONY: pydocstyle-check
 

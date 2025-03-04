@@ -4,8 +4,8 @@ from typing import List
 
 from pytest import mark
 
-from kfac_pinns_exp import plot_solution, train
-from kfac_pinns_exp.utils import run_verbose
+from rla_pinns import plot_solution, train
+from rla_pinns.utils import run_verbose
 
 ARGS = [
     # train and checkpoint for each logged step

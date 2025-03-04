@@ -1,1 +1,1 @@
-"""Test for kfac_pinns_exp."""
+"""Test for rla_pinns."""

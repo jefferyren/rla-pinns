@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#SBATCH --job-name=rla_pinns
+#SBATCH --mem=16G
+#SBATCH --cpus-per-task=4
+#SBATCH --partition=a40
+#SBATCH --gres=gpu:1
+#SBATCH --qos=m3
+#SBATCH --time=04:00:00
+#SBATCH --output=sweeps/slurm-%j.out
+
+# Append is important because otherwise preemption resets the file
+#SBATCH --open-mode=append
+
+echo $(date): Job $SLURM_JOB_ID is allocated resources.
+
+# the recommendation is to keep erything that defines the workload itself in a separate script
+echo "Inside slurm_launcher.slrm ($0). received arguments: $@"
+
+HOME_DIR=/h/aguzmanc
+SCRIPTDIR=${HOME_DIR}/kfac-pinns-experiments/rla_pinns/exp44_gramian_spectrum
+
+# this will run the script
+${HOME_DIR}/miniforge3/envs/rla_pinns/bin/python ${SCRIPTDIR}/"$@"

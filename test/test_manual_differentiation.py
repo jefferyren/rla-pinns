@@ -1,4 +1,4 @@
-"""Tests for `kfac_pinns_exp.manual_differentiation`."""
+"""Tests for `rla_pinns.manual_differentiation`."""
 
 from typing import Dict, List, Tuple
 
@@ -7,8 +7,8 @@ from torch import Tensor, allclose, manual_seed, rand, rand_like
 from torch.autograd import grad
 from torch.nn import Linear, Module, ReLU, Sequential, Sigmoid, Tanh
 
-from kfac_pinns_exp.autodiff_utils import autograd_input_hessian
-from kfac_pinns_exp.manual_differentiation import (
+from rla_pinns.autodiff_utils import autograd_input_hessian
+from rla_pinns.manual_differentiation import (
     manual_backward,
     manual_forward,
     manual_hessian_backward,

@@ -7,13 +7,13 @@ from torch import allclose, cat, manual_seed, rand, zeros, zeros_like
 from torch.autograd import grad
 from torch.nn import Linear, Sequential, Tanh
 
-from kfac_pinns_exp.log_fokker_planck_equation import evaluate_interior_loss
-from kfac_pinns_exp.log_fokker_planck_isotropic_equation import (
+from rla_pinns.log_fokker_planck_equation import evaluate_interior_loss
+from rla_pinns.log_fokker_planck_isotropic_equation import (
     mu_isotropic,
     q_isotropic_gaussian,
     sigma_isotropic,
 )
-from kfac_pinns_exp.pinn_utils import evaluate_boundary_loss
+from rla_pinns.pinn_utils import evaluate_boundary_loss
 
 DIM_OMEGAS = [1, 3]
 DIM_OMEGA_IDS = [f"dim_Omega={dim}" for dim in DIM_OMEGAS]

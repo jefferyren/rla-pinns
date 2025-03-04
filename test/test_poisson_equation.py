@@ -5,10 +5,10 @@ from test.utils import report_nonclose
 from torch import kron, manual_seed, rand, tensor, zeros_like
 from torch.nn import Linear, Sequential, Tanh
 
-from kfac_pinns_exp.gramian_utils import autograd_gramian
-from kfac_pinns_exp.kfac_utils import gramian_basis_to_kfac_basis
-from kfac_pinns_exp.pinn_utils import evaluate_boundary_loss_and_kfac
-from kfac_pinns_exp.poisson_equation import (
+from rla_pinns.gramian_utils import autograd_gramian
+from rla_pinns.kfac_utils import gramian_basis_to_kfac_basis
+from rla_pinns.pinn_utils import evaluate_boundary_loss_and_kfac
+from rla_pinns.poisson_equation import (
     evaluate_interior_loss_and_kfac,
     f_sin_product,
     square_boundary,

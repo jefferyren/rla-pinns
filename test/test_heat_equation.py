@@ -8,11 +8,11 @@ from torch import allclose, cat, manual_seed, rand, tensor, zeros, zeros_like
 from torch.autograd import grad
 from torch.nn import Linear, Sequential, Tanh
 
-from kfac_pinns_exp.autodiff_utils import (
+from rla_pinns.autodiff_utils import (
     autograd_input_hessian,
     autograd_input_jacobian,
 )
-from kfac_pinns_exp.heat_equation import (
+from rla_pinns.heat_equation import (
     evaluate_interior_loss,
     evaluate_interior_loss_and_kfac,
     square_boundary_random_time,
@@ -20,7 +20,7 @@ from kfac_pinns_exp.heat_equation import (
     u_sin_sum,
     unit_square_at_start,
 )
-from kfac_pinns_exp.pinn_utils import (
+from rla_pinns.pinn_utils import (
     evaluate_boundary_loss,
     evaluate_boundary_loss_and_kfac,
 )

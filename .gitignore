@@ -166,3 +166,4 @@ wandb/
 
 checkpoints/
 .DS_Store
+*.eggs

@@ -1,9 +1,9 @@
-"""Test `kfac_pinns_exp.utils`."""
+"""Test `rla_pinns.utils`."""
 
 from pytest import raises
 from torch import allclose, manual_seed, ones_like, rand, zeros_like
 
-from kfac_pinns_exp.utils import bias_augmentation, exponential_moving_average
+from rla_pinns.utils import bias_augmentation, exponential_moving_average
 
 
 def test_exponential_moving_average():

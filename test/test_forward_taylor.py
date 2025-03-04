@@ -1,4 +1,4 @@
-"""Test `kfac_pinns_exp.forward_taylor`."""
+"""Test `rla_pinns.forward_taylor`."""
 
 from test.test_manual_differentiation import CASE_IDS, CASES, set_up
 from test.utils import report_nonclose
@@ -8,11 +8,11 @@ from einops import rearrange
 from pytest import mark
 from torch.nn import Sequential
 
-from kfac_pinns_exp.autodiff_utils import (
+from rla_pinns.autodiff_utils import (
     autograd_input_hessian,
     autograd_input_jacobian,
 )
-from kfac_pinns_exp.forward_taylor import manual_forward_taylor
+from rla_pinns.forward_taylor import manual_forward_taylor
 
 
 @mark.parametrize("case", CASES, ids=CASE_IDS)

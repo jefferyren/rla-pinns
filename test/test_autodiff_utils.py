@@ -1,4 +1,4 @@
-"""Test `kfac_pinns_exp.autodiff_utils`."""
+"""Test `rla_pinns.autodiff_utils`."""
 
 from itertools import product
 from test.utils import report_nonclose
@@ -7,7 +7,7 @@ from torch import manual_seed, rand, zeros, zeros_like
 from torch.autograd import grad
 from torch.nn import Linear, Sequential, Sigmoid, Tanh
 
-from kfac_pinns_exp.autodiff_utils import autograd_input_divergence
+from rla_pinns.autodiff_utils import autograd_input_divergence
 
 
 def test_autograd_input_divergence():

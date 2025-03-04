@@ -1,4 +1,4 @@
-"""Test `kfac_pinns_exp.gramian_utils`."""
+"""Test `rla_pinns.gramian_utils`."""
 
 from typing import List, Union
 
@@ -7,11 +7,11 @@ from torch import Tensor, allclose, cat, manual_seed, outer, rand, zeros, zeros_
 from torch.autograd import grad
 from torch.nn import Linear, Module, Sequential, Tanh
 
-from kfac_pinns_exp import (
+from rla_pinns import (
     fokker_planck_isotropic_equation,
     log_fokker_planck_isotropic_equation,
 )
-from kfac_pinns_exp.gramian_utils import autograd_gramian
+from rla_pinns.gramian_utils import autograd_gramian
 
 LOSS_TYPES = [
     "poisson_boundary",

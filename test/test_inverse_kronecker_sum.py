@@ -2,7 +2,7 @@
 
 from torch import allclose, eye, inverse, kron, manual_seed, rand
 
-from kfac_pinns_exp.inverse_kronecker_sum import InverseKroneckerSum
+from rla_pinns.inverse_kronecker_sum import InverseKroneckerSum
 
 
 def test_InverseKroneckerSum__matmul__():

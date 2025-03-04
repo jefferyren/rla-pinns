@@ -1,4 +1,4 @@
-"""Test `kfac_pinns_exp.forward_laplacian`."""
+"""Test `rla_pinns.forward_laplacian`."""
 
 from test.test_manual_differentiation import CASE_IDS, CASES, set_up
 from typing import Callable, Dict, List, Union
@@ -8,8 +8,8 @@ from pytest import mark
 from torch import Tensor, allclose, linspace, ones, outer, rand, randn
 from torch.nn import Sequential
 
-from kfac_pinns_exp.autodiff_utils import autograd_input_hessian
-from kfac_pinns_exp.forward_laplacian import manual_forward_laplacian
+from rla_pinns.autodiff_utils import autograd_input_hessian
+from rla_pinns.forward_laplacian import manual_forward_laplacian
 
 
 def reshape_square(t: Tensor) -> Tensor:

@@ -1,1 +1,1 @@
-"""Test `kfac_pinns_exp.optim`."""
+"""Test `rla_pinns.optim`."""

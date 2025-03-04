@@ -5,8 +5,8 @@ from typing import List
 
 from pytest import mark
 
-from kfac_pinns_exp import train
-from kfac_pinns_exp.utils import run_verbose
+from rla_pinns import train
+from rla_pinns.utils import run_verbose
 
 ARGS = [
     # train with ENGD and on different equations
