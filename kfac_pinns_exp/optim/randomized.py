@@ -163,7 +163,7 @@ class RandomizedOptimizer(Optimizer):
 
         operator, grad = self._get_operator_and_grad(X_Omega, y_Omega, X_dOmega, y_dOmega)
         self._update_preconditioner(operator, X_Omega.device)
-        self.update_parameters(grad, X_Omega, y_Omega, X_dOmega, y_dOmega)
+        self._update_parameters(grad, X_Omega, y_Omega, X_dOmega, y_dOmega)
 
         self.steps += 1
 
@@ -184,7 +184,7 @@ class RandomizedOptimizer(Optimizer):
         del G_interior, G_boundary
         return G, grad
 
-    def RSVD(self, operator, l: int, dev: str) -> Tuple[Tensor, Tensor, Tensor]:
+    def _RSVD(self, operator, l: int, dev: str) -> Tuple[Tensor, Tensor, Tensor]:
         (group, ) = self.param_groups
         ema_factor = group["ema_factor"]
 
@@ -203,17 +203,14 @@ class RandomizedOptimizer(Optimizer):
         return U, S, V
 
     def _update_preconditioner(self, operator, dev: str) -> None:        
-        U, S, V = self.RSVD(operator, self.l, dev)
-
+        U, S, V = self._RSVD(operator, self.l, dev)
         valid_eig = min(sum(S > self.tol), self.l)
 
         self.S = S[:valid_eig]
         self.U = U[:, :valid_eig]
         self.V = V[:valid_eig, :]
-
-        print(f"U: {self.U.shape}, S: {self.S.shape}, V: {self.V.shape}", flush=True)
      
-    def update_parameters(self, grad: Tensor, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor) -> None:
+    def _update_parameters(self, grad: Tensor, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor) -> None:
         (group, ) = self.param_groups
         lr = group["lr"]
         params = group["params"]
@@ -235,7 +232,6 @@ class RandomizedOptimizer(Optimizer):
         else:
             grid = np.logspace(-3, 0, 10)
             best, _ = grid_line_search(f, params, grad_l_list, grid)
-            # print(f"Best step size: {best:.4f}", flush=True)
         
     def eval_loss(self, X: Tensor, y: Tensor, loss_type: str) -> Tensor:
         loss_evaluator = self.LOSS_EVALUATORS[self.equation][loss_type]
@@ -250,8 +246,10 @@ class RandomizedOptimizer(Optimizer):
             inv = self.V @ (torch.diag(1 / self.S) @ self.U.T)
         else:
             I = torch.ones(self.S.shape[0], self.S.shape[0], device=self.S.device)
-            inv = torch.linalg.pinv(I + dampening * self.U @ (torch.diag(self.S) @ self.V.T))
-            inv /= dampening
+            USVT = self.U @ (torch.diag(self.S) @ self.V.T)
+            USVT.data.mul_(dampening)
+            inv = torch.linalg.pinv(I + USVT)
+            inv.data.mul_(1 / dampening)
 
         return inv
 
