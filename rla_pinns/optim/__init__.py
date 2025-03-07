@@ -20,7 +20,7 @@ from rla_pinns.optim.hessianfree_cached import (
 from rla_pinns.optim.kfac import KFAC, parse_KFAC_args
 from rla_pinns.optim.lbfgs import parse_LBFGS_args
 from rla_pinns.optim.sgd import parse_SGD_args
-from rla_pinns.optim.randomized import RandomizedOptimizer, parse_randomized_args
+from rla_pinns.optim.randomized import Randomized, parse_randomized_args
 
 
 def set_up_optimizer(
@@ -45,7 +45,7 @@ def set_up_optimizer(
         "LBFGS": (LBFGS, parse_LBFGS_args),
         "HessianFree": (HessianFree, parse_HessianFree_args),
         "HessianFreeCached": (HessianFreeCached, parse_HessianFreeCached_args),
-        "Randomized": (RandomizedOptimizer, parse_randomized_args),
+        "Randomized": (Randomized, parse_randomized_args),
     }[optimizer]
 
     prefix = f"{optimizer}_"

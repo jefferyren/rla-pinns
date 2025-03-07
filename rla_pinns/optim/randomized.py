@@ -4,10 +4,11 @@ import torch
 import numpy as np
 
 from argparse import ArgumentParser, Namespace
-from torch import Tensor
+from torch import Tensor, cholesky_solve, arange
 from typing import List, Tuple
 from torch.nn import Module
 from torch.optim import Optimizer
+from torch.linalg import cholesky
 from rla_pinns import (
     fokker_planck_isotropic_equation,
     heat_equation,
@@ -37,7 +38,7 @@ def parse_randomized_args(verbose: bool = False, prefix="KFAC_") -> Namespace:
     parser.add_argument(
         f"--{prefix}equation",
         type=str,
-        choices=RandomizedOptimizer.SUPPORTED_EQUATIONS,
+        choices=Randomized.SUPPORTED_EQUATIONS,
         help="The equation to solve.",
         default="poisson",
     )
@@ -62,7 +63,7 @@ def parse_randomized_args(verbose: bool = False, prefix="KFAC_") -> Namespace:
 
     return args
 
-class RandomizedOptimizer(Optimizer):
+class Randomized(Optimizer):
     
     LOSS_AND_KFAC_EVALUATORS = {
         "poisson": {
@@ -184,26 +185,8 @@ class RandomizedOptimizer(Optimizer):
         del G_interior, G_boundary
         return G, grad
 
-    def _RSVD(self, operator, l: int, dev: str) -> Tuple[Tensor, Tensor, Tensor]:
-        (group, ) = self.param_groups
-        ema_factor = group["ema_factor"]
-
-        Omega = torch.randn(self.Ds, l, dtype=torch.float64, device=dev)
-
-        G_t = operator @ Omega        
-        G_svd_prev = self.U @ (torch.diag(self.S) @ (self.V.T @ Omega))
-        Y = ema_factor * G_svd_prev + (1 - ema_factor) * G_t
-
-        Q, _ = torch.linalg.qr(Y)
-        B =  Q.T @ operator
-
-        U_tilde, S, V = torch.linalg.svd(B, full_matrices=False)
-        U = Q @ U_tilde
-
-        return U, S, V
-
     def _update_preconditioner(self, operator, dev: str) -> None:        
-        U, S, V = self._RSVD(operator, self.l, dev)
+        U, S, V = RSVD(operator, self.l, self.Ds, dev)
         valid_eig = min(sum(S > self.tol), self.l)
 
         self.S = S[:valid_eig]
@@ -215,14 +198,7 @@ class RandomizedOptimizer(Optimizer):
         lr = group["lr"]
         params = group["params"]
 
-        inv = self._add_damping_and_invert()
-        grad_l = inv @ grad
-
-        def f() -> Tensor:
-            interior_loss = self.eval_loss(X_Omega, y_Omega, "interior")
-            boundary_loss = self.eval_loss(X_dOmega, y_dOmega, "boundary")
-            return interior_loss + boundary_loss
-
+        grad_l = self._add_damping_and_invert(grad)
         grad_l_list = grad_l.split([p.numel() for p in params])
         grad_l_list = [-g.view(p.shape) for g, p in zip(grad_l_list, params)]
 
@@ -230,26 +206,44 @@ class RandomizedOptimizer(Optimizer):
             for param, param_grad in zip(params, grad_l_list):
                 param.data.add_(param_grad, alpha=lr)
         else:
-            grid = np.logspace(-3, 0, 10)
-            best, _ = grid_line_search(f, params, grad_l_list, grid)
+            raise NotImplementedError("Line search not implemented yet.")
+        #     def f() -> Tensor:
+        #         interior_loss = self.eval_loss(X_Omega, y_Omega, "interior")
+        #         boundary_loss = self.eval_loss(X_dOmega, y_dOmega, "boundary")
+        #         return interior_loss + boundary_loss
+        #     grid = np.logspace(-3, 0, 10)
+        #     best, _ = grid_line_search(f, params, grad_l_list, grid)
         
     def eval_loss(self, X: Tensor, y: Tensor, loss_type: str) -> Tensor:
         loss_evaluator = self.LOSS_EVALUATORS[self.equation][loss_type]
         loss, _, _ = loss_evaluator(self.layers, X, y)
         return loss
 
-    def _add_damping_and_invert(self):
+    def _add_damping_and_invert(self, grad: Tensor) -> Tensor:
         (group, ) = self.param_groups
-        dampening = group["dampening"]
+        damping = group["damping"]
 
-        if dampening == 0.0:
-            inv = self.V @ (torch.diag(1 / self.S) @ self.U.T)
+        if damping == 0.0:
+            out = self.V @ (torch.diag(1 / self.S) @ (self.U.T @ grad))
         else:
-            I = torch.ones(self.S.shape[0], self.S.shape[0], device=self.S.device)
+            n, dev = grad.shape[0], grad.device
+            idx = arange(n, device=dev)
+
             USVT = self.U @ (torch.diag(self.S) @ self.V.T)
-            USVT.data.mul_(dampening)
-            inv = torch.linalg.pinv(I + USVT)
-            inv.data.mul_(1 / dampening)
+            USVT[idx, idx] = USVT.diag() + damping
+        
+            out = cholesky_solve(grad.unsqueeze(-1), cholesky(USVT)).squeeze(-1)
 
-        return inv
+        return out
 
+
+def RSVD(operator, l: int, Ds: int, dev: str) -> Tuple[Tensor, Tensor, Tensor]:
+    Omega = torch.randn(Ds, l, dtype=torch.float64, device=dev)
+    Y = operator @ Omega
+
+    Q, _ = torch.linalg.qr(Y)
+    B =  Q.T @ operator
+
+    U_tilde, S, V = torch.linalg.svd(B, full_matrices=False)
+    U = Q @ U_tilde
+    return U, S, V
