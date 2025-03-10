@@ -2,13 +2,15 @@
 
 from typing import Callable, Dict, List, Tuple, Union
 
-from torch import Tensor, ones_like
 from torch.autograd import grad
 from torch.nn import Linear, Module
+from torch import Tensor, ones_like
+
 
 from rla_pinns.kfac_utils import compute_kronecker_factors
 from rla_pinns.manual_differentiation import manual_forward
 from rla_pinns.utils import bias_augmentation
+
 
 
 def l2_error(model: Module, X: Tensor, u: Callable[[Tensor], Tensor]) -> Tensor:
