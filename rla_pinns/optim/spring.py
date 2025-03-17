@@ -17,10 +17,10 @@ from rla_pinns import (
 )
 from rla_pinns.parse_utils import parse_known_args_and_remove_from_argv
 from rla_pinns.optim.utils import (
-        evaluate_losses_with_layer_inputs_and_grad_outputs, 
-        apply_joint_J, 
-        apply_joint_JT,
-        compute_joint_JJT
+    evaluate_losses_with_layer_inputs_and_grad_outputs,
+    apply_joint_J,
+    apply_joint_JT,
+    compute_joint_JJT,
 )
 from rla_pinns.pinn_utils import evaluate_boundary_loss
 
@@ -212,21 +212,21 @@ class SPRING(Optimizer):
             interior_grad_outputs,
             boundary_inputs,
             boundary_grad_outputs,
-            [self.state[p]["phi"] for p in params],
-        )
+            [self.state[p]["phi"].unsqueeze(-1) for p in params],
+        ).squeeze(-1)
         zeta: Tensor = epsilon - O_phi.mul_(decay_factor)
 
         # apply inverse of damped OOT to zeta
-        step = cholesky_solve(zeta.unsqueeze(-1), cholesky(OOT)).squeeze(-1)
+        step = cholesky_solve(zeta.unsqueeze(-1), cholesky(OOT))
 
         # apply OT
-        step = apply_joint_JT(
+        step = [s.squeeze(-1) for s in apply_joint_JT(
             interior_inputs,
             interior_grad_outputs,
             boundary_inputs,
             boundary_grad_outputs,
             step,
-        )
+        )]
 
         # update phi
         for p, s in zip(params, step):

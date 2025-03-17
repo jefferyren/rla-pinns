@@ -8,7 +8,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from argparse import ArgumentParser
 from scipy.sparse.linalg import eigsh
 from rla_pinns.train import set_up_layers
-from rla_pinns.linops import GramianScipyOperator
 
 
 def evaluate_checkpoint(checkpoint: str):
@@ -69,7 +68,7 @@ def main():
     # Filter checkpoints based on equation
     for i, checkpoint in enumerate(sorted(glob(path.join(checkpoint_dir, "*.pt")))):
         checkpoint_name = path.splitext(path.basename(checkpoint))[0]
-        first_word = checkpoint_name.split('_')[0]  # Extract the first word
+        first_word = checkpoint_name.split("_")[0]  # Extract the first word
         if first_word != args.equation:
             continue  # Skip if the first word doesn't match the equation
 
@@ -83,15 +82,20 @@ def main():
 
     # Plot all eigenvalues in a 3D plot
     fig = plt.figure(figsize=(12, 8))
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection="3d")
 
     for i, eigenvalues in enumerate(all_eigenvalues):
-        ax.plot(range(1, len(eigenvalues) + 1), [checkpoint_steps[i]] * len(eigenvalues), eigenvalues, marker='o')
+        ax.plot(
+            range(1, len(eigenvalues) + 1),
+            [checkpoint_steps[i]] * len(eigenvalues),
+            eigenvalues,
+            marker="o",
+        )
 
-    ax.set_xlabel('Eigenvalue Ranking')
-    ax.set_ylabel('Epoch')
-    ax.set_zlabel('Log10(Eigenvalue)')
-    ax.set_title(f'Eigenvalues Over Checkpoints for {args.equation}')
+    ax.set_xlabel("Eigenvalue Ranking")
+    ax.set_ylabel("Epoch")
+    ax.set_zlabel("Log10(Eigenvalue)")
+    ax.set_title(f"Eigenvalues Over Checkpoints for {args.equation}")
     plt.grid()
     plt.savefig(f"{args.plot_dir}/eigenvalues_3d_{args.equation}.png")
     plt.show()

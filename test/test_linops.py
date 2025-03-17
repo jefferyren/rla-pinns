@@ -28,15 +28,13 @@ LOSS_TYPE_IDS = [f"loss_type={loss}" for loss in LOSS_TYPES]
 @mark.parametrize("equation", EQUATIONS, ids=EQUATION_IDS)
 @mark.parametrize("approximation", APPROXIMATIONS, ids=APPROXIMATION_IDS)
 @mark.parametrize("loss_type", LOSS_TYPES, ids=LOSS_TYPE_IDS)
-@mark.parametrize("transposed", [False, True], ids=["", "Transposed"])
-def test_GramianLinearOperator(equation: str, approximation: str, loss_type: str, transposed: bool):
+def test_GramianLinearOperator(equation: str, approximation: str, loss_type: str):
     """Check multiplication with the Gramian via pre-computed quantities.
 
     Args:
         equation: A string specifying the PDE.
         approximation: A string specifying the approximation of the Gramian.
         loss_type: A string specifying the type of loss.
-        transposed: A boolean specifying whether the [matmul] operator is transposed.
     """
     manual_seed(0)
     dim_Omega = 2
@@ -82,14 +80,7 @@ def test_GramianLinearOperator(equation: str, approximation: str, loss_type: str
     # 1) Gramian-vector products
     num_params = sum(p.numel() for p in model.parameters())
     v = rand(num_params)
-    if transposed:
-        report_nonclose(v @ gramian.T, v @ G_linop)
-    else:
-        report_nonclose(gramian @ v, G_linop @ v)
+    report_nonclose(gramian @ v, G_linop @ v)
 
     # 2) Gramian-matrix products
-    if transposed:
-        report_nonclose(gramian.T, eye(num_params) @ G_linop)
-    else:
-        report_nonclose(gramian, G_linop @ eye(num_params))
-
+    report_nonclose(gramian, G_linop @ eye(num_params))

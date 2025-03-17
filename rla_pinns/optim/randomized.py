@@ -24,14 +24,17 @@ from rla_pinns.optim.line_search import (
 from rla_pinns.parse_utils import parse_known_args_and_remove_from_argv
 from rla_pinns.pinn_utils import evaluate_boundary_loss
 from rla_pinns.optim.utils import (
-        evaluate_losses_with_layer_inputs_and_grad_outputs, 
-        apply_joint_J, 
-        apply_joint_JT,
-        compute_joint_JJT
+    evaluate_losses_with_layer_inputs_and_grad_outputs,
+    apply_joint_J,
+    apply_joint_JT,
+    compute_joint_JJT,
 )
 
+
 def parse_randomized_args(verbose: bool = False, prefix="randomized_") -> Namespace:
-    parser = ArgumentParser(description="Parse arguments for setting up the randomized optimizer.")
+    parser = ArgumentParser(
+        description="Parse arguments for setting up the randomized optimizer."
+    )
     parser.add_argument(
         f"--{prefix}lr",
         help="Learning rate or line search strategy for the optimizer.",
@@ -103,8 +106,9 @@ def parse_randomized_args(verbose: bool = False, prefix="randomized_") -> Namesp
 
     return args
 
+
 class Randomized(Optimizer):
-    
+
     LOSS_EVALUATORS = {
         "poisson": {
             "interior": poisson_equation.evaluate_interior_loss,
@@ -124,26 +128,26 @@ class Randomized(Optimizer):
         },
     }
     SUPPORTED_EQUATIONS = list(LOSS_EVALUATORS.keys())
-    
+
     def __init__(
-        self, 
-        layers: List[Module], 
+        self,
+        layers: List[Module],
         lr: float = 1e-3,
         equation: str = "poisson",
         rank_val: int = 300,
         damping: float = 0.0,
         eps: float = 1e-10,
-        approximation: str = 'random_naive',
+        approximation: str = "random_naive",
         woodbury: bool = False,
         spring: bool = False,
         *,
-        maximize: bool = False
+        maximize: bool = False,
     ):
         if isinstance(lr, Tensor) and lr.numel() != 1:
             raise ValueError("Tensor lr must be 1-element")
         if lr is None:
             raise ValueError(f"Invalid learning rate: {lr}")
-    
+
         params = sum((list(layer.parameters()) for layer in layers), [])
         defaults = dict(
             lr=lr,
@@ -151,13 +155,13 @@ class Randomized(Optimizer):
             maximize=maximize,
         )
         super().__init__(params, defaults)
-        
+
         if equation not in self.LOSS_EVALUATORS:
             raise ValueError(
                 f"Equation {equation} not supported. "
                 f"Supported equations are: {list(self.LOSS_EVALUATORS.keys())}."
             )
-        
+
         self.equation = equation
         self.layers = layers
         self.layers_idx = [
@@ -165,11 +169,18 @@ class Randomized(Optimizer):
         ]
         self.steps = 0
 
-        self.Ds = sum([p.numel() for layer in self.layers for p in layer.parameters() if p.requires_grad])
+        self.Ds = sum(
+            [
+                p.numel()
+                for layer in self.layers
+                for p in layer.parameters()
+                if p.requires_grad
+            ]
+        )
 
         self.l = rank_val
         self.eps = eps
-        
+
         if woodbury:
             self._matrix_fn = apply_kernel
         else:
@@ -180,9 +191,9 @@ class Randomized(Optimizer):
         else:
             self._get_step = normal_step
 
-        if approximation == 'random_naive':
+        if approximation == "random_naive":
             self._randomization = rsvd
-        elif approximation == 'random_nystrom':
+        elif approximation == "random_nystrom":
             self._randomization = nystrom_approx
         else:
             raise ValueError(f"Randomization method {approximation} not supported.")
@@ -195,7 +206,7 @@ class Randomized(Optimizer):
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
     ) -> Tuple[Tensor, Tensor]:
-        (group, ) = self.param_groups
+        (group,) = self.param_groups
         lr = group["lr"]
         params = group["params"]
         damping = group["damping"]
@@ -221,11 +232,13 @@ class Randomized(Optimizer):
         interior_residual = interior_residual.detach() / sqrt(N_Omega)
 
         epsilon = -torch.cat([interior_residual, boundary_residual]).flatten()
-        
+
         self._update_preconditioner(
-            interior_inputs, interior_grad_outputs, 
-            boundary_inputs, boundary_grad_outputs,
-            dev
+            interior_inputs,
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs,
+            dev,
         )
 
         step = self._get_step(epsilon, damping, dev)
@@ -245,7 +258,7 @@ class Randomized(Optimizer):
 
             grid = np.logspace(-3, 0, 10)
             best, _ = grid_line_search(f, params, step, grid)
-    
+
         self.steps += 1
 
         return interior_loss, boundary_loss
@@ -264,26 +277,35 @@ class Randomized(Optimizer):
         loss_evaluator = self.LOSS_EVALUATORS[loss_type][self.equation]
         loss, _, _ = loss_evaluator(self.model, X, y)
         return loss
-    
-    def _update_preconditioner(self, 
+
+    def _update_preconditioner(
+        self,
         interior_inputs,
-        interior_grad_outputs, 
+        interior_grad_outputs,
         boundary_inputs,
-        boundary_grad_outputs, 
-        damping, dev
+        boundary_grad_outputs,
+        damping,
+        dev,
     ) -> None:
 
         U, S, V = self._randomization(
-            interior_inputs, interior_grad_outputs, 
-            boundary_inputs, boundary_grad_outputs,
-            self.woodbury, self.l, self.Ds, self.eps, dev)
+            interior_inputs,
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs,
+            self.woodbury,
+            self.l,
+            self.Ds,
+            self.eps,
+            dev,
+        )
 
         self.U = U
         self.S = S
         self.V = V
 
         I = torch.eye(self.Ds, dtype=torch.float64, device=dev)
-        lhs = U @ torch.linalg.inv(torch.diag(damping/S) + V.T @ U) @ V.T
+        lhs = U @ torch.linalg.inv(torch.diag(damping / S) + V.T @ U) @ V.T
         out = (1 / damping) * (I - lhs)
         return out
 
@@ -302,37 +324,44 @@ def rsvd(
     boundary_inputs: Dict[int, Tensor],
     boundary_grad_outputs: Dict[int, Tensor],
     matrix_fn,
-    l: int, Ds: int, *kwargs, dev: str,
+    l: int,
+    Ds: int,
+    *kwargs,
+    dev: str,
 ) -> Tuple[Tensor, Tensor, Tensor]:
-    """ Compute the randomized SVD of the the Gram matrix.
-    
-        Args:
-            interior_inputs: The layer inputs for the interior loss.
-            interior_grad_outputs: The layer gradient outputs for the interior loss.
-            boundary_inputs: The layer inputs for the boundary loss.
-            boundary_grad_outputs: The layer gradient outputs for the boundary loss.
-            l: rank of the sketch matrix.
-            Ds: number of parameters.
-            dev: device to use.
+    """Compute the randomized SVD of the the Gram matrix.
 
-        Returns:
-            U: left singular vectors of shape [Ds, l].
-            S: singular values of shape [l, 1].
-            V: right singular vectors of shape [l, Ds].
+    Args:
+        interior_inputs: The layer inputs for the interior loss.
+        interior_grad_outputs: The layer gradient outputs for the interior loss.
+        boundary_inputs: The layer inputs for the boundary loss.
+        boundary_grad_outputs: The layer gradient outputs for the boundary loss.
+        l: rank of the sketch matrix.
+        Ds: number of parameters.
+        dev: device to use.
+
+    Returns:
+        U: left singular vectors of shape [Ds, l].
+        S: singular values of shape [l, 1].
+        V: right singular vectors of shape [l, Ds].
     """
     Omega = torch.randn(Ds, l, dtype=torch.float64, device=dev)
     Y = matrix_fn(
-        interior_inputs, interior_grad_outputs, 
-        boundary_inputs, boundary_grad_outputs, 
-        Omega
-        )
+        interior_inputs,
+        interior_grad_outputs,
+        boundary_inputs,
+        boundary_grad_outputs,
+        Omega,
+    )
 
     Q, _ = torch.linalg.qr(Y)
     B = matrix_fn(
-        interior_inputs, interior_grad_outputs, 
-        boundary_inputs, boundary_grad_outputs, 
-        Q
-        ).T
+        interior_inputs,
+        interior_grad_outputs,
+        boundary_inputs,
+        boundary_grad_outputs,
+        Q,
+    ).T
 
     U_tilde, S, V = torch.linalg.svd(B, full_matrices=False)
     U = Q @ U_tilde
@@ -344,17 +373,23 @@ def nystrom_approx(
     interior_grad_outputs: Dict[int, Tensor],
     boundary_inputs: Dict[int, Tensor],
     boundary_grad_outputs: Dict[int, Tensor],
-    matrix_fn, l: int, Ds: int, eps: float, dev: str,
+    matrix_fn,
+    l: int,
+    Ds: int,
+    eps: float,
+    dev: str,
 ) -> Tuple[Tensor, Tensor]:
 
     Omega = torch.randn(Ds, l, device=dev)
     Omega, _ = torch.linalg.qr(Omega)
 
     Y = matrix_fn(
-        interior_inputs, interior_grad_outputs, 
-        boundary_inputs, boundary_grad_outputs, 
-        Omega
-        )
+        interior_inputs,
+        interior_grad_outputs,
+        boundary_inputs,
+        boundary_grad_outputs,
+        Omega,
+    )
 
     Y_v = Y + eps * Omega
     C = cholesky(Omega.T @ Y_v)
@@ -374,7 +409,7 @@ def woodbury_step(
     boundary_grad_outputs: Dict[int, Tensor],
     epsilon: Tensor,
     damping: float,
-    *kwargs
+    *kwargs,
 ) -> Tuple[Tensor, Tensor]:
 
     OOT = compute_joint_JJT(
@@ -383,7 +418,7 @@ def woodbury_step(
         boundary_inputs,
         boundary_grad_outputs,
     ).detach()
-    
+
     I = arange(OOT.shape[0], device=OOT.device)
     OOT[idx, idx] = OOT.diag() + damping
 
@@ -408,15 +443,19 @@ def apply_gramian(
     v: Tensor,
 ):
     JTv = apply_joint_J(
-        interior_inputs, interior_grad_outputs, 
-        boundary_inputs, boundary_grad_outputs, 
-        v
-        )
+        interior_inputs,
+        interior_grad_outputs,
+        boundary_inputs,
+        boundary_grad_outputs,
+        v,
+    )
     JJTv = apply_joint_JT(
-        interior_inputs, interior_grad_outputs, 
-        boundary_inputs, boundary_grad_outputs, 
-        JTv
-        )
+        interior_inputs,
+        interior_grad_outputs,
+        boundary_inputs,
+        boundary_grad_outputs,
+        JTv,
+    )
 
     return JJTv
 
@@ -426,18 +465,21 @@ def apply_kernel(
     interior_grad_outputs: Dict[int, Tensor],
     boundary_inputs: Dict[int, Tensor],
     boundary_grad_outputs: Dict[int, Tensor],
-    v: Tensor
+    v: Tensor,
 ):
     JTv = apply_joint_JT(
-        interior_inputs, interior_grad_outputs, 
-        boundary_inputs, boundary_grad_outputs, 
-        v
-        )
+        interior_inputs,
+        interior_grad_outputs,
+        boundary_inputs,
+        boundary_grad_outputs,
+        v,
+    )
     JJTv = apply_joint_J(
-        interior_inputs, interior_grad_outputs, 
-        boundary_inputs, boundary_grad_outputs, 
-        JTv
-        )
+        interior_inputs,
+        interior_grad_outputs,
+        boundary_inputs,
+        boundary_grad_outputs,
+        JTv,
+    )
 
     return JJTv
-

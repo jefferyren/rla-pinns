@@ -87,7 +87,7 @@ if __name__ == "__main__":
         f"--name={args.sweep_name}",
         "--entity=andresguzco",
         "--project=KFAC",
-        args.yaml_file
+        args.yaml_file,
     ]
 
     # run the wandb command

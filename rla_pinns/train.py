@@ -37,14 +37,13 @@ from rla_pinns import (
     fokker_planck_isotropic_equation,
     heat_equation,
     log_fokker_planck_isotropic_equation,
-    poisson_equation
+    poisson_equation,
 )
 from rla_pinns.optim import set_up_optimizer
 from rla_pinns.optim.engd import ENGD
 from rla_pinns.optim.hessianfree_cached import HessianFreeCached
 from rla_pinns.optim.kfac import KFAC
 from rla_pinns.optim.spring import SPRING
-from rla_pinns.optim.randomized import Randomized
 from rla_pinns.parse_utils import (
     check_all_args_parsed,
     parse_known_args_and_remove_from_argv,
@@ -61,7 +60,7 @@ SUPPORTED_OPTIMIZERS = {
     "LBFGS",
     "HessianFree",
     "HessianFreeCached",
-    "Randomized",
+    "SPRING",
 }
 SUPPORTED_EQUATIONS = {
     "poisson",
@@ -247,7 +246,7 @@ def parse_general_args(verbose: bool = False) -> Namespace:
         "--save_checkpoints",
         action="store_true",
         help="Whether to save checkpoints.",
-        default=True,
+        default=False,
     )
     parser.add_argument(
         "--checkpoint_steps",
@@ -592,7 +591,7 @@ def main():  # noqa: C901
     check_all_args_parsed()
 
     # check that the equation was correctly passed to PDE-aware optimizers
-    if isinstance(optimizer, (KFAC, ENGD, Randomized)):
+    if isinstance(optimizer, (KFAC, ENGD)):
         assert optimizer.equation == equation
 
     config = vars(args) | vars(optimizer_args) | {"cmd": cmd}
@@ -621,7 +620,7 @@ def main():  # noqa: C901
 
         optimizer.zero_grad()
 
-        if isinstance(optimizer, (KFAC, ENGD, SPRING, Randomized)):
+        if isinstance(optimizer, (KFAC, ENGD, SPRING)):
             loss_interior, loss_boundary = optimizer.step(
                 X_Omega, y_Omega, X_dOmega, y_dOmega
             )
@@ -678,7 +677,7 @@ def main():  # noqa: C901
             loss_storage = []
 
             def forward(
-                loss_storage: List[Tuple[Tensor, Tensor]]
+                loss_storage: List[Tuple[Tensor, Tensor]],
             ) -> Tuple[Tensor, Tensor]:
                 """Compute the linearization point for the GGN and the loss.
 

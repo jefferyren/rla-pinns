@@ -47,7 +47,7 @@ def visualize_checkpoint(checkpoint: str, plot_dir: str, disable_tex: bool):
     architecture = config["model"]
 
     model = Sequential(*set_up_layers(architecture, equation, dim_Omega)).to(
-        X_Omega_eval.dtype
+        X_Omega_eval.device, X_Omega_eval.dtype
     )
     model.load_state_dict(data["model"])
 

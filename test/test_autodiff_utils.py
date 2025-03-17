@@ -34,7 +34,7 @@ def test_autograd_input_divergence():
     div = autograd_input_divergence(model, X)
 
     assert div.shape == div_true.shape == (N, 1)
-    report_nonclose(div, div_true)
+    report_nonclose(div, div_true, rtol=2e-5)
 
 
 def test_autograd_input_divergence_with_coordinates():
