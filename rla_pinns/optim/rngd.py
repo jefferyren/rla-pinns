@@ -5,7 +5,7 @@ import numpy as np
 
 from math import sqrt
 from argparse import ArgumentParser, Namespace
-from torch import Tensor, cholesky_solve, arange
+from torch import Tensor, cholesky_solve, arange, zeros_like, diag
 from typing import List, Tuple
 from torch.nn import Module
 from torch.optim import Optimizer
@@ -15,10 +15,6 @@ from rla_pinns import (
     heat_equation,
     log_fokker_planck_isotropic_equation,
     poisson_equation,
-)
-from rla_pinns.optim.line_search import (
-    grid_line_search,
-    parse_grid_line_search_args,
 )
 
 from rla_pinns.parse_utils import parse_known_args_and_remove_from_argv
@@ -37,13 +33,14 @@ def parse_randomized_args(verbose: bool = False, prefix="randomized_") -> Namesp
     )
     parser.add_argument(
         f"--{prefix}lr",
-        help="Learning rate or line search strategy for the optimizer.",
-        default="grid_line_search",
+        type=float,
+        help="Learning rate for the optimizer.",
+        default=0.001,
     )
     parser.add_argument(
         f"--{prefix}equation",
         type=str,
-        choices=Randomized.SUPPORTED_EQUATIONS,
+        choices=RNGD.SUPPORTED_EQUATIONS,
         help="The equation to solve.",
         default="poisson",
     )
@@ -57,7 +54,7 @@ def parse_randomized_args(verbose: bool = False, prefix="randomized_") -> Namesp
         f"--{prefix}damping",
         type=float,
         help="Damping parameter.",
-        default=0.0,
+        default=0.1,
     )
     parser.add_argument(
         f"--{prefix}eps",
@@ -68,46 +65,30 @@ def parse_randomized_args(verbose: bool = False, prefix="randomized_") -> Namesp
     parser.add_argument(
         f"--{prefix}approximation",
         type=str,
-        choices=["random_naive", "random_nystrom"],
+        choices=["sketch_naive", "sketch_nystrom", "exact"],
         help="Randomized method to approximate the range of a low-rank matrix.",
-        default="random_naive",
+        default="sketch_nystrom",
     )
     parser.add_argument(
-        f"--{prefix}woodbury",
-        type=bool,
+        f"--{prefix}use_woodbury",
+        action="store_false",
         help="Whether to use the kernel matrix the optimization.",
     )
     parser.add_argument(
-        f"--{prefix}spring",
-        type=bool,
-        help="Whether to use the spring step.",
+        f"--{prefix}momentum",
+        type=float,
+        default=0.0,
+        help="Momentum parameter for the optimizer.",
     )
 
     args = parse_known_args_and_remove_from_argv(parser)
-
-    # overwrite the lr value
-    lr = f"{prefix}lr"
-    if any(char.isdigit() for char in getattr(args, lr)):
-        setattr(args, lr, float(getattr(args, lr)))
-
-    if getattr(args, lr) == "grid_line_search":
-        # generate the grid from the command line arguments and overwrite the
-        # `lr` entry with a tuple containing the grid
-        grid = parse_grid_line_search_args(verbose=verbose)
-        setattr(args, lr, (getattr(args, lr), grid))
-
-    if getattr(args, lr) == "auto":
-        # use a small learning rate for the first step
-        lr_init = 1e-6
-        setattr(args, lr, (getattr(args, lr), lr_init))
-
     if verbose:
         print("Parsed arguments for randomized optimizer: ", args)
 
     return args
 
 
-class Randomized(Optimizer):
+class RNGD(Optimizer):
 
     LOSS_EVALUATORS = {
         "poisson": {
@@ -138,21 +119,24 @@ class Randomized(Optimizer):
         damping: float = 0.0,
         eps: float = 1e-10,
         approximation: str = "random_naive",
-        woodbury: bool = False,
-        spring: bool = False,
+        use_woodbury: bool = True,
+        momentum: float = 0.0,
+        norm_constraint: float = 1e-3,
         *,
         maximize: bool = False,
     ):
-        if isinstance(lr, Tensor) and lr.numel() != 1:
-            raise ValueError("Tensor lr must be 1-element")
-        if lr is None:
-            raise ValueError(f"Invalid learning rate: {lr}")
-
         params = sum((list(layer.parameters()) for layer in layers), [])
         defaults = dict(
             lr=lr,
-            dampening=damping,
+            damping=damping,
             maximize=maximize,
+            momentum=momentum,
+            norm_constraint=norm_constraint,
+            use_woodbury=use_woodbury,
+            approximation=approximation,
+            rank_val=rank_val,
+            eps=eps,
+            equation=equation,
         )
         super().__init__(params, defaults)
 
@@ -181,27 +165,28 @@ class Randomized(Optimizer):
         self.l = rank_val
         self.eps = eps
 
-        if woodbury:
-            self._matrix_fn = apply_kernel
-        else:
-            self._matrix_fn = apply_gramian
+        if not use_woodbury:
+            raise ValueError("Only Woodbury is supported.")
 
-        if spring:
-            self._get_step = spring_step
-        else:
-            self._get_step = normal_step
-
-        if approximation == "random_naive":
+        if approximation == "exact":
+            self._get_inv = self._exact_inv_damped_kernel
+        elif approximation == "sketch_naive":
             self._randomization = rsvd
-        elif approximation == "random_nystrom":
+            self._get_inv = self._sketch_inv_damped_kernel
+        elif approximation == "sketch_nystrom":
             self._randomization = nystrom_approx
+            self._get_inv = self._sketch_inv_damped_kernel
         else:
             raise ValueError(f"Randomization method {approximation} not supported.")
 
-        # initialize phi
-        (group,) = self.param_groups
-        for p in group["params"]:
-            self.state[p]["phi"] = zeros_like(p)
+        if momentum != 0.0:
+            self._step_fn = self._spring_step
+            # initialize phi
+            (group,) = self.param_groups
+            for p in group["params"]:
+                self.state[p]["phi"] = zeros_like(p)
+        else:
+            self._step_fn = self._normal_step
 
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
@@ -210,7 +195,8 @@ class Randomized(Optimizer):
         lr = group["lr"]
         params = group["params"]
         damping = group["damping"]
-        dev = params[0].device
+        momentum = group["momentum"]
+        norm_constraint = group["norm_constraint"]
 
         (
             interior_loss,
@@ -233,32 +219,9 @@ class Randomized(Optimizer):
 
         epsilon = -torch.cat([interior_residual, boundary_residual]).flatten()
 
-        self._update_preconditioner(
-            interior_inputs,
-            interior_grad_outputs,
-            boundary_inputs,
-            boundary_grad_outputs,
-            dev,
-        )
-
-        step = self._get_step(epsilon, damping, dev)
-
-        step = step.split([p.numel() for p in params])
-        step = [-s.view(p.shape) for s, p in zip(step, params)]
-
-        if isinstance(lr, float):
-            for p, s in zip(params, step):
-                p.data.add_(s, alpha=lr)
-        else:
-
-            def f() -> Tensor:
-                interior_loss = self._eval_loss(X_Omega, y_Omega, "interior")
-                boundary_loss = self._eval_loss(X_dOmega, y_dOmega, "boundary")
-                return interior_loss + boundary_loss
-
-            grid = np.logspace(-3, 0, 10)
-            best, _ = grid_line_search(f, params, step, grid)
-
+        inputs = (interior_inputs, interior_grad_outputs, boundary_inputs, boundary_grad_outputs)
+        hps = (damping, momentum, norm_constraint, lr)
+        self._step_fn(params, inputs, epsilon, hps)
         self.steps += 1
 
         return interior_loss, boundary_loss
@@ -283,51 +246,145 @@ class Randomized(Optimizer):
         interior_inputs,
         interior_grad_outputs,
         boundary_inputs,
-        boundary_grad_outputs,
-        damping,
-        dev,
+        boundary_grad_outputs
     ) -> None:
 
         U, S, V = self._randomization(
-            interior_inputs,
-            interior_grad_outputs,
-            boundary_inputs,
-            boundary_grad_outputs,
-            self.woodbury,
-            self.l,
-            self.Ds,
-            self.eps,
-            dev,
+            interior_inputs, interior_grad_outputs,
+            boundary_inputs, boundary_grad_outputs,
+            self.l, self.Ds, self.eps,
         )
 
         self.U = U
         self.S = S
         self.V = V
 
-        I = torch.eye(self.Ds, dtype=torch.float64, device=dev)
-        lhs = U @ torch.linalg.inv(torch.diag(damping / S) + V.T @ U) @ V.T
-        out = (1 / damping) * (I - lhs)
-        return out
+    @staticmethod
+    def _exact_inv_damped_kernel(
+            interior_inputs, interior_grad_outputs,
+            boundary_inputs, boundary_grad_outputs, 
+            damping
+            ):
+        
+        JJT = compute_joint_JJT(
+            interior_inputs, interior_grad_outputs,
+            boundary_inputs, boundary_grad_outputs,
+        ).detach()
 
+        # apply damping
+        idx = arange(JJT.shape[0], device=JJT.device)
+        JJT[idx, idx] = JJT.diag() + damping
+        inv = cholesky_solve(torch.eye(JJT.shape[0], device=JJT.device), cholesky(JJT))
+        return inv
+        
+    def _sketch_inv_damped_kernel(self,
+            interior_inputs, interior_grad_outputs,
+            boundary_inputs, boundary_grad_outputs, 
+            damping,
+            ):
+        
+        self._update_preconditioner(
+            interior_inputs,
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs
+        )
 
-def normal_step(self, precond, residuals) -> Tensor:
-    return precond @ residuals
+        I = torch.eye(self.U.sahpe[0], device=self.U.device)
+        arg = diag(inv(damping / self.S)) + self.V.T @ self.U
+        rhs = cholesky_solve(self.V.T, cholesky(arg))
+        inv = I - self.U @ rhs
+        inv.mul_(1 / damping)
+        return inv
+        
+    def _normal_step(self, params, inputs, residuals, hps) -> Tensor:
+        (
+            interior_inputs, 
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs
+        ) = inputs
 
+        damping, _, _, lr = hps
 
-def spring_step():
-    pass
+        inv = self._get_inv(
+            interior_inputs, interior_grad_outputs, 
+            boundary_inputs, boundary_grad_outputs,
+            damping
+            )
+        invR = inv @ residuals.unsqueeze(-1)
 
+        # apply JT
+        step = [s.squeeze(-1) for s in apply_joint_JT(
+            interior_inputs,
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs,
+            invR,
+        )]
+
+        step = step.split([p.numel() for p in params])
+        step = [-s.view(p.shape) for s, p in zip(step, params)]
+
+        for p, s in zip(params, step):
+            p.data.add_(s, alpha=lr)
+
+    def _spring_step(self, params, inputs, residuals, hps):
+        (
+            interior_inputs, 
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs
+        ) = inputs
+
+        damping, momentum, norm_constraint, lr = hps
+
+        inv = self._get_inv(
+            interior_inputs, interior_grad_outputs,
+            boundary_inputs, boundary_grad_outputs,
+            damping
+        )
+
+        J_phi = apply_joint_J(
+            interior_inputs,
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs,
+            [self.state[p]["phi"].unsqueeze(-1) for p in params],
+        ).squeeze(-1)
+        
+        zeta = residuals - J_phi.mul_(momentum)
+
+        # apply inverse of damped OOT to zeta
+        step = inv @ zeta.unsqueeze(-1)
+
+        # apply OT
+        step = [s.squeeze(-1) for s in apply_joint_JT(
+            interior_inputs,
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs,
+            step,
+        )]
+
+        # update phi
+        for p, s in zip(params, step):
+            self.state[p]["phi"].mul_(momentum).add_(s)
+
+        # compute effective learning rate
+        norm_phi = sum([(self.state[p]["phi"] ** 2).sum() for p in params]).sqrt()
+        scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
+
+        # update parameters
+        for p in params:
+            p.data.add_(self.state[p]["phi"], alpha=scale)
 
 def rsvd(
     interior_inputs: Dict[int, Tensor],
     interior_grad_outputs: Dict[int, Tensor],
     boundary_inputs: Dict[int, Tensor],
     boundary_grad_outputs: Dict[int, Tensor],
-    matrix_fn,
-    l: int,
-    Ds: int,
-    *kwargs,
-    dev: str,
+    l: int, Ds: int, *kwargs
 ) -> Tuple[Tensor, Tensor, Tensor]:
     """Compute the randomized SVD of the the Gram matrix.
 
@@ -345,8 +402,8 @@ def rsvd(
         S: singular values of shape [l, 1].
         V: right singular vectors of shape [l, Ds].
     """
-    Omega = torch.randn(Ds, l, dtype=torch.float64, device=dev)
-    Y = matrix_fn(
+    Omega = torch.randn(Ds, l, dtype=torch.float64, device=interior_inputs[0].device)
+    Y = apply_kernel(
         interior_inputs,
         interior_grad_outputs,
         boundary_inputs,
@@ -355,7 +412,7 @@ def rsvd(
     )
 
     Q, _ = torch.linalg.qr(Y)
-    B = matrix_fn(
+    B = apply_kernel(
         interior_inputs,
         interior_grad_outputs,
         boundary_inputs,
@@ -373,17 +430,16 @@ def nystrom_approx(
     interior_grad_outputs: Dict[int, Tensor],
     boundary_inputs: Dict[int, Tensor],
     boundary_grad_outputs: Dict[int, Tensor],
-    matrix_fn,
     l: int,
     Ds: int,
     eps: float,
-    dev: str,
+    *kwargs
 ) -> Tuple[Tensor, Tensor]:
 
-    Omega = torch.randn(Ds, l, device=dev)
+    Omega = torch.randn(Ds, l, device=interior_inputs[0].device)
     Omega, _ = torch.linalg.qr(Omega)
 
-    Y = matrix_fn(
+    Y = apply_kernel(
         interior_inputs,
         interior_grad_outputs,
         boundary_inputs,
@@ -396,69 +452,10 @@ def nystrom_approx(
     B = cholesky_solve(Y_v, C)
 
     U, Sigma, _ = torch.linalg.svd(B)
-    I = torch.ones(Sigma.shape[0], device=dev)
+    I = torch.ones(Sigma.shape[0], device=interior_inputs[0].device)
     S = max(0, Sigma @ Sigma - eps * I)
 
     return U, S, U
-
-
-def woodbury_step(
-    interior_inputs: Dict[int, Tensor],
-    interior_grad_outputs: Dict[int, Tensor],
-    boundary_inputs: Dict[int, Tensor],
-    boundary_grad_outputs: Dict[int, Tensor],
-    epsilon: Tensor,
-    damping: float,
-    *kwargs,
-) -> Tuple[Tensor, Tensor]:
-
-    OOT = compute_joint_JJT(
-        interior_inputs,
-        interior_grad_outputs,
-        boundary_inputs,
-        boundary_grad_outputs,
-    ).detach()
-
-    I = arange(OOT.shape[0], device=OOT.device)
-    OOT[idx, idx] = OOT.diag() + damping
-
-    out = cholesky_solve(epsilon.unsqueeze(-1), cholesky(OOT)).squeeze(-1)
-
-    step = apply_joint_JT(
-        interior_inputs,
-        interior_grad_outputs,
-        boundary_inputs,
-        boundary_grad_outputs,
-        out,
-    )
-
-    return step
-
-
-def apply_gramian(
-    interior_inputs: Dict[int, Tensor],
-    interior_grad_outputs: Dict[int, Tensor],
-    boundary_inputs: Dict[int, Tensor],
-    boundary_grad_outputs: Dict[int, Tensor],
-    v: Tensor,
-):
-    JTv = apply_joint_J(
-        interior_inputs,
-        interior_grad_outputs,
-        boundary_inputs,
-        boundary_grad_outputs,
-        v,
-    )
-    JJTv = apply_joint_JT(
-        interior_inputs,
-        interior_grad_outputs,
-        boundary_inputs,
-        boundary_grad_outputs,
-        JTv,
-    )
-
-    return JJTv
-
 
 def apply_kernel(
     interior_inputs: Dict[int, Tensor],

@@ -42,7 +42,7 @@ ARGS = [
             "--KFAC_T_inv=4",
             "--KFAC_ema_factor=0.95",
             "--KFAC_damping=0.01",
-            "--KFAC_lr=0.01",
+            "--KFAC_lr=0.1",
             f"--KFAC_ggn_type={ggn_type}",
         ]
         for (equation, condition), ggn_type in product(

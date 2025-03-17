@@ -44,6 +44,7 @@ from rla_pinns.optim.engd import ENGD
 from rla_pinns.optim.hessianfree_cached import HessianFreeCached
 from rla_pinns.optim.kfac import KFAC
 from rla_pinns.optim.spring import SPRING
+from rla_pinns.optim.rngd import RNGD
 from rla_pinns.parse_utils import (
     check_all_args_parsed,
     parse_known_args_and_remove_from_argv,
@@ -61,6 +62,7 @@ SUPPORTED_OPTIMIZERS = {
     "HessianFree",
     "HessianFreeCached",
     "SPRING",
+    'RNGD'
 }
 SUPPORTED_EQUATIONS = {
     "poisson",
@@ -591,7 +593,7 @@ def main():  # noqa: C901
     check_all_args_parsed()
 
     # check that the equation was correctly passed to PDE-aware optimizers
-    if isinstance(optimizer, (KFAC, ENGD)):
+    if isinstance(optimizer, (KFAC, ENGD, RNGD)):
         assert optimizer.equation == equation
 
     config = vars(args) | vars(optimizer_args) | {"cmd": cmd}
@@ -620,7 +622,7 @@ def main():  # noqa: C901
 
         optimizer.zero_grad()
 
-        if isinstance(optimizer, (KFAC, ENGD, SPRING)):
+        if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
             loss_interior, loss_boundary = optimizer.step(
                 X_Omega, y_Omega, X_dOmega, y_dOmega
             )
