@@ -220,13 +220,16 @@ class SPRING(Optimizer):
         step = cholesky_solve(zeta.unsqueeze(-1), cholesky(OOT))
 
         # apply OT
-        step = [s.squeeze(-1) for s in apply_joint_JT(
-            interior_inputs,
-            interior_grad_outputs,
-            boundary_inputs,
-            boundary_grad_outputs,
-            step,
-        )]
+        step = [
+            s.squeeze(-1)
+            for s in apply_joint_JT(
+                interior_inputs,
+                interior_grad_outputs,
+                boundary_inputs,
+                boundary_grad_outputs,
+                step,
+            )
+        ]
 
         # update phi
         for p, s in zip(params, step):

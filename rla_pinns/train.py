@@ -62,7 +62,7 @@ SUPPORTED_OPTIMIZERS = {
     "HessianFree",
     "HessianFreeCached",
     "SPRING",
-    'RNGD'
+    "RNGD",
 }
 SUPPORTED_EQUATIONS = {
     "poisson",

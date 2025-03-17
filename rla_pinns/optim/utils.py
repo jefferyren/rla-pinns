@@ -254,7 +254,7 @@ def _apply_individual_J(
         temp = einsum(
             grad_outputs[layer_idx],
             M_joint,
-            "n ... d_out, d_out d_in k -> n ... d_in k"
+            "n ... d_out, d_out d_in k -> n ... d_in k",
         )
         JM.add_(
             einsum(
