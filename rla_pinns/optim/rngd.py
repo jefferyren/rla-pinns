@@ -37,7 +37,7 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
     parser.add_argument(
         f"--{prefix}lr",
         help="Learning rate or line search strategy for the optimizer.",
-        default="0.01",
+        default="grid_line_search",
     )
     parser.add_argument(
         f"--{prefix}equation",
@@ -227,7 +227,7 @@ class RNGD(Optimizer):
         N_Omega = X_Omega.shape[0]
         interior_residual = interior_residual.detach() / sqrt(N_Omega)
 
-        epsilon = -torch.cat([interior_residual, boundary_residual]).flatten()
+        epsilon = torch.cat([interior_residual, boundary_residual]).flatten()
         
         step = self._step_fn(
             interior_inputs,
@@ -411,7 +411,7 @@ class RNGD(Optimizer):
             )
         ]
 
-        step = [-s.view(p.shape) for s, p in zip(step, params)]
+        step = [s.view(p.shape) for s, p in zip(step, params)]
         return step
 
     def _spring_step(
@@ -441,7 +441,7 @@ class RNGD(Optimizer):
             [self.state[p]["phi"].unsqueeze(-1) for p in params],
         ).squeeze(-1)
 
-        zeta = residuals - J_phi.mul_(momentum)
+        zeta = residuals + J_phi.mul_(momentum)
         step = inv @ zeta.unsqueeze(-1)
 
         step = [
@@ -456,7 +456,7 @@ class RNGD(Optimizer):
         ]
 
         for p, s in zip(params, step):
-            self.state[p]["phi"].mul_(momentum).add_(s)
+            self.state[p]["phi"].mul_(-momentum).add_(s)
 
         step = [self.state[p]["phi"] for p in params]
         return step
