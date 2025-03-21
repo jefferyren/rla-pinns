@@ -37,7 +37,7 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
     parser.add_argument(
         f"--{prefix}lr",
         help="Learning rate or line search strategy for the optimizer.",
-        default="0.001",
+        default="0.01",
     )
     parser.add_argument(
         f"--{prefix}equation",
@@ -194,21 +194,19 @@ class RNGD(Optimizer):
             raise ValueError(f"Randomization method {approximation} not supported.")
 
         if momentum != 0.0:
+            print(f"Using spring step.", flush=True)
             self._step_fn = self._spring_step
             # initialize phi
             (group,) = self.param_groups
             for p in group["params"]:
                 self.state[p]["phi"] = zeros_like(p)
         else:
+            print(f"Using normal step.", flush=True)
             self._step_fn = self._normal_step
 
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
     ) -> Tuple[Tensor, Tensor]:
-        (group,) = self.param_groups
-        params = group["params"]
-        damping = group["damping"]
-        momentum = group["momentum"]
 
         (
             interior_loss,
@@ -230,16 +228,13 @@ class RNGD(Optimizer):
         interior_residual = interior_residual.detach() / sqrt(N_Omega)
 
         epsilon = -torch.cat([interior_residual, boundary_residual]).flatten()
-
+        
         step = self._step_fn(
             interior_inputs,
             interior_grad_outputs,
             boundary_inputs,
             boundary_grad_outputs,
-            params,
             epsilon,
-            damping,
-            momentum,
         )
         self._update_parameters(step, X_Omega, y_Omega, X_dOmega, y_dOmega)
         self.steps += 1
@@ -247,18 +242,17 @@ class RNGD(Optimizer):
         return interior_loss, boundary_loss
 
     def _update_parameters(self, directions, X_Omega, y_Omega, X_dOmega, y_dOmega):
-
-        group = self.param_groups[0]
+        (group,) = self.param_groups
         lr = group["lr"]
         params = group["params"]
-        norm_constraint = group["norm_constraint"]
 
         if isinstance(lr, float):
-            norm_phi = sum([(d**2).sum() for d in directions]).sqrt()
-            scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
+            # norm_constraint = group["norm_constraint"]
+            # norm_phi = sum([(d**2).sum() for d in directions]).sqrt()
+            # scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
 
             for p, d in zip(params, directions):
-                p.data.add_(d, alpha=scale)
+                p.data.add_(d, alpha=-lr)
         else:
             if lr[0] == "grid_line_search":
 
@@ -314,26 +308,50 @@ class RNGD(Optimizer):
         self.S = S
         self.V = V
 
-    @staticmethod
     def _exact_inv_damped_kernel(
+        self,
         interior_inputs: Dict[int, Tensor],
         interior_grad_outputs: Dict[int, Tensor],
         boundary_inputs: Dict[int, Tensor],
         boundary_grad_outputs: Dict[int, Tensor],
-        damping,
     ):
+        (group,) = self.param_groups
+        params = group["params"]
+        damping = group["damping"]
+        (dev,) = {p.device for p in params}
+        (dt,) = {p.dtype for p in params}
 
-        JJT = compute_joint_JJT(
+        (N_Omega,) = {
+            t.shape[0]
+            for t in list(interior_inputs.values()) + list(interior_grad_outputs.values())
+        }
+        (N_dOmega,) = {
+            t.shape[0]
+            for t in list(boundary_inputs.values()) + list(boundary_grad_outputs.values())
+        }
+        (dev,) = {p.device for p in params}
+        (dt,) = {p.dtype for p in params}
+
+        I = torch.eye(N_Omega + N_dOmega, device=dev, dtype=dt)
+        JTI = apply_joint_JT(
             interior_inputs,
             interior_grad_outputs,
             boundary_inputs,
             boundary_grad_outputs,
-        ).detach()
+            I
+        )
+        JJTI = apply_joint_J(
+            interior_inputs,
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs,
+            JTI
+        )
+        
+        idx = arange(JJTI.shape[0], device=dev)
+        JJTI[idx, idx] = JJTI.diag() + damping
 
-        idx = arange(JJT.shape[0], device=JJT.device)
-        JJT[idx, idx] = JJT.diag() + damping
-
-        out = inv(JJT)
+        out = inv(JJTI)
         return out
 
     def _sketch_inv_damped_kernel(
@@ -342,8 +360,12 @@ class RNGD(Optimizer):
         interior_grad_outputs: Dict[int, Tensor],
         boundary_inputs: Dict[int, Tensor],
         boundary_grad_outputs: Dict[int, Tensor],
-        damping,
     ):
+        (group,) = self.param_groups
+        params = group["params"]
+        damping = group["damping"]
+        (dev,) = {p.device for p in params}
+        (dt,) = {p.dtype for p in params}
 
         self._update_preconditioner(
             interior_inputs,
@@ -352,7 +374,7 @@ class RNGD(Optimizer):
             boundary_grad_outputs,
         )
 
-        I = torch.eye(self.U.shape[0], device=self.U.device)
+        I = torch.eye(self.U.shape[0], device=dev, dtype=dt)
         arg = diag(damping / self.S) + self.V.T @ self.U
         rhs = torch.linalg.inv(arg) @ self.V.T
         out = I - self.U @ rhs
@@ -365,22 +387,19 @@ class RNGD(Optimizer):
         interior_grad_outputs: Dict[int, Tensor],
         boundary_inputs: Dict[int, Tensor],
         boundary_grad_outputs: Dict[int, Tensor],
-        params,
         residuals,
-        damping,
-        *kwargs
     ):
+        
+        (group,) = self.param_groups
+        params = group["params"]
 
         inv = self._get_inv(
             interior_inputs,
             interior_grad_outputs,
             boundary_inputs,
             boundary_grad_outputs,
-            damping,
         )
         invR = inv @ residuals.unsqueeze(-1)
-
-        # apply JT
         step = [
             s.squeeze(-1)
             for s in apply_joint_JT(
@@ -401,18 +420,17 @@ class RNGD(Optimizer):
         interior_grad_outputs: Dict[int, Tensor],
         boundary_inputs: Dict[int, Tensor],
         boundary_grad_outputs: Dict[int, Tensor],
-        params,
         residuals,
-        damping,
-        momentum,
     ):
+        (group,) = self.param_groups
+        params = group["params"]
+        momentum = group["momentum"]
 
         inv = self._get_inv(
             interior_inputs,
             interior_grad_outputs,
             boundary_inputs,
             boundary_grad_outputs,
-            damping,
         )
 
         J_phi = apply_joint_J(
@@ -424,11 +442,8 @@ class RNGD(Optimizer):
         ).squeeze(-1)
 
         zeta = residuals - J_phi.mul_(momentum)
-
-        # apply inverse of damped OOT to zeta
         step = inv @ zeta.unsqueeze(-1)
 
-        # apply OT
         step = [
             s.squeeze(-1)
             for s in apply_joint_JT(
@@ -440,7 +455,6 @@ class RNGD(Optimizer):
             )
         ]
 
-        # update phi
         for p, s in zip(params, step):
             self.state[p]["phi"].mul_(momentum).add_(s)
 
@@ -481,9 +495,10 @@ def rsvd(
         for t in list(boundary_inputs.values()) + list(boundary_grad_outputs.values())
     }
 
-    Omega = torch.randn(
-        N_Omega + N_dOmega, l, dtype=torch.float64, device=interior_inputs[0].device
-    )
+    (dev,) = {p.device for p in list(interior_inputs.values()) + list(interior_grad_outputs.values())}
+    (dt,) = {p.dtype for p in list(interior_inputs.values()) + list(interior_grad_outputs.values())}
+
+    Omega = torch.randn(N_Omega + N_dOmega, l, dtype=dt, device=dev)
     Y = apply_kernel(
         interior_inputs,
         interior_grad_outputs,
@@ -524,10 +539,10 @@ def nystrom_approx(
         t.shape[0]
         for t in list(boundary_inputs.values()) + list(boundary_grad_outputs.values())
     }
+    (dev,) = {p.device for p in list(interior_inputs.values()) + list(interior_grad_outputs.values())}
+    (dt,) = {p.dtype for p in list(interior_inputs.values()) + list(interior_grad_outputs.values())}
 
-    Omega = torch.randn(
-        N_Omega + N_dOmega, l, dtype=torch.float64, device=interior_inputs[0].device
-    )
+    Omega = torch.randn(N_Omega + N_dOmega, l, dtype=dt, device=dev)
     Omega, _ = torch.linalg.qr(Omega)
 
     Y = apply_kernel(
@@ -545,7 +560,7 @@ def nystrom_approx(
     B = Y_v @ C_inv
 
     U, Sigma, _ = torch.linalg.svd(B, full_matrices=False)
-    I = torch.ones(Sigma.shape[0], device=interior_inputs[0].device)
+    I = torch.ones(Sigma.shape[0], device=dev, dtype=dt)
     S = torch.clamp(Sigma @ Sigma - eps * I, min=0.0)
 
     return U, S, U
