@@ -5,11 +5,11 @@ import numpy as np
 
 from math import sqrt
 from argparse import ArgumentParser, Namespace
-from torch import Tensor, cholesky_solve, arange, zeros_like, diag, triangular_solve
+from torch import Tensor, arange, zeros_like, diag
 from typing import List, Tuple
 from torch.nn import Module
 from torch.optim import Optimizer
-from torch.linalg import cholesky
+from torch.linalg import cholesky, inv
 from rla_pinns import (
     fokker_planck_isotropic_equation,
     heat_equation,
@@ -37,7 +37,7 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
     parser.add_argument(
         f"--{prefix}lr",
         help="Learning rate or line search strategy for the optimizer.",
-        default="grid_line_search",
+        default="0.001",
     )
     parser.add_argument(
         f"--{prefix}equation",
@@ -95,11 +95,6 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
         # `lr` entry with a tuple containing the grid
         grid = parse_grid_line_search_args(verbose=verbose)
         setattr(args, lr, (getattr(args, lr), grid))
-
-    if getattr(args, lr) == "auto":
-        # use a small learning rate for the first step
-        lr_init = 1e-6
-        setattr(args, lr, (getattr(args, lr), lr_init))
 
     if verbose:
         print("Parsed arguments for randomized optimizer: ", args)
@@ -214,7 +209,6 @@ class RNGD(Optimizer):
         params = group["params"]
         damping = group["damping"]
         momentum = group["momentum"]
-        norm_constraint = group["norm_constraint"]
 
         (
             interior_loss,
@@ -260,11 +254,11 @@ class RNGD(Optimizer):
         norm_constraint = group["norm_constraint"]
 
         if isinstance(lr, float):
-            norm_phi = sum([(s**2).sum() for s in step]).sqrt()
+            norm_phi = sum([(d**2).sum() for d in directions]).sqrt()
             scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
 
             for p, d in zip(params, directions):
-                p.data.add_(s, alpha=scale)
+                p.data.add_(d, alpha=scale)
         else:
             if lr[0] == "grid_line_search":
 
@@ -336,13 +330,11 @@ class RNGD(Optimizer):
             boundary_grad_outputs,
         ).detach()
 
-        # apply damping
         idx = arange(JJT.shape[0], device=JJT.device)
         JJT[idx, idx] = JJT.diag() + damping
 
-        I = torch.eye(JJT.shape[0], dtype=torch.float64, device=JJT.device)
-        inv = cholesky_solve(I, cholesky(JJT))
-        return inv
+        out = inv(JJT)
+        return out
 
     def _sketch_inv_damped_kernel(
         self,
@@ -376,7 +368,7 @@ class RNGD(Optimizer):
         params,
         residuals,
         damping,
-        momentum,
+        *kwargs
     ):
 
         inv = self._get_inv(
@@ -522,7 +514,7 @@ def nystrom_approx(
     l: int,
     eps: float,
     *kwargs,
-) -> Tuple[Tensor, Tensor]:
+    ) -> Tuple[Tensor, Tensor]:
 
     (N_Omega,) = {
         t.shape[0]
@@ -565,7 +557,8 @@ def apply_kernel(
     boundary_inputs: Dict[int, Tensor],
     boundary_grad_outputs: Dict[int, Tensor],
     M: Tensor,
-):
+    ):
+
     JTM = apply_joint_JT(
         interior_inputs,
         interior_grad_outputs,
