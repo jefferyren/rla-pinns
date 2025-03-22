@@ -256,6 +256,9 @@ class RNGD(Optimizer):
         else:
             if lr[0] == "grid_line_search":
 
+                for d in directions:
+                    d.mul_(-1)
+
                 def f() -> Tensor:
                     """Closure to evaluate the loss.
 
