@@ -319,39 +319,18 @@ class RNGD(Optimizer):
         params = group["params"]
         damping = group["damping"]
         (dev,) = {p.device for p in params}
-        (dt,) = {p.dtype for p in params}
 
-        (N_Omega,) = {
-            t.shape[0]
-            for t in list(interior_inputs.values()) + list(interior_grad_outputs.values())
-        }
-        (N_dOmega,) = {
-            t.shape[0]
-            for t in list(boundary_inputs.values()) + list(boundary_grad_outputs.values())
-        }
-        (dev,) = {p.device for p in params}
-        (dt,) = {p.dtype for p in params}
-
-        I = torch.eye(N_Omega + N_dOmega, device=dev, dtype=dt)
-        JTI = apply_joint_JT(
+        JJT = compute_joint_JJT(
             interior_inputs,
             interior_grad_outputs,
             boundary_inputs,
             boundary_grad_outputs,
-            I
-        )
-        JJTI = apply_joint_J(
-            interior_inputs,
-            interior_grad_outputs,
-            boundary_inputs,
-            boundary_grad_outputs,
-            JTI
         )
         
-        idx = arange(JJTI.shape[0], device=dev)
-        JJTI[idx, idx] = JJTI.diag() + damping
+        idx = arange(JJT.shape[0], device=dev)
+        JJT[idx, idx] = JJT.diag() + damping
 
-        out = inv(JJTI)
+        out = inv(JJT)
         return out
 
     def _sketch_inv_damped_kernel(
@@ -375,10 +354,9 @@ class RNGD(Optimizer):
         )
 
         I = torch.eye(self.U.shape[0], device=dev, dtype=dt)
-        arg = diag(damping / self.S) + self.V.T @ self.U
-        rhs = torch.linalg.inv(arg) @ self.V.T
-        out = I - self.U @ rhs
-        out.mul_(1 / damping)
+        lhs = self.U @ inv(diag(self.S + damping)) @ self.V.T
+        rhs = (1 / damping) * (I - (self.U @ self.V.T))
+        out = lhs + rhs
         return out
 
     def _normal_step(
@@ -499,22 +477,16 @@ def rsvd(
     (dt,) = {p.dtype for p in list(interior_inputs.values()) + list(interior_grad_outputs.values())}
 
     Omega = torch.randn(N_Omega + N_dOmega, l, dtype=dt, device=dev)
-    Y = apply_kernel(
+    JJT = compute_joint_JJT(
         interior_inputs,
         interior_grad_outputs,
         boundary_inputs,
         boundary_grad_outputs,
-        Omega,
     )
 
+    Y = JJT @ Omega
     Q, _ = torch.linalg.qr(Y)
-    B = apply_kernel(
-        interior_inputs,
-        interior_grad_outputs,
-        boundary_inputs,
-        boundary_grad_outputs,
-        Q,
-    ).T
+    B = Q.T @ JJT
 
     U_tilde, S, V = torch.linalg.svd(B, full_matrices=False)
     U = Q @ U_tilde
@@ -545,14 +517,14 @@ def nystrom_approx(
     Omega = torch.randn(N_Omega + N_dOmega, l, dtype=dt, device=dev)
     Omega, _ = torch.linalg.qr(Omega)
 
-    Y = apply_kernel(
+    JJT = compute_joint_JJT(
         interior_inputs,
         interior_grad_outputs,
         boundary_inputs,
         boundary_grad_outputs,
-        Omega,
     )
 
+    Y = JJT @ Omega
     Y_v = Y + eps * Omega
     C = cholesky(Omega.T @ Y_v)
 
@@ -564,29 +536,3 @@ def nystrom_approx(
     S = torch.clamp(Sigma @ Sigma - eps * I, min=0.0)
 
     return U, S, U
-
-
-def apply_kernel(
-    interior_inputs: Dict[int, Tensor],
-    interior_grad_outputs: Dict[int, Tensor],
-    boundary_inputs: Dict[int, Tensor],
-    boundary_grad_outputs: Dict[int, Tensor],
-    M: Tensor,
-    ):
-
-    JTM = apply_joint_JT(
-        interior_inputs,
-        interior_grad_outputs,
-        boundary_inputs,
-        boundary_grad_outputs,
-        M,
-    )
-    JJTM = apply_joint_J(
-        interior_inputs,
-        interior_grad_outputs,
-        boundary_inputs,
-        boundary_grad_outputs,
-        JTM,
-    )
-
-    return JJTM
