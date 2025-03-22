@@ -20,7 +20,7 @@ def create_sbatch_script(
     cmd: str,
     qos: str = "m4",
     array: int = 64,
-    array_max_active: int = 17,
+    array_max_active: int = 15,
     partition: str = "rtx6000",
 ):
     """Create an sbatch script containing the given command.
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         "sweep",
         f"--name={args.sweep_name}",
         "--entity=andresguzco",
-        "--project=KFAC",
+        "--project=rla-pinns",
         args.yaml_file,
     ]
 

@@ -1,13 +1,13 @@
 entity: rla-pinns
 project: poisson5d
-name: ENGD
+name: RNGD
 program: ../../train.py
 command:
     - ${env}
     - python
     - ${program}
     - "--wandb"
-    - "--optimizer=ENGD"
+    - "--optimizer=RNGD"
     - ${args_no_boolean_flags}
 metric:
     goal: minimize
@@ -21,7 +21,7 @@ parameters:
     model:
         value: mlp-tanh-64-64-48-48
     num_seconds:
-        value: 3_000
+        value: 7_200
     dim_Omega:
         value: 5
     N_Omega:
@@ -32,13 +32,13 @@ parameters:
         values: ["exact", "sketch_naive", "sketch_nystrom"]
     RNGD_damping:
         distribution: categorical
-        values: [1e-8, 1e-9, 1e-10, 1e-11, 1e-12, 0.0]
+        values: [1e-1, 1e-5, 1e-10]
     RNGD_momentum:
         distribution: categorical
-        values: [0.99, 0.9, 0.5, 0.1, 0.01, 0.0]
+        values: [0.9, 0.5, 0.0]
     RNGD_rank_val:
         distribution: categorical
-        values: [3500, 1000, 500, 100, 50]
+        values: [500, 100, 50]
     wandb_entity:
         value: "andresguzco"
     equation:
