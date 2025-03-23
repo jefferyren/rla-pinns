@@ -23,6 +23,10 @@ from rla_pinns.optim.utils import (
     compute_joint_JJT,
 )
 from rla_pinns.pinn_utils import evaluate_boundary_loss
+from rla_pinns.optim.line_search import (
+    grid_line_search,
+    parse_grid_line_search_args,
+)
 
 
 def parse_SPRING_args(verbose: bool = False, prefix="SPRING_") -> Namespace:
@@ -38,7 +42,9 @@ def parse_SPRING_args(verbose: bool = False, prefix="SPRING_") -> Namespace:
     parser = ArgumentParser(description="Parse arguments for setting up SPRING.")
 
     parser.add_argument(
-        f"--{prefix}lr", type=float, help="Learning rate for SPRING.", required=True
+        f"--{prefix}lr",
+        help="Learning rate or line search strategy for the optimizer.",
+        default="grid_line_search",
     )
     parser.add_argument(
         f"--{prefix}damping",
@@ -67,6 +73,17 @@ def parse_SPRING_args(verbose: bool = False, prefix="SPRING_") -> Namespace:
     )
 
     args = parse_known_args_and_remove_from_argv(parser)
+
+    # overwrite the lr value
+    lr = f"{prefix}lr"
+    if any(char.isdigit() for char in getattr(args, lr)):
+        setattr(args, lr, float(getattr(args, lr)))
+
+    if getattr(args, lr) == "grid_line_search":
+        # generate the grid from the command line arguments and overwrite the
+        # `lr` entry with a tuple containing the grid
+        grid = parse_grid_line_search_args(verbose=verbose)
+        setattr(args, lr, (getattr(args, lr), grid))
 
     if verbose:
         print("Parsed arguments for SPRING: ", args)
@@ -235,14 +252,47 @@ class SPRING(Optimizer):
         for p, s in zip(params, step):
             self.state[p]["phi"].mul_(decay_factor).add_(s)
 
-        # compute effective learning rate
-        norm_phi = sum([(self.state[p]["phi"] ** 2).sum() for p in params]).sqrt()
-        scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
+        if isinstance(lr, float):
+            # compute effective learning rate
+            norm_phi = sum([(self.state[p]["phi"] ** 2).sum() for p in params]).sqrt()
+            scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
 
-        # update parameters
-        for p in params:
-            p.data.add_(self.state[p]["phi"], alpha=scale)
+            # update parameters
+            for p in params:
+                p.data.add_(self.state[p]["phi"], alpha=scale)
+        else:
+            if lr[0] == "grid_line_search":
+
+                directions = [self.state[p]["phi"] for p in params]
+
+                def f() -> Tensor:
+                    """Closure to evaluate the loss.
+
+                    Returns:
+                        Loss value.
+                    """
+                    interior_loss = self._eval_loss(X_Omega, y_Omega, "interior")
+                    boundary_loss = self._eval_loss(X_dOmega, y_dOmega, "boundary")
+                    return interior_loss + boundary_loss
+
+                grid = lr[1]
+                grid_line_search(f, params, directions, grid)
 
         self.steps += 1
 
         return interior_loss, boundary_loss
+
+    def _eval_loss(self, X: Tensor, y: Tensor, loss_type: str) -> Tensor:
+        """Evaluate the loss.
+
+        Args:
+            X: Input data.
+            y: Target data.
+            loss_type: Type of the loss function. Can be `'interior'` or `'boundary'`.
+
+        Returns:
+            The differentiable loss.
+        """
+        loss_evaluator = self.LOSS_EVALUATORS[self.equation][loss_type]
+        loss, _, _ = loss_evaluator(self.layers, X, y)
+        return loss

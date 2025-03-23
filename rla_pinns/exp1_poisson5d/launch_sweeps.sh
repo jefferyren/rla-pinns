@@ -2,7 +2,7 @@
 cd sweeps/
 
 # launch each script
-sbatch SGD.sh
-sbatch Adam.sh
-# sbatch ENGD.sh
+# sbatch SGD.sh
+# sbatch Adam.sh
+sbatch ENGD.sh
 # sbatch RNGD.sh

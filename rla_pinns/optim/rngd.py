@@ -26,7 +26,7 @@ from rla_pinns.optim.utils import (
     evaluate_losses_with_layer_inputs_and_grad_outputs,
     apply_joint_J,
     apply_joint_JT,
-    compute_joint_JJT,
+    # compute_joint_JJT,
 )
 
 
@@ -194,14 +194,12 @@ class RNGD(Optimizer):
             raise ValueError(f"Randomization method {approximation} not supported.")
 
         if momentum != 0.0:
-            print(f"Using spring step.", flush=True)
             self._step_fn = self._spring_step
             # initialize phi
             (group,) = self.param_groups
             for p in group["params"]:
                 self.state[p]["phi"] = zeros_like(p)
         else:
-            print(f"Using normal step.", flush=True)
             self._step_fn = self._normal_step
 
     def step(

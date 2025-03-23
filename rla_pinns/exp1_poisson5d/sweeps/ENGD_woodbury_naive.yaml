@@ -1,13 +1,13 @@
 entity: rla-pinns
 project: poisson5d_deepwide
-name: ENGD
+name: ENGD_woodbury_naive
 program: ../../train.py
 command:
     - ${env}
     - python
     - ${program}
     - "--wandb"
-    - "--optimizer=ENGD"
+    - "--optimizer=RNGD"
     - ${args_no_boolean_flags}
 metric:
     goal: minimize
@@ -19,7 +19,7 @@ parameters:
     boundary_condition:
         value: cos_sum
     model:
-        value: mlp-tanh-64-48-32-16
+        value: mlp-tanh-64-64-48-48
     num_seconds:
         value: 7_000
     dim_Omega:
@@ -28,14 +28,17 @@ parameters:
         value: 3_000
     N_dOmega:
         value: 500
-    ENGD_approximation:
-        value: full
-    ENGD_damping:
+    RNGD_approximation:
+        value: "sketch_naive"
+    RNGD_damping:
         distribution: categorical
         values: [1e-8, 1e-9, 1e-10, 1e-11, 1e-12, 0.0]
-    ENGD_ema_factor:
+    RNGD_momentum:
+        value: 0.0
+    RNGD_rank_val:
         distribution: categorical
-        values: [0.0, 0.3, 0.6, 0.9]
-    ENGD_initialize_to_identity:
-        distribution: categorical
-        values: [false, true]
+        values: [500, 100, 50]
+    wandb_entity:
+        value: "andresguzco"
+    equation:
+        value: "poisson"

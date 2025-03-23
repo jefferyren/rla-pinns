@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: poisson5d
-name: RNGD
+project: poisson5d_deepwide
+name: ENGD_woodbury_nystrom
 program: ../../train.py
 command:
     - ${env}
@@ -21,7 +21,7 @@ parameters:
     model:
         value: mlp-tanh-64-64-48-48
     num_seconds:
-        value: 7_200
+        value: 7_000
     dim_Omega:
         value: 5
     N_Omega:
@@ -29,13 +29,12 @@ parameters:
     N_dOmega:
         value: 500
     RNGD_approximation:
-        values: ["exact", "sketch_naive", "sketch_nystrom"]
+        value: "sketch_nystrom"
     RNGD_damping:
         distribution: categorical
-        values: [1e-1, 1e-5, 1e-10]
+        values: [1e-8, 1e-9, 1e-10, 1e-11, 1e-12, 0.0]
     RNGD_momentum:
-        distribution: categorical
-        values: [0.9, 0.5, 0.0]
+        value: 0.0
     RNGD_rank_val:
         distribution: categorical
         values: [500, 100, 50]
