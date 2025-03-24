@@ -12,6 +12,7 @@ from rla_pinns import (
 from rla_pinns.pinn_utils import (
     evaluate_boundary_loss_with_layer_inputs_and_grad_outputs,
 )
+import torch
 
 
 INTERIOR_LOSS_EVALUATORS = {
@@ -168,6 +169,7 @@ def compute_joint_JJT(
     JJT = zeros((N_Omega + N_dOmega, N_Omega + N_dOmega), device=dev, dtype=dt)
 
     for idx in interior_inputs:
+
         J_boundary = einsum(
             # gradients are scaled by 1/N, but we need 1/√N for the outer product
             boundary_grad_outputs[idx] * sqrt(N_dOmega),
@@ -185,6 +187,107 @@ def compute_joint_JJT(
         JJT.add_(J @ J.T)
 
     return JJT
+
+
+def apply_joint_JJT(
+    interior_inputs: Dict[int, Tensor],
+    interior_grad_outputs: Dict[int, Tensor],
+    boundary_inputs: Dict[int, Tensor],
+    boundary_grad_outputs: Dict[int, Tensor],
+    M: Tensor,
+) -> Tensor:
+    """Multiply the kernel onto a matrix in data space.
+
+    Considers both the interior and the boundary loss.
+
+    Args:
+        interior_inputs: The layer inputs for the interior loss.
+        interior_grad_outputs: The layer gradient outputs for the interior loss.
+        boundary_inputs: The layer inputs for the boundary loss.
+        boundary_grad_outputs: The layer gradient outputs for the boundary loss.
+        M: The matrix to multiply the kernel with. Has shape
+        `(N_Omega + N_dOmega, K)` where `N_Omega` is the batch size for the
+        evaluation of the interior loss, `N_dOmega` is the batch size for the
+        evaluation of the boundary loss and `K` is the number of columns.
+
+    Returns:
+        The result of multiplying the kernel with the matrix. Has the same shape as M
+    """
+    # split into interior and boundary terms
+    (N_Omega,) = {
+        t.shape[0]
+        for t in list(interior_inputs.values()) + list(interior_grad_outputs.values())
+    }
+    (N_dOmega,) = {
+        t.shape[0]
+        for t in list(boundary_inputs.values()) + list(boundary_grad_outputs.values())
+    }
+    M_interior, M_boundary = M.split([N_Omega, N_dOmega])
+
+    M_out = torch.zeros_like(M)
+
+    for idx in interior_inputs:
+
+        scaled_boundary_grad_outputs = boundary_grad_outputs[idx] * sqrt(N_dOmega)
+        scaled_interior_grad_outputs = interior_grad_outputs[idx] * sqrt(N_Omega)
+
+        # NOTE: the following operations are done in two einsums for performance reasons
+
+        JTM_boundary = einsum(
+            scaled_boundary_grad_outputs,
+            M_boundary,
+            "n ... d_out, n k -> n ... d_out k",
+        )
+
+        JTM_boundary = einsum(
+            JTM_boundary,
+            boundary_inputs[idx],
+            "n ... d_out k, n ... d_in-> d_out d_in k",
+        )
+
+        JTM_interior = einsum(
+            scaled_interior_grad_outputs,
+            M_interior,
+            "n ... d_out, n k -> n ... d_out k",
+        )
+
+        JTM_interior = einsum(
+            JTM_interior,
+            interior_inputs[idx],
+            "n ... d_out k, n ... d_in-> d_out d_in k",
+        )
+
+        JTM = JTM_boundary + JTM_interior
+
+        JJTM_boundary = einsum(
+            scaled_boundary_grad_outputs,
+            JTM,
+            "n ... d_out, d_out d_in k -> n ... d_in k",
+        )
+
+        JJTM_boundary = einsum(
+            JJTM_boundary,
+            boundary_inputs[idx],
+            "n ... d_in k, n ... d_in -> n k",
+        )
+
+        JJTM_interior = einsum(
+            scaled_interior_grad_outputs,
+            JTM,
+            "n ... d_out, d_out d_in k -> n ... d_in k",
+        )   
+
+        JJTM_interior = einsum(
+            JJTM_interior,
+            interior_inputs[idx],
+            "n ... d_in k, n ... d_in -> n k",
+        )   
+
+        JJTM = cat([JJTM_interior, JJTM_boundary], dim=0)
+
+        M_out.add_(JJTM)
+
+    return M_out
 
 
 def apply_joint_J(

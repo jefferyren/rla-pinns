@@ -15,6 +15,7 @@ from rla_pinns.optim.utils import (
     apply_joint_JT,
     compute_individual_JJT,
     compute_joint_JJT,
+    apply_joint_JJT,
     evaluate_losses_with_layer_inputs_and_grad_outputs,
 )
 from rla_pinns.train import (
@@ -106,8 +107,10 @@ def test_leading_eigenvalues_G_and_JJT(
     )
     JJT_interior = compute_individual_JJT(interior_inputs, interior_grad_outputs)
     JJT_boundary = compute_individual_JJT(boundary_inputs, boundary_grad_outputs)
+
     JJT = compute_joint_JJT(
-        interior_inputs, interior_grad_outputs, boundary_inputs, boundary_grad_outputs
+        interior_inputs, interior_grad_outputs, 
+        boundary_inputs, boundary_grad_outputs
     )
     assert JJT_interior.shape == (N_Omega, N_Omega)
     assert JJT_boundary.shape == (N_dOmega, N_dOmega)
@@ -127,6 +130,14 @@ def test_leading_eigenvalues_G_and_JJT(
         g_evals = g_evals.flip(0)[:effective_evals]
         jjt_evals = jjt_evals.flip(0)[:effective_evals]
         report_nonclose(g_evals, jjt_evals)
+
+    # Test the application joint JJT to a matrix
+    JJT_via_matvec = apply_joint_JJT(
+        interior_inputs, interior_grad_outputs, 
+        boundary_inputs, boundary_grad_outputs, 
+        eye(N_dOmega + N_Omega, device=device, dtype=dtype)
+    )
+    report_nonclose(JJT, JJT_via_matvec)
 
 
 LOSS_TYPE_CASES = ["interior", "boundary"]

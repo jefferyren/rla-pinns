@@ -17,8 +17,8 @@ from rla_pinns.wandb_utils import (
     show_sweeps,
 )
 
-entity = "rla-pinns"  # team name on wandb
-project = "poisson5d"  # name from the 'Projects' tab on wandb
+entity = "andresguzco"  # team name on wandb
+project = "rla-pinns"  # name from the 'Projects' tab on wandb
 
 # information for title
 equation = "poisson"
@@ -34,26 +34,23 @@ num_params = sum(
 print_sweeps = False
 if print_sweeps:
     show_sweeps(entity, project)
+    raise Exception("Printed sweeps. Exiting...")
+
 
 sweep_ids = {  # ids from the wandb agent
-    "goktsa9y": "SGD",
-    "m5kvgryh": "Adam",
-    "6588slns": "Hessian-free",
-    "65zicj58": "LBFGS",
-    "ht3rw3va": "ENGD (full)",
-    "wwqgphis": "ENGD (layer-wise)",
-    "h6dthg9h": "ENGD (diagonal)",
-    "maqfgxl2": "KFAC",
-    "5t4ff9ic": "KFAC*",
+    "gvk9gchy": "SGD",
+    "va174qk7": "Adam",
+    "14ls2uo2": "ENGD",
+    "2kt8hlmo": "ENGD (woodbury)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
 colors = {
     "SGD": sequential.Reds_4.mpl_colors[-2],
     "Adam": sequential.Reds_4.mpl_colors[-1],
-    "ENGD (full)": sequential.Blues_5.mpl_colors[-3],
+    "ENGD": sequential.Blues_5.mpl_colors[-3],
     "ENGD (layer-wise)": sequential.Blues_5.mpl_colors[-2],
-    "ENGD (diagonal)": sequential.Blues_5.mpl_colors[-1],
+    "ENGD (woodbury)": sequential.Blues_5.mpl_colors[-1],
     "Hessian-free": sequential.Greens_4.mpl_colors[-2],
     "LBFGS": sequential.Greens_4.mpl_colors[-1],
     "KFAC": "black",
@@ -63,9 +60,9 @@ colors = {
 linestyles = {
     "SGD": "-",
     "Adam": "-",
-    "ENGD (full)": "-",
+    "ENGD": "-",
     "ENGD (layer-wise)": "-",
-    "ENGD (diagonal)": "-",
+    "ENGD (woodbury)": "-",
     "Hessian-free": "-",
     "LBFGS": "-",
     "KFAC": "-",
@@ -138,16 +135,16 @@ if __name__ == "__main__":
             plt.savefig(path.join(HEREDIR, f"{y}_over_{x}.pdf"), bbox_inches="tight")
 
     # export sweep and run descriptions to LaTeX
-    TEXDIR = path.join(HEREDIR, "tex")
-    makedirs(TEXDIR, exist_ok=True)
+    # TEXDIR = path.join(HEREDIR, "tex")
+    # makedirs(TEXDIR, exist_ok=True)
 
-    if args.update:  # only if online access is possible
-        for sweep_id in sweep_ids:
-            _, meta = load_best_run(entity, project, sweep_id, savedir=DATADIR)
-            sweep_args = meta.to_dict()["config"][0]
-            WandbRunFormatter.to_tex(TEXDIR, sweep_args)
+    # if args.update:  # only if online access is possible
+    #     for sweep_id in sweep_ids:
+    #         _, meta = load_best_run(entity, project, sweep_id, savedir=DATADIR)
+    #         sweep_args = meta.to_dict()["config"][0]
+    #         WandbRunFormatter.to_tex(TEXDIR, sweep_args)
 
-        for sweep in show_sweeps(entity, project):
-            WandbSweepFormatter.to_tex(TEXDIR, sweep.config)
-    else:
-        print("Skipping LaTeX export of sweeps and best runs.")
+    #     for sweep in show_sweeps(entity, project):
+    #         WandbSweepFormatter.to_tex(TEXDIR, sweep.config)
+    # else:
+    #     print("Skipping LaTeX export of sweeps and best runs.")

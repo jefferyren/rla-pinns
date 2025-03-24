@@ -1,8 +1,17 @@
 # Launch all sweeps using the sbatch command
 cd sweeps/
 
-# launch each script
+# Benchamrks
 # sbatch SGD.sh
 # sbatch Adam.sh
-sbatch ENGD.sh
-# sbatch RNGD.sh
+# sbatch ENGD.sh
+
+# Woodbury ENGD
+# sbatch ENGD_woodbury_exact.sh
+# sbatch ENGD_woodbury_naive.sh
+# sbatch ENGD_woodbury_nystrom.sh
+
+# Spring
+sbatch SPRING_exact.sh
+# sbatch SPRING_naive.sh
+# sbatch SPRING_nystrom.sh
