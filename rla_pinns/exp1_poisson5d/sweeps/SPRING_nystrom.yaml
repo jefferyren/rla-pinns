@@ -12,7 +12,7 @@ command:
 metric:
     goal: minimize
     name: l2_error
-method: grid
+method: random
 parameters:
     batch_frequency:
         value: 1

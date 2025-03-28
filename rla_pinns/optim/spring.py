@@ -5,7 +5,7 @@ from math import sqrt
 from typing import List, Tuple
 
 from torch import Tensor, arange, cat, cholesky_solve, zeros_like
-from torch.linalg import cholesky
+from torch.linalg import cholesky, inv
 from torch.nn import Module
 from torch.optim import Optimizer
 
@@ -234,7 +234,8 @@ class SPRING(Optimizer):
         zeta: Tensor = epsilon - O_phi.mul_(decay_factor)
 
         # apply inverse of damped OOT to zeta
-        step = cholesky_solve(zeta.unsqueeze(-1), cholesky(OOT))
+        # step = cholesky_solve(zeta.unsqueeze(-1), cholesky(OOT))
+        step = inv(OOT) @ zeta.unsqueeze(-1)
 
         # apply OT
         step = [

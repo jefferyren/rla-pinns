@@ -42,6 +42,11 @@ sweep_ids = {  # ids from the wandb agent
     "va174qk7": "Adam",
     "14ls2uo2": "ENGD",
     "2kt8hlmo": "ENGD (woodbury)",
+    "2kt8hlmo": "Nystrom ENGD (50%)",
+    "2kt8hlmo": "Nystrom ENGD (10%)",
+    "nl1utjg2": "SPRING",
+    "nl1utjg2": "Nystrom SPRING (50%)",
+    "nl1utjg2": "Nystrom SPRING (10%)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
@@ -53,7 +58,7 @@ colors = {
     "ENGD (woodbury)": sequential.Blues_5.mpl_colors[-1],
     "Hessian-free": sequential.Greens_4.mpl_colors[-2],
     "LBFGS": sequential.Greens_4.mpl_colors[-1],
-    "KFAC": "black",
+    "SPRING": "black",
     "KFAC*": "black",
 }
 
@@ -65,7 +70,7 @@ linestyles = {
     "ENGD (woodbury)": "-",
     "Hessian-free": "-",
     "LBFGS": "-",
-    "KFAC": "-",
+    "SPRING": "-",
     "KFAC*": "dashed",
 }
 

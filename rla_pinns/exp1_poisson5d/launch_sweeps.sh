@@ -5,13 +5,18 @@ cd sweeps/
 # sbatch SGD.sh
 # sbatch Adam.sh
 # sbatch ENGD.sh
+# sbatch SPRING.sh
 
 # Woodbury ENGD
-# sbatch ENGD_woodbury_exact.sh
-# sbatch ENGD_woodbury_naive.sh
-# sbatch ENGD_woodbury_nystrom.sh
+sbatch ENGD_woodbury_exact.sh
+# sbatch ENGD_woodbury_naive_10.sh
+# sbatch ENGD_woodbury_naive_50.sh
+# sbatch ENGD_woodbury_nystrom_10.sh
+# sbatch ENGD_woodbury_nystrom_50.sh
 
 # Spring
 sbatch SPRING_exact.sh
-# sbatch SPRING_naive.sh
-# sbatch SPRING_nystrom.sh
+# sbatch SPRING_naive_10.sh
+# sbatch SPRING_naive_50.sh
+# sbatch SPRING_nystrom_10.sh
+# sbatch SPRING_nystrom_50.sh

@@ -26,6 +26,7 @@ from rla_pinns.optim.utils import (
     apply_joint_J,
     apply_joint_JT,
     compute_joint_JJT,
+    apply_joint_JJT
 )
 
 
@@ -49,13 +50,13 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
         f"--{prefix}rank_val",
         type=int,
         help="Low-rank approximation parameter.",
-        default=500,
+        default=0,
     )
     parser.add_argument(
         f"--{prefix}damping",
         type=float,
         help="Damping parameter.",
-        default=0.1,
+        default=1e-8,
     )
     parser.add_argument(
         f"--{prefix}eps",
@@ -66,9 +67,9 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
     parser.add_argument(
         f"--{prefix}approximation",
         type=str,
-        choices=["sketch_naive", "sketch_nystrom", "exact"],
+        choices=["naive", "nystrom", "exact"],
         help="Randomized method to approximate the range of a low-rank matrix.",
-        default="sketch_naive",
+        default="exact",
     )
     parser.add_argument(
         f"--{prefix}use_woodbury",
@@ -84,7 +85,7 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
     parser.add_argument(
         f"--{prefix}norm_constraint",
         type=float,
-        default=1e-3,
+        default=0.0,
         help="Norm constraint parameter for the SPRING step.",
     )
 
@@ -134,16 +135,17 @@ class RNGD(Optimizer):
         layers: List[Module],
         lr: float = 1e-3,
         equation: str = "poisson",
-        rank_val: int = 300,
         damping: float = 0.0,
-        eps: float = 1e-10,
-        approximation: str = "random_naive",
+        approximation: str = "exact",
+        rank_val: int = 0,
         use_woodbury: bool = True,
         momentum: float = 0.0,
-        norm_constraint: float = 1e-3,
+        norm_constraint: float = 0.0,
+        eps: float = 1e-10,
         *,
         maximize: bool = False,
     ):
+        
         params = sum((list(layer.parameters()) for layer in layers), [])
         defaults = dict(
             lr=lr,
@@ -188,24 +190,34 @@ class RNGD(Optimizer):
             raise ValueError("Only Woodbury is supported.")
 
         if approximation == "exact":
+            assert rank_val is None, "Rank value is not used with exact approximation."
             self._get_inv = self._exact_inv_damped_kernel
-        elif approximation == "sketch_naive":
+        elif approximation == "naive":
+            assert rank_val is int and rank_val > 0, "Rank value must be a positive integer."
             self._randomization = rsvd
             self._get_inv = self._sketch_inv_damped_kernel
-        elif approximation == "sketch_nystrom":
+        elif approximation == "nystrom":
+            assert rank_val > 0, "Rank value must be a positive integer."
+            assert eps > 0.0, "Epsilon must be positive."
             self._randomization = nystrom_approx
             self._get_inv = self._sketch_inv_damped_kernel
         else:
             raise ValueError(f"Randomization method {approximation} not supported.")
 
         if momentum != 0.0:
+            if lr == "grid_line_search":
+                assert norm_constraint == 0.0, "Norm constraint is not supported with grid line search."
+            else:
+                assert norm_constraint != 0.0, "Norm constraint is required with momentum."
+
             self._step_fn = self._spring_step
             # initialize phi
             (group,) = self.param_groups
             for p in group["params"]:
                 self.state[p]["phi"] = zeros_like(p)
         else:
-            self._step_fn = self._normal_step
+            assert norm_constraint == 0.0, "Norm constraint is not supported with ENGD."
+            self._step_fn = self._engd_step
 
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
@@ -230,7 +242,7 @@ class RNGD(Optimizer):
         N_Omega = X_Omega.shape[0]
         interior_residual = interior_residual.detach() / sqrt(N_Omega)
 
-        epsilon = torch.cat([interior_residual, boundary_residual]).flatten()
+        epsilon = -torch.cat([interior_residual, boundary_residual]).flatten()
         
         step = self._step_fn(
             interior_inputs,
@@ -248,19 +260,20 @@ class RNGD(Optimizer):
         (group,) = self.param_groups
         lr = group["lr"]
         params = group["params"]
+        momentum = group["momentum"]
 
         if isinstance(lr, float):
-            # norm_constraint = group["norm_constraint"]
-            # norm_phi = sum([(d**2).sum() for d in directions]).sqrt()
-            # scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
+            if momentum != 0.0:
+                norm_constraint = group["norm_constraint"]
+                norm_phi = sum([(d**2).sum() for d in directions]).sqrt()
+                scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
+            else:
+                scale = lr
 
             for p, d in zip(params, directions):
-                p.data.add_(d, alpha=-lr)
+                p.data.add_(d, alpha=scale)
         else:
             if lr[0] == "grid_line_search":
-
-                for d in directions:
-                    d.mul_(-1)
 
                 def f() -> Tensor:
                     """Closure to evaluate the loss.
@@ -314,6 +327,10 @@ class RNGD(Optimizer):
         self.S = S
         self.V = V
 
+        print(f"U shape: {self.U.shape}")
+        print(f"S shape: {self.S.shape}")
+        print(f"V shape: {self.V.shape}")
+
     def _exact_inv_damped_kernel(
         self,
         interior_inputs: Dict[int, Tensor],
@@ -331,7 +348,7 @@ class RNGD(Optimizer):
             interior_grad_outputs,
             boundary_inputs,
             boundary_grad_outputs
-        )
+        ).detach()
         
         idx = arange(JJT.shape[0], device=dev)
         JJT[idx, idx] = JJT.diag() + damping
@@ -347,10 +364,10 @@ class RNGD(Optimizer):
         boundary_grad_outputs: Dict[int, Tensor],
     ):
         (group,) = self.param_groups
-        params = group["params"]
-        damping = group["damping"]
         (dev,) = {p.device for p in params}
         (dt,) = {p.dtype for p in params}
+        params = group["params"]
+        damping = group["damping"]
 
         self._update_preconditioner(
             interior_inputs,
@@ -366,7 +383,7 @@ class RNGD(Optimizer):
         out.mul_(1 / damping)
         return out
 
-    def _normal_step(
+    def _engd_step(
         self,
         interior_inputs: Dict[int, Tensor],
         interior_grad_outputs: Dict[int, Tensor],
@@ -384,6 +401,7 @@ class RNGD(Optimizer):
             boundary_inputs,
             boundary_grad_outputs,
         )
+        print(f"Inverse shape: {inv.shape}")
         invR = inv @ residuals.unsqueeze(-1)
         step = [
             s.squeeze(-1)
@@ -426,7 +444,7 @@ class RNGD(Optimizer):
             [self.state[p]["phi"].unsqueeze(-1) for p in params],
         ).squeeze(-1)
 
-        zeta = residuals + J_phi.mul_(momentum)
+        zeta = residuals - J_phi.mul_(momentum)
         step = inv @ zeta.unsqueeze(-1)
 
         step = [
@@ -441,7 +459,7 @@ class RNGD(Optimizer):
         ]
 
         for p, s in zip(params, step):
-            self.state[p]["phi"].mul_(-momentum).add_(s)
+            self.state[p]["phi"].mul_(momentum).add_(s)
 
         step = [self.state[p]["phi"] for p in params]
         return step
@@ -524,14 +542,13 @@ def nystrom_approx(
     Omega = torch.randn(N_Omega + N_dOmega, l, dtype=dt, device=dev)
     Omega, _ = torch.linalg.qr(Omega)
 
-    JJT = compute_joint_JJT(
+    Y = apply_joint_JJT(
         interior_inputs,
         interior_grad_outputs,
         boundary_inputs,
-        boundary_grad_outputs
+        boundary_grad_outputs,
+        Omega
         )
-    Y = JJT @ Omega
-
 
     Y_v = Y + eps * Omega
     C = cholesky(Omega.T @ Y_v)
