@@ -222,70 +222,26 @@ def apply_joint_JJT(
         t.shape[0]
         for t in list(boundary_inputs.values()) + list(boundary_grad_outputs.values())
     }
-    M_interior, M_boundary = M.split([N_Omega, N_dOmega])
 
     M_out = torch.zeros_like(M)
 
     for idx in interior_inputs:
 
-        scaled_boundary_grad_outputs = boundary_grad_outputs[idx] * sqrt(N_dOmega)
-        scaled_interior_grad_outputs = interior_grad_outputs[idx] * sqrt(N_Omega)
-
-        # NOTE: the following operations are done in two einsums for performance reasons
-
-        JTM_boundary = einsum(
-            scaled_boundary_grad_outputs,
-            M_boundary,
-            "n ... d_out, n k -> n ... d_out k",
-        )
-
-        JTM_boundary = einsum(
-            JTM_boundary,
+        J_boundary = einsum(
+            # gradients are scaled by 1/N, but we need 1/√N for the outer product
+            boundary_grad_outputs[idx] * sqrt(N_dOmega),
             boundary_inputs[idx],
-            "n ... d_out k, n ... d_in-> d_out d_in k",
+            "n d_out, n d_in -> n d_out d_in",
         )
-
-        JTM_interior = einsum(
-            scaled_interior_grad_outputs,
-            M_interior,
-            "n ... d_out, n k -> n ... d_out k",
-        )
-
-        JTM_interior = einsum(
-            JTM_interior,
+        J_interior = einsum(
+            # gradients are scaled by 1/N, but we need 1/√N for the outer product
+            interior_grad_outputs[idx] * sqrt(N_Omega),
             interior_inputs[idx],
-            "n ... d_out k, n ... d_in-> d_out d_in k",
+            "n ... d_out, n ... d_in -> n d_out d_in",
         )
+        J = cat([J_interior, J_boundary], dim=0).flatten(start_dim=1)
 
-        JTM = JTM_boundary + JTM_interior
-
-        JJTM_boundary = einsum(
-            scaled_boundary_grad_outputs,
-            JTM,
-            "n ... d_out, d_out d_in k -> n ... d_in k",
-        )
-
-        JJTM_boundary = einsum(
-            JJTM_boundary,
-            boundary_inputs[idx],
-            "n ... d_in k, n ... d_in -> n k",
-        )
-
-        JJTM_interior = einsum(
-            scaled_interior_grad_outputs,
-            JTM,
-            "n ... d_out, d_out d_in k -> n ... d_in k",
-        )   
-
-        JJTM_interior = einsum(
-            JJTM_interior,
-            interior_inputs[idx],
-            "n ... d_in k, n ... d_in -> n k",
-        )   
-
-        JJTM = cat([JJTM_interior, JJTM_boundary], dim=0)
-
-        M_out.add_(JJTM)
+        M_out.add_(J @ (J.T @ M))
 
     return M_out
 

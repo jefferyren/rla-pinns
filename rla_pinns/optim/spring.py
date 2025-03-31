@@ -231,11 +231,10 @@ class SPRING(Optimizer):
             boundary_grad_outputs,
             [self.state[p]["phi"].unsqueeze(-1) for p in params],
         ).squeeze(-1)
-        zeta: Tensor = epsilon - O_phi.mul_(decay_factor)
+        zeta = epsilon - O_phi.mul_(decay_factor)
 
         # apply inverse of damped OOT to zeta
-        # step = cholesky_solve(zeta.unsqueeze(-1), cholesky(OOT))
-        step = inv(OOT) @ zeta.unsqueeze(-1)
+        step = cholesky_solve(zeta.unsqueeze(-1), cholesky(OOT))
 
         # apply OT
         step = [
@@ -297,3 +296,4 @@ class SPRING(Optimizer):
         loss_evaluator = self.LOSS_EVALUATORS[self.equation][loss_type]
         loss, _, _ = loss_evaluator(self.layers, X, y)
         return loss
+    

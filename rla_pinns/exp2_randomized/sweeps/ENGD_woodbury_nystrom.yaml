@@ -1,6 +1,6 @@
 entity: rla-pinns
 project: poisson5d_deepwide
-name: SPRING_exact
+name: ENGD_woodbury_nystrom
 program: ../../train.py
 command:
     - ${env}
@@ -29,15 +29,17 @@ parameters:
     N_dOmega:
         value: 500
     RNGD_approximation:
-        value: "exact"
+        value: "nystrom"
     RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-10
-        max: 1e-3
+        min: 1e-9
+        max: 1e-1
     RNGD_momentum:
-        distribution: uniform
-        min: 0.0
-        max: 0.999
+        value: 0.0
+    RNGD_norm_constraint:
+        value: 0.0
+    RNGD_rank_val:
+        value: 1750
     wandb_entity:
         value: "andresguzco"
     equation:

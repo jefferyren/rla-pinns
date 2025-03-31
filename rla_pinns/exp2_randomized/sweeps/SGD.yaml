@@ -1,18 +1,19 @@
 entity: rla-pinns
 project: poisson5d_deepwide
-name: ENGD_woodbury_naive
+name: SGD
 program: ../../train.py
 command:
     - ${env}
     - python
     - ${program}
     - "--wandb"
-    - "--optimizer=RNGD"
-    - ${args_no_boolean_flags}
+    - "--optimizer=SGD"
+    - ${args}
 metric:
     goal: minimize
     name: l2_error
 method: random
+run_cap: 50
 parameters:
     batch_frequency:
         value: 1
@@ -28,16 +29,10 @@ parameters:
         value: 3_000
     N_dOmega:
         value: 500
-    RNGD_approximation:
-        value: "sketch_naive"
-    RNGD_damping:
+    SGD_lr:
+        distribution: log_uniform_values
+        min: 1e-3
+        max: 1e-2
+    SGD_momentum:
         distribution: categorical
-        values: [1e-1, 5e-2, 1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5, 5e-6, 1e-6, 5e-7, 1e-7, 5e-8, 1e-8, 5e-9, 1e-9, 5e-10, 1e-10, 5e-11, 1e-11, 5e-12, 1e-12]
-    RNGD_momentum:
-        value: 0.0
-    RNGD_rank_val:
-        value: 1750
-    wandb_entity:
-        value: "andresguzco"
-    equation:
-        value: "poisson"
+        values: [0.0, 0.3, 0.6, 0.9]

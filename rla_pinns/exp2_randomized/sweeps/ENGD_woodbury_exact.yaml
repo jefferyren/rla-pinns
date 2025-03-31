@@ -1,42 +1,39 @@
-entity: andresguzco
-project: poisson
-name: poisson
+entity: rla-pinns
+project: poisson5d_deepwide
+name: ENGD_woodbury_exact
 program: ../../train.py
 command:
     - ${env}
     - python
     - ${program}
     - "--wandb"
-    - "--optimizer=Randomized"
-    - ${args}
+    - "--optimizer=RNGD"
+    - ${args_no_boolean_flags}
 metric:
     goal: minimize
     name: l2_error
 method: random
-run_cap: 50
 parameters:
     batch_frequency:
         value: 1
     boundary_condition:
         value: cos_sum
     model:
-        value: mlp-tanh-256-256-128-128
-    # num_seconds:
-    #     value: 3_000
+        value: mlp-tanh-64-64-48-48
+    num_seconds:
+        value: 7_000
     dim_Omega:
-        value: 10
+        value: 5
     N_Omega:
         value: 3_000
     N_dOmega:
-        value: 3_000
-    Randomized_lr:
-        value: "line search"
-    Randomized_rank_val:
-        value: 300
-    Randomized_dampening:
-        value: 0.1
-    wandb_project:
-        value: "poisson"
+        value: 500
+    RNGD_approximation:
+        value: "exact"
+    RNGD_damping:
+        distribution: log_uniform_values
+        min: 1e-15
+        max: 1e-5
     wandb_entity:
         value: "andresguzco"
     equation:

@@ -1,18 +1,18 @@
 entity: rla-pinns
 project: poisson5d_deepwide
-name: ENGD_woodbury_naive
+name: HessianFree
 program: ../../train.py
 command:
     - ${env}
     - python
     - ${program}
     - "--wandb"
-    - "--optimizer=RNGD"
+    - "--optimizer=HessianFree"
     - ${args_no_boolean_flags}
 metric:
     goal: minimize
     name: l2_error
-method: random
+method: grid
 parameters:
     batch_frequency:
         value: 1
@@ -21,23 +21,22 @@ parameters:
     model:
         value: mlp-tanh-64-64-48-48
     num_seconds:
-        value: 7_000
+        value: 3_000
     dim_Omega:
         value: 5
     N_Omega:
         value: 3_000
     N_dOmega:
         value: 500
-    RNGD_approximation:
-        value: "sketch_naive"
-    RNGD_damping:
+    HessianFree_curvature_opt:
         distribution: categorical
-        values: [1e-1, 5e-2, 1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5, 5e-6, 1e-6, 5e-7, 1e-7, 5e-8, 1e-8, 5e-9, 1e-9, 5e-10, 1e-10, 5e-11, 1e-11, 5e-12, 1e-12]
-    RNGD_momentum:
-        value: 0.0
-    RNGD_rank_val:
-        value: 1750
-    wandb_entity:
-        value: "andresguzco"
-    equation:
-        value: "poisson"
+        values: ["ggn"]
+    HessianFree_damping:
+        distribution: categorical
+        values: [100, 50, 10, 5, 1.0, 5e-1, 1e-1, 5e-2]
+    HessianFree_no_adapt_damping:
+        distribution: categorical
+        values: [false]
+    HessianFree_cg_max_iter:
+        distribution: categorical
+        values: [100, 150, 200, 250, 300, 350]

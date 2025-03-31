@@ -1,13 +1,13 @@
 entity: rla-pinns
 project: poisson5d_deepwide
-name: SPRING
+name: ENGD_woodbury_nystrom
 program: ../../train.py
 command:
     - ${env}
     - python
     - ${program}
     - "--wandb"
-    - "--optimizer=SPRING"
+    - "--optimizer=RNGD"
     - ${args_no_boolean_flags}
 metric:
     goal: minimize
@@ -19,7 +19,7 @@ parameters:
     boundary_condition:
         value: cos_sum
     model:
-        value: mlp-tanh-64-48-32-16
+        value: mlp-tanh-64-64-48-48
     num_seconds:
         value: 7_000
     dim_Omega:
@@ -28,15 +28,19 @@ parameters:
         value: 3_000
     N_dOmega:
         value: 500
-    SPRING_damping:
+    RNGD_approximation:
+        value: "nystrom"
+    RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-12
-        max: 1e-3
-    SPRING_decay_factor:
-        distribution: uniform
-        min: 0.8
-        max: 0.999
-    SPRING_norm_constraint:
-        distribution: uniform
-        min: 1e-8
-        max: 1e-2
+        min: 1e-9
+        max: 1e-1
+    RNGD_momentum:
+        value: 0.0
+    RNGD_norm_constraint:
+        value: 0.0
+    RNGD_rank_val:
+        value: 1750
+    wandb_entity:
+        value: "andresguzco"
+    equation:
+        value: "poisson"
