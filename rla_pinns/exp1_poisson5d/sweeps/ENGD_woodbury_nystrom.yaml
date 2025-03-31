@@ -39,7 +39,7 @@ parameters:
     RNGD_norm_constraint:
         value: 0.0
     RNGD_rank_val:
-        value: 1750
+        value: 875
     wandb_entity:
         value: "andresguzco"
     equation:
