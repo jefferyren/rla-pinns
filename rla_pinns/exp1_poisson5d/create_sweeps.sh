@@ -9,7 +9,8 @@
 
 # WOODBURY ENGD
 # python ../yaml_to_sh.py sweeps/ENGD_woodbury_exact.yaml sweeps/ENGD_woodbury_exact.sh --qos=m2 --array=50
-python ../yaml_to_sh.py sweeps/ENGD_woodbury_nystrom.yaml sweeps/ENGD_woodbury_nystrom.sh --qos=m4 --array=50
+# python ../yaml_to_sh.py sweeps/ENGD_woodbury_nystrom.yaml sweeps/ENGD_woodbury_nystrom.sh --qos=m4 --array=50
 
 # SPRING
 # python ../yaml_to_sh.py sweeps/SPRING_exact.yaml sweeps/SPRING_exact.sh --qos=m3 --array=50
+python ../yaml_to_sh.py sweeps/SPRING_nystrom.yaml sweeps/SPRING_nystrom.sh --qos=m3 --array=50

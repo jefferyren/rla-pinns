@@ -42,11 +42,10 @@ sweep_ids = {  # ids from the wandb agent
     "va174qk7": "Adam",
     "14ls2uo2": "ENGD",
     "tdrcxk6g": "Hessian-free",
-    "xg6x6380": "ENGD (woodbury)",
-    "2n4emiug": "ENGD (Nystrom)",
-    # "2kt8hlmo": "Nystrom ENGD (10%)",
-    "jgyb40wk": "SPRING",
-    # "nl1utjg2": "Nystrom SPRING (50%)",
+    "4z3fie3c": "ENGD (woodbury)",
+    "jab1da9d": "ENGD (Nystrom)",
+    "c7h5qqbj": "SPRING",
+    # "8ebw6gkq": "SPRING (Nystrom)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
@@ -56,10 +55,9 @@ colors = {
     "ENGD": sequential.Blues_5.mpl_colors[-3],
     "ENGD (woodbury)": sequential.Blues_5.mpl_colors[-1],
     "ENGD (Nystrom)": sequential.Blues_5.mpl_colors[-2],
-    "Hessian-free": sequential.Greens_4.mpl_colors[-2],
-    "LBFGS": sequential.Greens_4.mpl_colors[-1],
-    "SPRING": "black",
-    "KFAC*": "black",
+    "SPRING": sequential.Greens_4.mpl_colors[-2],
+    "SPRING (Nystrom)": sequential.Greens_4.mpl_colors[-1],
+    "Hessian-free": "black",
 }
 
 linestyles = {
@@ -68,10 +66,9 @@ linestyles = {
     "ENGD": "-",
     "ENGD (woodbury)": "-",
     "ENGD (Nystrom)": "-",
-    "Hessian-free": "-",
-    "LBFGS": "-",
     "SPRING": "-",
-    "KFAC*": "dashed",
+    "SPRING (Nystrom)": "-",
+    "Hessian-free": "-",
 }
 
 HEREDIR = path.dirname(path.abspath(__file__))
