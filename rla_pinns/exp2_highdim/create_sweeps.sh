@@ -1,5 +1,16 @@
 # Generate sweeps for all yaml config files
 # NOTE: This is usually only necessary once
-# python yaml_to_sh.py sweeps/poisson.yaml sweeps/poisson.sh --qos=m3 --array_max_active=5 --array=1
-python yaml_to_sh.py sweeps/heat.yaml sweeps/heat.sh --qos=m3 --array_max_active=5 --array=1
 
+# BENCHMARKS
+# python ../yaml_to_sh.py sweeps/SGD.yaml sweeps/SGD.sh --qos=m3
+# python ../yaml_to_sh.py sweeps/Adam.yaml sweeps/Adam.sh --qos=m4
+# python ../yaml_to_sh.py sweeps/ENGD.yaml sweeps/ENGD.sh --qos=m4
+# python ../yaml_to_sh.py sweeps/HessianFree.yaml sweeps/HessianFree.sh --qos=m3
+
+# WOODBURY ENGD
+# python ../yaml_to_sh.py sweeps/ENGD_woodbury_exact.yaml sweeps/ENGD_woodbury_exact.sh --qos=m2 --array=50
+# python ../yaml_to_sh.py sweeps/ENGD_woodbury_nystrom.yaml sweeps/ENGD_woodbury_nystrom.sh --qos=m4 --array=50
+
+# SPRING
+# python ../yaml_to_sh.py sweeps/SPRING_exact.yaml sweeps/SPRING_exact.sh --qos=m3 --array=50
+python ../yaml_to_sh.py sweeps/SPRING_nystrom.yaml sweeps/SPRING_nystrom.sh --qos=m3 --array=50

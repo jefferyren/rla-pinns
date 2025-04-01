@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: poisson5d_deepwide
+project: poisson100d
 name: HessianFree
 program: ../../train.py
 command:
@@ -12,31 +12,32 @@ command:
 metric:
     goal: minimize
     name: l2_error
-method: grid
+method: random
 parameters:
-    batch_frequency:
-        value: 1
     boundary_condition:
-        value: cos_sum
+        value: u_weinan_norm
     model:
-        value: mlp-tanh-64-64-48-48
+        value: mlp-tanh-768-768-512-512
     num_seconds:
-        value: 3_000
+        value: 10_000
     dim_Omega:
-        value: 5
+        value: 100
     N_Omega:
         value: 3_000
     N_dOmega:
         value: 500
+    batch_frequency:
+        value: 1
     HessianFree_curvature_opt:
         distribution: categorical
-        values: ["ggn"]
+        values: ["ggn", "hessian"]
     HessianFree_damping:
-        distribution: categorical
-        values: [100, 50, 10, 5, 1.0, 5e-1, 1e-1, 5e-2]
+        distribution: log_uniform_values
+        min: 1e-10
+        max: 1e3
     HessianFree_no_adapt_damping:
         distribution: categorical
-        values: [false]
+        values: [false, true]
     HessianFree_cg_max_iter:
-        distribution: categorical
-        values: [100, 150, 200, 250, 300, 350]
+        min: 1
+        max: 500
