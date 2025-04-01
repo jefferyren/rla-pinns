@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: poisson100d
-name: ENGD_woodbury_exact
+project: poisson5d_highnoise
+name: ENGD_woodbury_nystrom
 program: ../../train.py
 command:
     - ${env}
@@ -17,27 +17,29 @@ parameters:
     batch_frequency:
         value: 1
     boundary_condition:
-        value: u_weinan_norm
+        value: cos_sum
     model:
-        value: mlp-tanh-768-768-512-512
+        value: mlp-tanh-64-64-48-48
     num_seconds:
-        value: 10_000
+        value: 7_000
     dim_Omega:
-        value: 100
+        value: 5
     N_Omega:
-        value: 3_000
+        value: 1_500
     N_dOmega:
-        value: 500
+        value: 250
     RNGD_approximation:
-        value: "exact"
+        value: "nystrom"
     RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-12
-        max: 1e-0
+        min: 1e-9
+        max: 1e-1
     RNGD_momentum:
         value: 0.0
     RNGD_norm_constraint:
         value: 0.0
+    RNGD_rank_val:
+        value: 875
     wandb_entity:
         value: "andresguzco"
     equation:
