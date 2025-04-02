@@ -42,7 +42,5 @@ parameters:
         value: 0.0
     RNGD_rank_val:
         value: 875
-    wandb_entity:
-        value: "andresguzco"
     equation:
         value: "poisson"

@@ -34,7 +34,5 @@ parameters:
         distribution: log_uniform_values
         min: 1e-15
         max: 1e-5
-    wandb_entity:
-        value: "andresguzco"
     equation:
         value: "poisson"

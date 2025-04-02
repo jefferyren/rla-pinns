@@ -393,6 +393,7 @@ class RNGD(Optimizer):
 def exact(apply_A, N, dt, dev, *kwargs) -> Tuple[Tensor, Tensor]:
     I = torch.eye(N, dtype=dt, device=dev)
     A = apply_A(I)
+    ####
     return A
 
 
