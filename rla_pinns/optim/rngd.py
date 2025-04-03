@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Callable
 
 import torch
 from functools import partial
@@ -174,10 +174,10 @@ class RNGD(Optimizer):
 
         if approximation == "exact":
             assert rank_val == 0 or rank_val is None, "Rank value is not used with exact approximation. Has to be zero or None."
-            self._approximation = exact
+            self._get_inverse = self._inv_exact
         elif approximation == "nystrom":
             assert rank_val > 0, "Rank value must be a positive integer."
-            self._approximation = nystrom_naive
+            self._get_inverse = self._inv_sketch
         else:
             raise ValueError(f"Randomization method {approximation} not supported.")
 
@@ -306,12 +306,9 @@ class RNGD(Optimizer):
             boundary_inputs,
             boundary_grad_outputs
         )
-        JJT = self._approximation(fn, N_Omega + N_dOmega, dt, dev, self.l)
+        inv = self._get_inverse(fn, N_Omega + N_dOmega, dt, dev, self.l, damping) 
 
-        idx = arange(N_Omega + N_dOmega, device=dev)
-        JJT[idx, idx] = JJT.diag() + damping    
-
-        step = cholesky_solve(residuals.unsqueeze(-1), cholesky(JJT))
+        step = inv @ residuals.unsqueeze(-1)
         step = [
             s.squeeze(-1)
             for s in apply_joint_JT(
@@ -356,11 +353,7 @@ class RNGD(Optimizer):
             boundary_inputs,
             boundary_grad_outputs
         )
-        JJT = self._approximation(fn, N_Omega + N_dOmega, dt, dev, self.l)
-
-        idx = arange(N_Omega + N_dOmega, device=dev)
-        JJT[idx, idx] = JJT.diag() + damping    
-
+        inv = self._get_inverse(fn, N_Omega + N_dOmega, dt, dev, self.l, damping)
         J_phi = apply_joint_J(
             interior_inputs,
             interior_grad_outputs,
@@ -370,7 +363,7 @@ class RNGD(Optimizer):
         ).squeeze(-1)
 
         zeta = residuals - J_phi.mul_(momentum)
-        step = cholesky_solve(zeta.unsqueeze(-1), cholesky(JJT))
+        step = inv @ zeta.unsqueeze(-1)
 
         step = [
             s.squeeze(-1)
@@ -388,20 +381,76 @@ class RNGD(Optimizer):
 
         step = [self.state[p]["phi"] for p in params]
         return step
+
+    @staticmethod
+    def _inv_sketch(
+        fn: Callable[[Tensor], Tensor],
+        N: int,
+        dt,
+        dev,
+        l: int,
+        damping: float
+    ):  
+        U, S = nystrom_stable(fn, N, l, dt, dev)
+        lhs = U @ torch.diag(1 / (S + damping)) @ U.T
+        idx = torch.arange(0, N, device=dev)
+        arg = -(U @ U.T)
+        arg[idx, idx] = arg.diag() + 1
+        rhs = arg / damping
+        out = lhs + rhs
+
+        return out
+    
+    @staticmethod
+    def _inv_exact(
+        fn: Callable[[Tensor], Tensor],
+        N: int,
+        dt,
+        dev,
+        l: int,
+        damping: float
+    ):
+        JJT = exact(fn, N, 0, dt, dev)
+        I = torch.eye(N, dtype=dt, device=dev)
+        out = torch.linalg.solve(JJT + I * damping, I)
+        return out
     
 
-def exact(apply_A, N, dt, dev, *kwargs) -> Tuple[Tensor, Tensor]:
+def exact(apply_A, N, _, dt, dev) -> Tuple[Tensor, Tensor]:
     I = torch.eye(N, dtype=dt, device=dev)
     A = apply_A(I)
     ####
     return A
 
 
-def nystrom_naive(apply_A, N, dt, dev, l) -> Tuple[Tensor, Tensor]:
-    Omega = torch.randn(N, l, dtype=dt, device=dev)
+def nystrom_naive(apply_A, dim, sketch_size, dt, dev) -> Tuple[Tensor, Tensor]:
+    Omega = torch.randn(dim, sketch_size, dtype=dt, device=dev)
     Omega, _ = qr(Omega)
     AO = apply_A(Omega)
     OAO = Omega.T @ AO
     B = cholesky_solve(AO.T, cholesky(OAO))
     A_hat = AO @ B
     return A_hat
+
+
+def nystrom_stable(
+    A: Callable[[Tensor], Tensor],
+    dim: int,
+    sketch_size,
+    dt, dev,
+) -> Tensor:
+    """Compute a stable Nystrom approximation."""
+    O = torch.randn(dim, sketch_size, device=dev, dtype=dt)
+    O, _ = qr(O)
+    Y = A(O)
+
+    nu = 1e-7
+
+    Y.add_(O, alpha=nu)
+    C = cholesky(O.T @ Y, upper=True)
+
+    B = torch.linalg.solve_triangular(C, Y, upper=True, left=False)
+    U, Sigma, _ = torch.linalg.svd(B, full_matrices=False)
+    Lambda = (Sigma**2 - nu).clamp(min=0.0)
+
+    return U, Lambda
