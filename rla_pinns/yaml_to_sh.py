@@ -85,8 +85,6 @@ if __name__ == "__main__":
         "wandb",
         "sweep",
         f"--name={args.sweep_name}",
-        "--entity=andresguzco",
-        "--project=rla-pinns",
         args.yaml_file,
     ]
 
