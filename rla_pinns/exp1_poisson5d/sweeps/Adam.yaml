@@ -1,4 +1,4 @@
-entity: rla-pinns
+entity: aguzmanc-org
 project: poisson5d_deepwide
 name: Adam
 program: ../../train.py

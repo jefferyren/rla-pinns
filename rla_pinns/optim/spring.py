@@ -53,7 +53,7 @@ def parse_SPRING_args(verbose: bool = False, prefix="SPRING_") -> Namespace:
         default=1e-3,
     )
     parser.add_argument(
-        f"--{prefix}decay_factor",
+        f"--{prefix}momentum",
         type=float,
         help="Decay factor of the previous step.",
         default=0.99,
@@ -122,7 +122,7 @@ class SPRING(Optimizer):
         layers: List[Module],
         lr: float,
         damping: float = 1e-3,
-        decay_factor: float = 0.99,
+        momentum: float = 0.99,
         norm_constraint: float = 1e-3,
         equation: str = "poisson",
     ):
@@ -147,7 +147,7 @@ class SPRING(Optimizer):
         defaults = dict(
             lr=lr,
             damping=damping,
-            decay_factor=decay_factor,
+            decay_factor=momentum,
             norm_constraint=norm_constraint,
         )
         params = sum((list(layer.parameters()) for layer in layers), [])
