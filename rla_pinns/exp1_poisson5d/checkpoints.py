@@ -1,11 +1,12 @@
 from os import path
 from glob import glob
 from torch import load
+from torch.linalg import eigvalsh
 from tueplots import bundles
 from torch.nn import Sequential
+from palettable.colorbrewer import sequential
 from argparse import ArgumentParser
 from matplotlib import pyplot as plt
-from scipy.sparse.linalg import eigvalsh
 from rla_pinns.train import set_up_layers
 from rla_pinns.optim.utils import compute_joint_JJT
 
@@ -100,7 +101,12 @@ def main():
         default="sweeps/checkpoints",
         help="Directory containing checkpoints that should be visualized.",
     )
-
+    parser.add_argument(
+        "--disable_tex",
+        action="store_true",
+        default=False,
+        help="Disable TeX rendering in matplotlib.",
+    )
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
 
@@ -136,8 +142,9 @@ def main():
     # Plot all effective dimensions for a given experiment
     HEREDIR = path.dirname(path.abspath(__file__))
     with plt.rc_context(
-        bundles.neurips2024(rel_width=1.0, usetex=not args.disable_tex)
+        bundles.neurips2023(rel_width=1.0, usetex=not args.disable_tex)
     ):
+        print(equation, dim_Omega, num_params)
         fig, ax = plt.subplots(1, 1)
         ax.set_xlabel("Steps")
         ax.set_ylabel("Efective dimension")

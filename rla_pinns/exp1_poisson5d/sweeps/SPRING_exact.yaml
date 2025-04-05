@@ -24,7 +24,7 @@ parameters:
     model:
         value: mlp-tanh-64-64-48-48
     num_seconds:
-        value: 7_000
+        value: 3_000
     dim_Omega:
         value: 5
     N_Omega:
