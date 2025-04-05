@@ -1,36 +1,37 @@
 entity: rla-pinns
-project: exp1_poisson5d
-name: ENGD_woodbury_exact
+project: exp6_log_fokker_planck_9d
+name: Adam
 program: ../../train.py
 command:
     - ${env}
     - python
     - ${program}
     - "--wandb"
-    - "--optimizer=RNGD"
-    - ${args_no_boolean_flags}
+    - "--optimizer=Adam"
+    - ${args}
 metric:
     goal: minimize
     name: l2_error
 method: random
+run_cap: 50
 parameters:
+    equation:
+        value: log-fokker-planck-isotropic
+    boundary_condition:
+        value: gaussian
     batch_frequency:
         value: 1
-    boundary_condition:
-        value: cos_sum
     model:
-        value: mlp-tanh-64-64-48-48
+        value: mlp-tanh-256-256-128-128
     num_seconds:
-        value: 7_000
+        value: 6_000
     dim_Omega:
-        value: 5
+        value: 9
     N_Omega:
         value: 3_000
     N_dOmega:
-        value: 500
-    RNGD_approximation:
-        value: "exact"
-    RNGD_damping:
+        value: 1_000
+    Adam_lr:
         distribution: log_uniform_values
-        min: 1e-15
-        max: 1e-5
+        min: 5e-5
+        max: 5e-3

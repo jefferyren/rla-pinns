@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: exp1_poisson5d
+project: exp3_smallbatch
 name: SPRING_exact
 program: ../../train.py
 command:
@@ -25,9 +25,9 @@ parameters:
     dim_Omega:
         value: 5
     N_Omega:
-        value: 3_000
+        value: 1_500
     N_dOmega:
-        value: 500
+        value: 250
     RNGD_approximation:
         value: "nystrom"
     RNGD_damping:
@@ -42,3 +42,5 @@ parameters:
         value: 0.0
     RNGD_rank_val:
         value: 875
+    equation:
+        value: "poisson"

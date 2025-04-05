@@ -1,18 +1,19 @@
 entity: rla-pinns
-project: exp1_poisson5d
-name: SPRING_exact
+project: exp3_smallbatch
+name: SGD
 program: ../../train.py
 command:
     - ${env}
     - python
     - ${program}
     - "--wandb"
-    - "--optimizer=RNGD"
-    - ${args_no_boolean_flags}
+    - "--optimizer=SGD"
+    - ${args}
 metric:
     goal: minimize
     name: l2_error
 method: random
+run_cap: 50
 parameters:
     batch_frequency:
         value: 1
@@ -25,20 +26,13 @@ parameters:
     dim_Omega:
         value: 5
     N_Omega:
-        value: 3_000
+        value: 1_500
     N_dOmega:
-        value: 500
-    RNGD_approximation:
-        value: "nystrom"
-    RNGD_damping:
+        value: 250
+    SGD_lr:
         distribution: log_uniform_values
-        min: 1e-9
-        max: 1e-1
-    RNGD_momentum:
-        distribution: uniform
-        min: 0.0
-        max: 0.999
-    RNGD_norm_constraint:
-        value: 0.0
-    RNGD_rank_val:
-        value: 875
+        min: 1e-3
+        max: 1e-2
+    SGD_momentum:
+        distribution: categorical
+        values: [0.0, 0.3, 0.6, 0.9]
