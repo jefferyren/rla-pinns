@@ -109,8 +109,7 @@ def test_leading_eigenvalues_G_and_JJT(
     JJT_boundary = compute_individual_JJT(boundary_inputs, boundary_grad_outputs)
 
     JJT = compute_joint_JJT(
-        interior_inputs, interior_grad_outputs, 
-        boundary_inputs, boundary_grad_outputs
+        interior_inputs, interior_grad_outputs, boundary_inputs, boundary_grad_outputs
     )
     assert JJT_interior.shape == (N_Omega, N_Omega)
     assert JJT_boundary.shape == (N_dOmega, N_dOmega)
@@ -133,9 +132,11 @@ def test_leading_eigenvalues_G_and_JJT(
 
     # Test the application joint JJT to a matrix
     JJT_via_matvec = apply_joint_JJT(
-        interior_inputs, interior_grad_outputs, 
-        boundary_inputs, boundary_grad_outputs, 
-        eye(N_dOmega + N_Omega, device=device, dtype=dtype)
+        interior_inputs,
+        interior_grad_outputs,
+        boundary_inputs,
+        boundary_grad_outputs,
+        eye(N_dOmega + N_Omega, device=device, dtype=dtype),
     )
     report_nonclose(JJT, JJT_via_matvec)
 

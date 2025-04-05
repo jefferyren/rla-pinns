@@ -2,7 +2,7 @@
 # NOTE: This is usually only necessary once
 
 # BENCHMARKS
-python ../yaml_to_sh.py sweeps/SGD.yaml sweeps/SGD.sh --qos=normal
+python ../yaml_to_sh.py sweeps/SGD.yaml sweeps/SGD.sh --qos=m2
 # python ../yaml_to_sh.py sweeps/Adam.yaml sweeps/Adam.sh --qos=normal
 # python ../yaml_to_sh.py sweeps/ENGD.yaml sweeps/ENGD.sh --qos=m
 # python ../yaml_to_sh.py sweeps/HessianFree.yaml sweeps/HessianFree.sh --qos=m
@@ -14,3 +14,4 @@ python ../yaml_to_sh.py sweeps/SGD.yaml sweeps/SGD.sh --qos=normal
 # SPRING
 # python ../yaml_to_sh.py sweeps/SPRING_exact.yaml sweeps/SPRING_exact.sh --qos=m4 --array=50
 # python ../yaml_to_sh.py sweeps/SPRING_nystrom.yaml sweeps/SPRING_nystrom.sh --qos=m4 --array=50
+

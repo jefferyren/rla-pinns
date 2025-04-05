@@ -86,7 +86,9 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
         setattr(args, lr, float(getattr(args, lr)))
 
     if getattr(args, lr) == "grid_line_search":
-        assert args.RNGD_norm_constraint == 0.0, "Norm constraint is not supported with grid line search."
+        assert (
+            args.RNGD_norm_constraint == 0.0
+        ), "Norm constraint is not supported with grid line search."
         # generate the grid from the command line arguments and overwrite the
         # `lr` entry with a tuple containing the grid
         grid = parse_grid_line_search_args(verbose=verbose)
@@ -133,7 +135,7 @@ class RNGD(Optimizer):
         *,
         maximize: bool = False,
     ):
-        
+
         params = sum((list(layer.parameters()) for layer in layers), [])
         defaults = dict(
             lr=lr,
@@ -173,7 +175,9 @@ class RNGD(Optimizer):
         self._approximation = approximation
 
         if approximation == "exact":
-            assert rank_val == 0 or rank_val is None, "Rank value is not used with exact approximation. Has to be zero or None."
+            assert (
+                rank_val == 0 or rank_val is None
+            ), "Rank value is not used with exact approximation. Has to be zero or None."
             self._get_inverse = self._inv_exact
         elif approximation == "nystrom":
             assert rank_val > 0, "Rank value must be a positive integer."
@@ -214,7 +218,7 @@ class RNGD(Optimizer):
         interior_residual = interior_residual.detach() / sqrt(N_Omega)
 
         epsilon = -torch.cat([interior_residual, boundary_residual]).flatten()
-        
+
         step = self._step_fn(
             interior_inputs,
             interior_grad_outputs,
@@ -292,11 +296,13 @@ class RNGD(Optimizer):
         (dt,) = {p.dtype for p in params}
         (N_Omega,) = {
             t.shape[0]
-            for t in list(interior_inputs.values()) + list(interior_grad_outputs.values())
+            for t in list(interior_inputs.values())
+            + list(interior_grad_outputs.values())
         }
         (N_dOmega,) = {
             t.shape[0]
-            for t in list(boundary_inputs.values()) + list(boundary_grad_outputs.values())
+            for t in list(boundary_inputs.values())
+            + list(boundary_grad_outputs.values())
         }
 
         fn = partial(
@@ -304,9 +310,9 @@ class RNGD(Optimizer):
             interior_inputs,
             interior_grad_outputs,
             boundary_inputs,
-            boundary_grad_outputs
+            boundary_grad_outputs,
         )
-        inv = self._get_inverse(fn, N_Omega + N_dOmega, dt, dev, self.l, damping) 
+        inv = self._get_inverse(fn, N_Omega + N_dOmega, dt, dev, self.l, damping)
 
         step = inv @ residuals.unsqueeze(-1)
         step = [
@@ -339,11 +345,13 @@ class RNGD(Optimizer):
         (dt,) = {p.dtype for p in params}
         (N_Omega,) = {
             t.shape[0]
-            for t in list(interior_inputs.values()) + list(interior_grad_outputs.values())
+            for t in list(interior_inputs.values())
+            + list(interior_grad_outputs.values())
         }
         (N_dOmega,) = {
             t.shape[0]
-            for t in list(boundary_inputs.values()) + list(boundary_grad_outputs.values())
+            for t in list(boundary_inputs.values())
+            + list(boundary_grad_outputs.values())
         }
 
         fn = partial(
@@ -351,7 +359,7 @@ class RNGD(Optimizer):
             interior_inputs,
             interior_grad_outputs,
             boundary_inputs,
-            boundary_grad_outputs
+            boundary_grad_outputs,
         )
         inv = self._get_inverse(fn, N_Omega + N_dOmega, dt, dev, self.l, damping)
         J_phi = apply_joint_J(
@@ -384,13 +392,8 @@ class RNGD(Optimizer):
 
     @staticmethod
     def _inv_sketch(
-        fn: Callable[[Tensor], Tensor],
-        N: int,
-        dt,
-        dev,
-        l: int,
-        damping: float
-    ):  
+        fn: Callable[[Tensor], Tensor], N: int, dt, dev, l: int, damping: float
+    ):
         U, S = nystrom_stable(fn, N, l, dt, dev)
         lhs = U @ torch.diag(1 / (S + damping)) @ U.T
         idx = torch.arange(0, N, device=dev)
@@ -400,21 +403,16 @@ class RNGD(Optimizer):
         out = lhs + rhs
 
         return out
-    
+
     @staticmethod
     def _inv_exact(
-        fn: Callable[[Tensor], Tensor],
-        N: int,
-        dt,
-        dev,
-        l: int,
-        damping: float
+        fn: Callable[[Tensor], Tensor], N: int, dt, dev, l: int, damping: float
     ):
         JJT = exact(fn, N, 0, dt, dev)
         I = torch.eye(N, dtype=dt, device=dev)
         out = torch.linalg.solve(JJT + I * damping, I)
         return out
-    
+
 
 def exact(apply_A, N, _, dt, dev) -> Tuple[Tensor, Tensor]:
     I = torch.eye(N, dtype=dt, device=dev)
@@ -437,7 +435,8 @@ def nystrom_stable(
     A: Callable[[Tensor], Tensor],
     dim: int,
     sketch_size,
-    dt, dev,
+    dt,
+    dev,
 ) -> Tensor:
     """Compute a stable Nystrom approximation."""
     O = torch.randn(dim, sketch_size, device=dev, dtype=dt)

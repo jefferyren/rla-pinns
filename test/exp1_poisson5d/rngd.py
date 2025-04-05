@@ -1,7 +1,7 @@
 from torch import cuda, device, manual_seed, allclose, zeros
 from torch.nn import Sequential
 from rla_pinns.optim import set_up_optimizer
-from rla_pinns.train import parse_general_args, create_data_loader,set_up_layers
+from rla_pinns.train import parse_general_args, create_data_loader, set_up_layers
 
 
 def main():  # noqa: C901
@@ -10,13 +10,16 @@ def main():  # noqa: C901
     args = parse_general_args(verbose=True)
     dev, dt = device("cuda" if cuda.is_available() else "cpu"), args.dtype
     print(f"Running on device {str(dev)} in dtype {dt}.")
-    
+
     losses_SPRING = run(args, dev, dt, "SPRING")
     losses_RNGD = run(args, dev, dt, "RNGD")
 
-    assert allclose(losses_SPRING, losses_RNGD), f"Losses do not match: {losses_SPRING} != {losses_RNGD}"
+    assert allclose(
+        losses_SPRING, losses_RNGD
+    ), f"Losses do not match: {losses_SPRING} != {losses_RNGD}"
 
-def run(args, dev, dt, optim, n = 5):
+
+def run(args, dev, dt, optim, n=5):
     print(f"Running on device {str(dev)} in dtype {dt}.")
 
     # DATA LOADERS
@@ -52,7 +55,7 @@ def run(args, dev, dt, optim, n = 5):
     )
 
     manual_seed(args.model_seed)
-    # NEURAL NET 
+    # NEURAL NET
     layers = set_up_layers(args.model, equation, dim_Omega)
     layers = [layer.to(dev, dt) for layer in layers]
     model = Sequential(*layers).to(dev)
@@ -72,7 +75,9 @@ def run(args, dev, dt, optim, n = 5):
         X_dOmega, y_dOmega = next(condition_train_data_loader)
 
         optimizer.zero_grad()
-        loss_interior, loss_boundary = optimizer.step(X_Omega, y_Omega, X_dOmega, y_dOmega)
+        loss_interior, loss_boundary = optimizer.step(
+            X_Omega, y_Omega, X_dOmega, y_dOmega
+        )
         losses[i] = loss_boundary.item() + loss_interior.item()
 
     return losses

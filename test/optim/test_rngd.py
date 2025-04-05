@@ -11,7 +11,7 @@ ARGS = [
     # train with SPRING and RNGD on different equations
     *[
         [
-            "--optimizer=RNGD", # NOTE: this is a placeholder, the actual optimizer is set in the script
+            "--optimizer=RNGD",  # NOTE: this is a placeholder, the actual optimizer is set in the script
             f"--equation=poisson",
             f"--boundary_condition=cos_sum",
             "--SPRING_decay_factor=0.9",
@@ -48,8 +48,8 @@ def check_approx(A, A_hat):
         A_hat = U @ diag(S) @ U.T
 
     diff = A - A_hat
-    fro_norm_diff = norm(diff, p='fro')
-    fro_norm_A = norm(A, p='fro')
+    fro_norm_diff = norm(diff, p="fro")
+    fro_norm_A = norm(A, p="fro")
     error = (fro_norm_diff / fro_norm_A).item()
     return error
 
@@ -65,17 +65,28 @@ def test_nystrom():
     errors_stable = []
     for val in r:
         manual_seed(1)
-        errors_naive.append(check_approx(B, nystrom_naive(B.matmul, B.shape[0], val, float64, "cpu")))
+        errors_naive.append(
+            check_approx(B, nystrom_naive(B.matmul, B.shape[0], val, float64, "cpu"))
+        )
         manual_seed(1)
-        errors_stable.append(check_approx(B, nystrom_stable(B.matmul, B.shape[0], val, float64, "cpu")))
-
+        errors_stable.append(
+            check_approx(B, nystrom_stable(B.matmul, B.shape[0], val, float64, "cpu"))
+        )
 
     for i in range(1, len(r)):
-        assert errors_naive[i - 1] > errors_naive[i], f"Error increases for larger sketch values in naive version."
-        assert errors_stable[i - 1] > errors_stable[i], f"Error increases for larger sketch values in stable version."
+        assert (
+            errors_naive[i - 1] > errors_naive[i]
+        ), f"Error increases for larger sketch values in naive version."
+        assert (
+            errors_stable[i - 1] > errors_stable[i]
+        ), f"Error increases for larger sketch values in stable version."
 
-    assert errors_naive[-1] < 1e-5, f"Error is too large for the largest sketch value in naive version."
-    assert errors_stable[-1] < 1e-5, f"Error is too large for the largest sketch value in stable version."
+    assert (
+        errors_naive[-1] < 1e-5
+    ), f"Error is too large for the largest sketch value in naive version."
+    assert (
+        errors_stable[-1] < 1e-5
+    ), f"Error is too large for the largest sketch value in stable version."
 
     start_naive = time()
     manual_seed(1)
@@ -90,5 +101,6 @@ def test_nystrom():
     print("Time for naive version:", end_naive - start_naive)
     print("Time for stable version:", end_stable - start_stable)
 
-    assert end_naive - start_naive > end_stable - start_stable, f"Stable version is slower than naive version."
-
+    assert (
+        end_naive - start_naive > end_stable - start_stable
+    ), f"Stable version is slower than naive version."

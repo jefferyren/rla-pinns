@@ -296,4 +296,3 @@ class SPRING(Optimizer):
         loss_evaluator = self.LOSS_EVALUATORS[self.equation][loss_type]
         loss, _, _ = loss_evaluator(self.layers, X, y)
         return loss
-    
