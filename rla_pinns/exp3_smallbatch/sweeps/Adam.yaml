@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: poisson5d_highnoise
+project: exp3_smallbatch
 name: Adam
 program: ../../train.py
 command:

@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: poisson5d_highnoise
+project: exp2_highnoise
 name: ENGD_woodbury_nystrom
 program: ../../train.py
 command:

@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: exp2_highnoise
+project: exp3_smallbatch
 name: SGD
 program: ../../train.py
 command:

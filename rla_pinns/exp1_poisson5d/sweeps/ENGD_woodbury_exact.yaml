@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: poisson5d_deepwide
+project: exp1_poisson5d
 name: ENGD_woodbury_exact
 program: ../../train.py
 command:

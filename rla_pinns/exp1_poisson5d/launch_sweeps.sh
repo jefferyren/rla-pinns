@@ -1,5 +1,5 @@
 # Launch all sweeps using the sbatch command
-# cd sweeps/
+cd sweeps/
 
 # Benchamrks
 sbatch SGD.sh
