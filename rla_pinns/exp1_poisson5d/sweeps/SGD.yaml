@@ -1,5 +1,5 @@
-entity: rla-pinns
-project: exp1_poisson5d
+entity: andresguzco
+project: rla-pinns
 name: SGD
 program: ../../train.py
 command:
