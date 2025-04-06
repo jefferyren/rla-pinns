@@ -15,8 +15,6 @@ metric:
     name: l2_error
 method: random
 parameters:
-    checkpoint_steps:
-        value: 500
     batch_frequency:
         value: 1
     boundary_condition:

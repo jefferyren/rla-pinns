@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp1_poisson5d
-name: ENGD_woodbury_exact
+project: exp7_effectivedim_5d_10k
+name: SPRING
 program: ../../train.py
 command:
     - ${env}
@@ -15,6 +15,10 @@ metric:
     name: l2_error
 method: random
 parameters:
+    num_steps:
+        value: 1_000
+    max_logs:
+        value: 100
     batch_frequency:
         value: 1
     boundary_condition:
@@ -22,7 +26,7 @@ parameters:
     model:
         value: mlp-tanh-64-64-48-48
     num_seconds:
-        value: 3_000
+        value: 0
     dim_Omega:
         value: 5
     N_Omega:
@@ -32,6 +36,6 @@ parameters:
     RNGD_approximation:
         value: "exact"
     RNGD_damping:
-        distribution: log_uniform_values
-        min: 1e-15
-        max: 1e-5
+        value: 0.000000000208628673
+    RNGD_momentum:
+       value: 0.0632666532797279

@@ -777,10 +777,15 @@ def main():  # noqa: C901
                 else logging_trigger.should_log(step)
             )
             if should_checkpoint:
+
+                if isinstance(optimizer, RNGD):
+                    opt_name = "ENGDw" if optimizer_args.RNGD_momentum == 0.0 else "SPRING"
+                else:
+                    opt_name = args.optimizer
+
                 checkpoint_path = path.join(
                     args.checkpoint_dir,
-                    f"{equation}_{dim_Omega}d_{condition}_{args.model}"
-                    + f"_{args.optimizer}_step{step:07g}.pt",
+                    f"{equation}_{dim_Omega}d_{condition}_{args.model}_{opt_name}_step{step:07g}.pt",
                 )
                 print(f"Saving checkpoint to {checkpoint_path}.")
                 data = {

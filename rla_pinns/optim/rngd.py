@@ -26,7 +26,6 @@ from rla_pinns.optim.utils import (
     apply_joint_J,
     apply_joint_JT,
     apply_joint_JJT,
-    # apply_kernel,
 )
 
 

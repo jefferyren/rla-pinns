@@ -1,14 +1,14 @@
 from os import path
 from glob import glob
 from torch import load
-from torch.linalg import eigvalsh
 from tueplots import bundles
 from torch.nn import Sequential
-from palettable.colorbrewer import sequential
 from argparse import ArgumentParser
 from matplotlib import pyplot as plt
+from torch.linalg import eigvalsh, matrix_rank
 from rla_pinns.train import set_up_layers
-from rla_pinns.optim.utils import compute_joint_JJT
+from palettable.colorbrewer import sequential
+from rla_pinns.optim.utils import evaluate_losses_with_layer_inputs_and_grad_outputs, compute_joint_JJT
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
 COLORS = {
@@ -19,7 +19,7 @@ COLORS = {
     "ENGD (Nystrom)": sequential.Blues_5.mpl_colors[-1],
     "SPRING (Woodbury)": sequential.Greens_4.mpl_colors[-2],
     "SPRING (Nystrom)": sequential.Greens_4.mpl_colors[-1],
-    "Hessian-free": "black",
+    "HessianFree": "black",
 }
 
 LINESTYLE = {
@@ -30,7 +30,7 @@ LINESTYLE = {
     "ENGD (Nystrom)": "-",
     "SPRING (Woodbury)": "-",
     "SPRING (Nystrom)": "-",
-    "Hessian-free": "-",
+    "HessianFree": "-",
 }
 
 
@@ -51,12 +51,12 @@ def evaluate_checkpoint(checkpoint: str):
     equation = config["equation"]
     dim_Omega = config["dim_Omega"]
     architecture = config["model"]
-    damping = config["damping"]
-    optimizer = config["optimizer"]
 
-    if optimizer == "RNGD":
-        optimizer += f" (Woodbury)" if config["RNGD_approximation"] == "exact" else " (Nystrom)"
-
+    try:
+        damping = config[f"{config["optimizer"]}_damping"]
+    except:
+        damping = 0.0
+        
     X_Omega = data["X_Omega"]
     y_Omega = data["y_Omega"]
     X_dOmega = data["X_dOmega"]
@@ -89,7 +89,7 @@ def evaluate_checkpoint(checkpoint: str):
 
     d_eff = get_effective_dim(JJT, damping)
     num_params = sum(p.numel() for layer in layers for p in layer.parameters())
-    return d_eff, num_params, optimizer
+    return d_eff, num_params
 
 
 def main():
@@ -115,38 +115,41 @@ def main():
     dim_Omega = set()
     equation = set()
     num_params = set()
-    optimizer = set()
 
     # Filter checkpoints based on equation
     for i, checkpoint in enumerate(sorted(glob(path.join(checkpoint_dir, "*.pt")))):
-
         checkpoint_name = path.splitext(path.basename(checkpoint))[0]
         info = checkpoint_name.split("_")
+        opt = info[-2]
         step = int(info[-1][-7:])  # Extract the last word
-        N_Omega = int(info[-1])  # Extract the third last word
+        N_Omega = int(info[1][:-1])  # Extract the third last word
 
-        d, params, opt = evaluate_checkpoint(checkpoint)
+        d, params = evaluate_checkpoint(checkpoint)
 
-        (optimizer, ) = {optimizer} | {opt}
+        if opt not in d_effs.keys():
+            d_effs[opt] = []
+        d_effs[opt].append(d.item())
 
-        if optimizer not in d_effs.keys():
-            d_effs[optimizer] = []
+        steps = steps | {step}
+        dim_Omega = dim_Omega | {N_Omega}
+        equation = equation | {info[0]}
+        num_params = num_params | {params}
 
-        d_effs[optimizer].append(d)
-
-        (steps, ) = {steps} | {step}
-        (dim_Omega, ) = {dim_Omega} | {N_Omega}
-        (equation, ) = {equation} | {info[0]}
-        (num_params, ) = {num_params} | {params}
+    # Retrieve data
+    (dim_Omega, ) = dim_Omega
+    (equation, ) = equation
+    print(num_params)
+    (num_params, ) = num_params
+    steps = sorted(list(steps))
 
     # Plot all effective dimensions for a given experiment
     HEREDIR = path.dirname(path.abspath(__file__))
     with plt.rc_context(
         bundles.neurips2023(rel_width=1.0, usetex=not args.disable_tex)
     ):
-        print(equation, dim_Omega, num_params)
         fig, ax = plt.subplots(1, 1)
         ax.set_xlabel("Steps")
+        ax.set_xscale("log")
         ax.set_ylabel("Efective dimension")
         ax.set_title(f"{dim_Omega}d {equation.capitalize()} ($D={num_params}$)")
         ax.grid(True, alpha=0.5)
@@ -155,9 +158,9 @@ def main():
             ax.plot(
                 steps,
                 d_vals,
-                label=opt_name,
-                color=COLOR[opt_name],
-                linestyle=LINESYLE[opt_name],
+                label="ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name,
+                color=COLORS[opt_name],
+                linestyle=LINESTYLE[opt_name],
             )
 
         ax.legend()
