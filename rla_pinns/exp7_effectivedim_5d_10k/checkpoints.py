@@ -53,7 +53,7 @@ def evaluate_checkpoint(checkpoint: str):
     architecture = config["model"]
 
     try:
-        damping = config[f"{config["optimizer"]}_damping"]
+        damping = config[f"{config['optimizer']}_damping"]
     except:
         damping = 0.0
         
