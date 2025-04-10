@@ -1,6 +1,7 @@
 from os import path
 from glob import glob
 from torch import load
+from typiung import Tuple
 from tueplots import bundles
 from torch.nn import Sequential
 from argparse import ArgumentParser
@@ -41,7 +42,7 @@ def get_effective_dim(kernel, damping):
     return d_eff
 
 
-def evaluate_checkpoint(checkpoint: str):
+def evaluate_checkpoint(checkpoint: str, damping: float) -> Tuple[float, int]:
     """Evaluate a single checkpoint and return its eigenvalues."""
     checkpoint_name = path.splitext(path.basename(checkpoint))[0]
     print(f"Processing checkpoint {checkpoint_name}.")
@@ -51,11 +52,6 @@ def evaluate_checkpoint(checkpoint: str):
     equation = config["equation"]
     dim_Omega = config["dim_Omega"]
     architecture = config["model"]
-
-    try:
-        damping = config[f"{config['optimizer']}_damping"]
-    except:
-        damping = 0.0
         
     X_Omega = data["X_Omega"]
     y_Omega = data["y_Omega"]
@@ -106,6 +102,12 @@ def main():
         action="store_true",
         default=False,
         help="Disable TeX rendering in matplotlib.",
+    )
+    parser.add_argument(
+        "--damping",
+        type=float,
+        default=1e-3,
+        help="Damping parameter for effective dimension calculation.",
     )
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
@@ -164,7 +166,7 @@ def main():
             )
 
         ax.legend()
-        plt.savefig(path.join(HEREDIR, f"Effective_dim_over_step.pdf"), bbox_inches="tight")
+        plt.savefig(path.join(HEREDIR, f"Effective_dim_over_step_{args.damping}.pdf"), bbox_inches="tight")
 
 
 
