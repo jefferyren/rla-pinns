@@ -88,6 +88,40 @@ def evaluate_checkpoint(checkpoint: str, damping: float) -> Tuple[float, int]:
     return d_eff, num_params
 
 
+def process_checkpoints(checkpoint_dir, damping):
+    d_effs = {}
+    steps = set()
+    dim_Omega = set()
+    equation = set()
+    num_params = set()
+
+    # Filter checkpoints based on equation
+    for i, checkpoint in enumerate(sorted(glob(path.join(checkpoint_dir, "*.pt")))):
+        checkpoint_name = path.splitext(path.basename(checkpoint))[0]
+        info = checkpoint_name.split("_")
+        opt = info[-2]
+        step = int(info[-1][-7:])  # Extract the last word
+        N_Omega = int(info[1][:-1])  # Extract the third last word
+
+        d, params = evaluate_checkpoint(checkpoint, damping)
+
+        if opt not in d_effs.keys():
+            d_effs[opt] = []
+        d_effs[opt].append(d.item())
+
+        steps = steps | {step}
+        dim_Omega = dim_Omega | {N_Omega}
+        equation = equation | {info[0]}
+        num_params = num_params | {params}
+
+    # Retrieve data
+    (dim_Omega, ) = dim_Omega
+    (equation, ) = equation
+    (num_params, ) = num_params
+    steps = sorted(list(steps))
+    return dim_Omega, equation, num_params, steps
+
+
 def main():
     """Visualize eigenvalues for each checkpoint."""
     parser = ArgumentParser(description="Plot solutions of checkpoints.")
@@ -105,69 +139,63 @@ def main():
     )
     parser.add_argument(
         "--damping",
-        type=float,
-        default=1e-3,
+        type=list,
+        default=[1e-3, 1e-5, 1e-7],
         help="Damping parameter for effective dimension calculation.",
     )
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
 
-    d_effs = {}
+    d_effs = []
     steps = set()
     dim_Omega = set()
     equation = set()
     num_params = set()
 
-    # Filter checkpoints based on equation
-    for i, checkpoint in enumerate(sorted(glob(path.join(checkpoint_dir, "*.pt")))):
-        checkpoint_name = path.splitext(path.basename(checkpoint))[0]
-        info = checkpoint_name.split("_")
-        opt = info[-2]
-        step = int(info[-1][-7:])  # Extract the last word
-        N_Omega = int(info[1][:-1])  # Extract the third last word
+    for val in args.damping:
+        d, s, e, p = process_checkpoints(checkpoint_dir, val)
 
-        d, params = evaluate_checkpoint(checkpoint, args.damping)
-
-        if opt not in d_effs.keys():
-            d_effs[opt] = []
-        d_effs[opt].append(d.item())
-
-        steps = steps | {step}
-        dim_Omega = dim_Omega | {N_Omega}
-        equation = equation | {info[0]}
-        num_params = num_params | {params}
-
-    # Retrieve data
+        d_effs.append(s)
+        steps = steps | {s}
+        equation = equation | {e}
+        num_params = num_params | {p}
+    
     (dim_Omega, ) = dim_Omega
     (equation, ) = equation
-    print(num_params)
     (num_params, ) = num_params
-    steps = sorted(list(steps))
 
     # Plot all effective dimensions for a given experiment
     HEREDIR = path.dirname(path.abspath(__file__))
     with plt.rc_context(
         bundles.neurips2023(rel_width=1.0, usetex=not args.disable_tex)
     ):
-        fig, ax = plt.subplots(1, 1)
-        ax.set_xlabel("Steps")
-        ax.set_xscale("log")
-        ax.set_ylabel("Efective dimension")
-        ax.set_title(f"{dim_Omega}d {equation.capitalize()} ($D={num_params}$) - Damping={args.damping}")
-        ax.grid(True, alpha=0.5)
+        fig, ax = plt.subplots(1, 3)
 
-        for opt_name, d_vals in d_effs.items():
-            name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
-            ax.plot(
-                steps,
-                d_vals,
-                label=name,
-                color=COLORS[name],
-                linestyle=LINESTYLE[name],
-            )
+        i = 0
+        for damp, ds in zip(args.damping, d_effs):
 
-        ax.legend()
-        plt.savefig(path.join(HEREDIR, f"Effective_dim_over_step_{args.damping}.pdf"), bbox_inches="tight")
+            ax[0, i].set_xlabel("Steps")
+            ax[0, i].set_xscale("log")
+
+            if i == 0
+                ax[0, i].set_ylabel("Efective dimension")
+
+            ax[0, i].set_title(f"Damping = {damp}")
+            ax[0, i].grid(True, alpha=0.5)
+
+            for opt_name, d_vals in ds.items():
+                name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
+                ax[0, i].plot(
+                    steps,
+                    d_vals,
+                    label=name,
+                    color=COLORS[name],
+                    linestyle=LINESTYLE[name],
+                )
+
+            # ax[0, i].legend()
+            plt.savefig(path.join(HEREDIR, f"Effective_dim_over_step_{args.damping}.pdf"), bbox_inches="tight")
+            i += 1
 
 
 
