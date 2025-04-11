@@ -41,10 +41,10 @@ sweep_ids = {  # ids from the wandb agent
     "oeig58vb": "SGD",
     "va174qk7": "Adam",
     "14ls2uo2": "ENGD",
-    "tdrcxk6g": "Hessian-free",
+    # "tdrcxk6g": "Hessian-free",
     "tacjf0pi": "ENGD (Woodbury)",
     # "2w73cus0": "ENGD (Nystrom)",
-    # "eimjo8j1": "SPRING",
+    "eimjo8j1": "SPRING",
     # "0nnkkbcb": "SPRING (Nystrom)",
 }
 
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     for (x, xlabel), (y, ylabel) in product(x_to_xlabel.items(), y_to_ylabel.items()):
         with plt.rc_context(
-            bundles.neurips2023(rel_width=1.0, usetex=not args.disable_tex)
+            bundles.neurips2023(rel_width=0.45, usetex=not args.disable_tex)
         ):
             fig, ax = plt.subplots(1, 1)
             ax.set_xlabel(xlabel)
