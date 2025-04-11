@@ -5,7 +5,7 @@
 # python ../yaml_to_sh.py sweeps/SGD.yaml sweeps/SGD.sh --qos=m2
 # python ../yaml_to_sh.py sweeps/Adam.yaml sweeps/Adam.sh --qos=normal
 # python ../yaml_to_sh.py sweeps/ENGD.yaml sweeps/ENGD.sh --qos=m
-# python ../yaml_to_sh.py sweeps/HessianFree.yaml sweeps/HessianFree.sh --qos=m
+# python ../yaml_to_sh.py sweeps/HessianFree.yaml sweeps/HessianFree.sh --qos=m2
 
 # WOODBURY ENGD
 # python ../yaml_to_sh.py sweeps/ENGD_woodbury_exact.yaml sweeps/ENGD_woodbury_exact.sh --qos=m5 --array=1
