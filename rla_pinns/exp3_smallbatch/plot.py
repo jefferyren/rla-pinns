@@ -41,11 +41,11 @@ sweep_ids = {  # ids from the wandb agent
     "cy7vw0e4": "SGD",
     "sl5gj5iw": "Adam",
     "zh9b2h93": "ENGD",
-    "3dntauau": "Hessian-free",
+    # "3dntauau": "Hessian-free",
     "dkpgu4e5": "ENGD (Woodbury)",
-    "giaqn1wl": "ENGD (Nystrom)",
+    # "giaqn1wl": "ENGD (Nystrom)",
     "a8t9o731": "SPRING",
-    "c21wg6c6": "SPRING (Nystrom)",
+    # "c21wg6c6": "SPRING (Nystrom)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/

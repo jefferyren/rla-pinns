@@ -25,9 +25,9 @@ parameters:
     dim_Omega:
         value: 5
     N_Omega:
-        value: 500
-    N_dOmega:
         value: 100
+    N_dOmega:
+        value: 200
     RNGD_approximation:
         value: "nystrom"
     RNGD_damping:
