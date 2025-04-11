@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp7_effectivedim_5d_10k
-name: Adam
+project: exp3_effectivedim
+name: SPRING
 program: ../../train.py
 command:
     - ${env}
@@ -8,13 +8,12 @@ command:
     - ${program}
     - "--wandb"
     - "--save_checkpoints"
-    - "--optimizer=Adam"
-    - ${args}
+    - "--optimizer=RNGD"
+    - ${args_no_boolean_flags}
 metric:
     goal: minimize
     name: l2_error
 method: random
-run_cap: 1
 parameters:
     num_steps:
         value: 1_000
@@ -34,5 +33,9 @@ parameters:
         value: 3_000
     N_dOmega:
         value: 500
-    Adam_lr:
-        value: 0.00028084514290147006
+    RNGD_approximation:
+        value: "exact"
+    RNGD_damping:
+        value: 0.000000000208628673
+    RNGD_momentum:
+       value: 0.0632666532797279

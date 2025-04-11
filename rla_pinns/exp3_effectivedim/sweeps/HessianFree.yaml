@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: exp7_effectivedim_5d_10k
+project: exp3_effectivedim
 name: HessianFree
 program: ../../train.py
 command:
