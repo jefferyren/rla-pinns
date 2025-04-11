@@ -1,7 +1,7 @@
 from os import path
 from glob import glob
 from torch import load
-from typiung import Tuple
+from typing import Tuple
 from tueplots import bundles
 from torch.nn import Sequential
 from argparse import ArgumentParser
@@ -18,7 +18,7 @@ COLORS = {
     "ENGD": sequential.Blues_5.mpl_colors[-3],
     "ENGD (Woodbury)": sequential.Blues_5.mpl_colors[-2],
     "ENGD (Nystrom)": sequential.Blues_5.mpl_colors[-1],
-    "SPRING (Woodbury)": sequential.Greens_4.mpl_colors[-2],
+    "SPRING": sequential.Greens_4.mpl_colors[-2],
     "SPRING (Nystrom)": sequential.Greens_4.mpl_colors[-1],
     "HessianFree": "black",
 }
@@ -29,7 +29,7 @@ LINESTYLE = {
     "ENGD": "-",
     "ENGD (Woodbury)": "-",
     "ENGD (Nystrom)": "-",
-    "SPRING (Woodbury)": "-",
+    "SPRING": "-",
     "SPRING (Nystrom)": "-",
     "HessianFree": "-",
 }
@@ -126,7 +126,7 @@ def main():
         step = int(info[-1][-7:])  # Extract the last word
         N_Omega = int(info[1][:-1])  # Extract the third last word
 
-        d, params = evaluate_checkpoint(checkpoint)
+        d, params = evaluate_checkpoint(checkpoint, args.damping)
 
         if opt not in d_effs.keys():
             d_effs[opt] = []
@@ -153,16 +153,17 @@ def main():
         ax.set_xlabel("Steps")
         ax.set_xscale("log")
         ax.set_ylabel("Efective dimension")
-        ax.set_title(f"{dim_Omega}d {equation.capitalize()} ($D={num_params}$)")
+        ax.set_title(f"{dim_Omega}d {equation.capitalize()} ($D={num_params}$) - Damping={args.damping}")
         ax.grid(True, alpha=0.5)
 
         for opt_name, d_vals in d_effs.items():
+            name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
             ax.plot(
                 steps,
                 d_vals,
-                label="ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name,
-                color=COLORS[opt_name],
-                linestyle=LINESTYLE[opt_name],
+                label=name,
+                color=COLORS[name],
+                linestyle=LINESTYLE[name],
             )
 
         ax.legend()
