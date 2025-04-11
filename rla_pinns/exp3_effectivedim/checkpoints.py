@@ -109,6 +109,8 @@ def process_checkpoints(checkpoint_dir, damping):
             d_effs[opt] = []
         d_effs[opt].append(d.item())
 
+        print(step, N_Omega, info[0], params)
+
         steps = steps | {step}
         dim_Omega = dim_Omega | {N_Omega}
         equation = equation | {info[0]}
@@ -145,18 +147,19 @@ def main():
     )
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
+    print(args.damping)
 
     d_effs = []
-    steps = set()
     dim_Omega = set()
     equation = set()
     num_params = set()
 
     for val in args.damping:
         d, s, e, p = process_checkpoints(checkpoint_dir, val)
+        print(d, s, e, p)
 
         d_effs.append(s)
-        steps = steps | {s}
+        dim_Omega = dim_Omega | {d}
         equation = equation | {e}
         num_params = num_params | {p}
     
@@ -177,7 +180,7 @@ def main():
             ax[0, i].set_xlabel("Steps")
             ax[0, i].set_xscale("log")
 
-            if i == 0
+            if i == 0:
                 ax[0, i].set_ylabel("Efective dimension")
 
             ax[0, i].set_title(f"Damping = {damp}")
@@ -194,8 +197,8 @@ def main():
                 )
 
             # ax[0, i].legend()
-            plt.savefig(path.join(HEREDIR, f"Effective_dim_over_step_{args.damping}.pdf"), bbox_inches="tight")
-            i += 1
+        plt.savefig(path.join(HEREDIR, f"Effective_dim_over_step.pdf"), bbox_inches="tight")
+        i += 1
 
 
 
