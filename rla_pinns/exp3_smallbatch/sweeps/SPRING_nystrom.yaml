@@ -25,14 +25,14 @@ parameters:
     dim_Omega:
         value: 5
     N_Omega:
-        value: 1_500
+        value: 500
     N_dOmega:
-        value: 250
+        value: 100
     RNGD_approximation:
         value: "nystrom"
     RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-9
+        min: 1e-5
         max: 1e-1
     RNGD_momentum:
         distribution: uniform
@@ -41,6 +41,6 @@ parameters:
     RNGD_norm_constraint:
         value: 0.0
     RNGD_rank_val:
-        value: 875
+        value: 60
     equation:
         value: "poisson"

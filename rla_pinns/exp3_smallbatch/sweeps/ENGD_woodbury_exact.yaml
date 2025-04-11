@@ -32,7 +32,7 @@ parameters:
         value: "exact"
     RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-10
+        min: 1e-7
         max: 1e-1
     equation:
         value: "poisson"

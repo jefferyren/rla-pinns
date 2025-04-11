@@ -25,15 +25,16 @@ parameters:
     dim_Omega:
         value: 5
     N_Omega:
-        value: 1_500
+        value: 500
     N_dOmega:
-        value: 250
+        value: 100
     HessianFree_curvature_opt:
         distribution: categorical
         values: ["ggn"]
     HessianFree_damping:
-        distribution: categorical
-        values: [100, 50, 10, 5, 1.0, 5e-1, 1e-1, 5e-2]
+        distribution: log_uniform_values
+        min: 1e-5
+        max: 1e2
     HessianFree_no_adapt_damping:
         distribution: categorical
         values: [false]
