@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp3_smallbatch
-name: SPRING_exact
+project: exp4_poisson100d
+name: SPRING
 program: ../../train.py
 command:
     - ${env}
@@ -17,17 +17,17 @@ parameters:
     batch_frequency:
         value: 1
     boundary_condition:
-        value: cos_sum
+        value: u_weinan_norm
     model:
-        value: mlp-tanh-64-64-48-48
+        value: mlp-tanh-768-768-512-512
     num_seconds:
         value: 7_000
     dim_Omega:
-        value: 5
+        value: 100
     N_Omega:
-        value: 1_500
+        value: 100
     N_dOmega:
-        value: 250
+        value: 50
     RNGD_approximation:
         value: "exact"
     RNGD_damping:

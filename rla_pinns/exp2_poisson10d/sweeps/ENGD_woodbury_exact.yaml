@@ -1,6 +1,6 @@
 entity: rla-pinns
 project: exp2_poisson10d
-name: ENGD_woodbury_exact
+name: ENGD_exact
 program: ../../train.py
 command:
     - ${env}
