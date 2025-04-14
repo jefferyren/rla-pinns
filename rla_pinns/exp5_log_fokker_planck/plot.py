@@ -17,13 +17,13 @@ from rla_pinns.wandb_utils import (
     show_sweeps,
 )
 
-entity = "andresguzco"  # team name on wandb
-project = "rla-pinns"  # name from the 'Projects' tab on wandb
+entity = "rla-pinns"  # team name on wandb
+project = "exp5_log_fokker_planck"  # name from the 'Projects' tab on wandb
 
 # information for title
-equation = "poisson"
-architecture = "mlp-tanh-64-64-48-48"
-dim_Omega = 5
+equation = "log-fokker-planck-isotropic"
+architecture = "mlp-tanh-256-256-128-128"
+dim_Omega = 9
 num_params = sum(
     p.numel()
     for layer in set_up_layers(architecture, equation, dim_Omega)
@@ -31,21 +31,21 @@ num_params = sum(
 )
 
 # Useful to map sweep ids to human-readable names
-print_sweeps = False
+print_sweeps = False 
 if print_sweeps:
     show_sweeps(entity, project)
     raise Exception("Printed sweeps. Exiting...")
 
 
 sweep_ids = {  # ids from the wandb agent
-    "agtgmknd": "SGD",
-    "p6bgdypg": "Adam",
-    "fdohey43": "ENGD",
-    "d5ujt0u0": "Hessian-free",
-    "g9jjpfu4": "ENGD (Woodbury)",
-    "dvtd4rth": "ENGD (Nystrom)",
-    "hf4yth14": "SPRING",
-    "qf0s6jg3": "SPRING (Nystrom)",
+    # "agtgmknd": "SGD",
+    # "p6bgdypg": "Adam",
+    # "fdohey43": "ENGD",
+    # "d5ujt0u0": "Hessian-free",
+    "zbscn1ou": "ENGD (Woodbury)",
+    # "dvtd4rth": "ENGD (Nystrom)",
+    "os6ivmta": "SPRING",
+    # "qf0s6jg3": "SPRING (Nystrom)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
