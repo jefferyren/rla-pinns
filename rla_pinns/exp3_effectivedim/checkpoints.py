@@ -109,8 +109,6 @@ def process_checkpoints(checkpoint_dir, damping):
             d_effs[opt] = []
         d_effs[opt].append(d.item())
 
-        print(step, N_Omega, info[0], params)
-
         steps = steps | {step}
         dim_Omega = dim_Omega | {N_Omega}
         equation = equation | {info[0]}
@@ -147,7 +145,6 @@ def main():
     )
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
-    print(args.damping)
 
     d_effs = []
     dim_Omega = set()
@@ -155,8 +152,7 @@ def main():
     num_params = set()
 
     for val in args.damping:
-        d, s, e, p = process_checkpoints(checkpoint_dir, val)
-        print(d, s, e, p)
+        d, e, p, s = process_checkpoints(checkpoint_dir, val)
 
         d_effs.append(s)
         dim_Omega = dim_Omega | {d}
@@ -177,18 +173,18 @@ def main():
         i = 0
         for damp, ds in zip(args.damping, d_effs):
 
-            ax[0, i].set_xlabel("Steps")
-            ax[0, i].set_xscale("log")
+            ax[i].set_xlabel("Steps")
+            ax[i].set_xscale("log")
 
             if i == 0:
-                ax[0, i].set_ylabel("Efective dimension")
+                ax[i].set_ylabel("Efective dimension")
 
-            ax[0, i].set_title(f"Damping = {damp}")
-            ax[0, i].grid(True, alpha=0.5)
+            ax[i].set_title(f"Damping = {damp}")
+            ax[i].grid(True, alpha=0.5)
 
             for opt_name, d_vals in ds.items():
                 name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
-                ax[0, i].plot(
+                ax[i].plot(
                     steps,
                     d_vals,
                     label=name,
@@ -196,7 +192,7 @@ def main():
                     linestyle=LINESTYLE[name],
                 )
 
-            # ax[0, i].legend()
+            # ax[i].legend()
         plt.savefig(path.join(HEREDIR, f"Effective_dim_over_step.pdf"), bbox_inches="tight")
         i += 1
 
