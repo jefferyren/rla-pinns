@@ -9,7 +9,10 @@ from matplotlib import pyplot as plt
 from torch.linalg import eigvalsh, matrix_rank
 from rla_pinns.train import set_up_layers
 from palettable.colorbrewer import sequential
-from rla_pinns.optim.utils import evaluate_losses_with_layer_inputs_and_grad_outputs, compute_joint_JJT
+from rla_pinns.optim.utils import (
+    evaluate_losses_with_layer_inputs_and_grad_outputs,
+    compute_joint_JJT,
+)
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
 COLORS = {
@@ -52,7 +55,7 @@ def evaluate_checkpoint(checkpoint: str, damping: float) -> Tuple[float, int]:
     equation = config["equation"]
     dim_Omega = config["dim_Omega"]
     architecture = config["model"]
-        
+
     X_Omega = data["X_Omega"]
     y_Omega = data["y_Omega"]
     X_dOmega = data["X_dOmega"]
@@ -115,9 +118,9 @@ def process_checkpoints(checkpoint_dir, damping):
         num_params = num_params | {params}
 
     # Retrieve data
-    (dim_Omega, ) = dim_Omega
-    (equation, ) = equation
-    (num_params, ) = num_params
+    (dim_Omega,) = dim_Omega
+    (equation,) = equation
+    (num_params,) = num_params
     steps = sorted(list(steps))
     return dim_Omega, equation, num_params, steps
 
@@ -158,10 +161,10 @@ def main():
         dim_Omega = dim_Omega | {d}
         equation = equation | {e}
         num_params = num_params | {p}
-    
-    (dim_Omega, ) = dim_Omega
-    (equation, ) = equation
-    (num_params, ) = num_params
+
+    (dim_Omega,) = dim_Omega
+    (equation,) = equation
+    (num_params,) = num_params
 
     # Plot all effective dimensions for a given experiment
     HEREDIR = path.dirname(path.abspath(__file__))
@@ -193,9 +196,10 @@ def main():
                 )
 
             # ax[i].legend()
-        plt.savefig(path.join(HEREDIR, f"Effective_dim_over_step.pdf"), bbox_inches="tight")
+        plt.savefig(
+            path.join(HEREDIR, f"Effective_dim_over_step.pdf"), bbox_inches="tight"
+        )
         i += 1
-
 
 
 if __name__ == "__main__":

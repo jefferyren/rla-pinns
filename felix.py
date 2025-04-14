@@ -1,6 +1,6 @@
 from torch import cat, randn, zeros_like, allclose, manual_seed
 from einops import einsum
-from math import sqrt 
+from math import sqrt
 
 Dim = 5
 N_Omega = 10
@@ -13,7 +13,7 @@ manual_seed(0)
 interior_inputs = [randn(N_Omega, Dim) for _ in range(list_len)]
 boundary_inputs = [randn(N_dOmega, Dim) for _ in range(list_len)]
 interior_grad_outputs = [randn(N_Omega, Dim) for _ in range(list_len)]
-boundary_grad_outputs = [randn(N_dOmega, Dim) for _ in range(list_len)] 
+boundary_grad_outputs = [randn(N_dOmega, Dim) for _ in range(list_len)]
 
 
 M = randn(N_Omega + N_dOmega, k)
@@ -88,13 +88,13 @@ for idx in range(len(interior_inputs)):
         scaled_interior_grad_outputs,
         JTM,
         "n ... d_out, d_out d_in k -> n ... d_in k",
-    )   
+    )
 
     JJTM_interior = einsum(
         JJTM_interior,
         interior_inputs[idx],
         "n ... d_in k, n ... d_in -> n k",
-    )   
+    )
 
     JJTM = cat([JJTM_interior, JJTM_boundary], dim=0)
 

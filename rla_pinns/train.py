@@ -779,7 +779,9 @@ def main():  # noqa: C901
             if should_checkpoint:
 
                 if isinstance(optimizer, RNGD):
-                    opt_name = "ENGDw" if optimizer_args.RNGD_momentum == 0.0 else "SPRING"
+                    opt_name = (
+                        "ENGDw" if optimizer_args.RNGD_momentum == 0.0 else "SPRING"
+                    )
                 else:
                     opt_name = args.optimizer
 
