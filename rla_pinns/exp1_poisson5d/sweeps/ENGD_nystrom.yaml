@@ -1,6 +1,6 @@
-entity: rla-pinns
-project: exp1_poisson5d
-name: ENGD_woodbury_nystrom
+entity: andresguzco
+project: rla-pinns
+name: ENGD_nystrom
 program: ../../train.py
 command:
     - ${env}
@@ -32,11 +32,11 @@ parameters:
         value: "nystrom"
     RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-7
+        min: 1e-11
         max: 1e-3
     RNGD_momentum:
         value: 0.0
     RNGD_norm_constraint:
         value: 0.0
     RNGD_rank_val:
-        value: 1000
+        value: 1750

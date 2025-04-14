@@ -1,6 +1,6 @@
-entity: rla-pinns
-project: exp1_poisson5d
-name: SPRING_exact
+entity: andresguzco
+project: rla-pinns
+name: SPRING_fixed
 program: ../../train.py
 command:
     - ${env}
@@ -39,3 +39,7 @@ parameters:
         distribution: uniform
         min: 0.0
         max: 0.999
+    RNGD_lr:
+        distribution: uniform
+        min: 1e-5
+        max: 1e-2
