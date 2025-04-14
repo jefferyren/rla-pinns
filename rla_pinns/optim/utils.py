@@ -213,7 +213,6 @@ def apply_joint_JJT(
     Returns:
         The result of multiplying the kernel with the matrix. Has the same shape as M
     """
-    # split into interior and boundary terms
     (N_Omega,) = {
         t.shape[0]
         for t in list(interior_inputs.values()) + list(interior_grad_outputs.values())
