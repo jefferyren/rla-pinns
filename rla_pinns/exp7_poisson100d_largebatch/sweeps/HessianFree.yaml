@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: exp5_log_fokker_planck
+project: exp7_poisson100d_largebatch
 name: HessianFree
 program: ../../train.py
 command:
@@ -14,31 +14,29 @@ metric:
     name: l2_error
 method: grid
 parameters:
-    equation:
-        value: log-fokker-planck-isotropic
-    boundary_condition:
-        value: gaussian
     batch_frequency:
         value: 1
+    boundary_condition:
+        value: u_weinan_norm
     model:
-        value: mlp-tanh-256-256-128-128
+        value: mlp-tanh-768-768-512-512
     num_seconds:
         value: 7_000
     dim_Omega:
-        value: 9
+        value: 100
     N_Omega:
-        value: 3_000
+        value: 3000
     N_dOmega:
-        value: 1_000
+        value: 500
     HessianFree_curvature_opt:
         distribution: categorical
-        values: ["ggn", "hessian"]
+        values: ["ggn"]
     HessianFree_damping:
         distribution: categorical
-        values: [1.0, 1e-1, 1e-2, 1e-3, 1e-4]
+        values: [100, 50, 10, 5, 1.0, 5e-1, 1e-1, 5e-2]
     HessianFree_no_adapt_damping:
         distribution: categorical
-        values: [false, true]
+        values: [false]
     HessianFree_cg_max_iter:
         distribution: categorical
-        values: [50, 250]
+        values: [100, 150, 200, 250, 300, 350]

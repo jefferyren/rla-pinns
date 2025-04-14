@@ -1,6 +1,6 @@
 entity: rla-pinns
 project: exp5_log_fokker_planck
-name: SPRING_exact
+name: ENGD_nystrom
 program: ../../train.py
 command:
     - ${env}
@@ -31,7 +31,7 @@ parameters:
     N_dOmega:
         value: 1_000
     RNGD_approximation:
-        value: "nystrom"
+        value: "exact"
     RNGD_damping:
         distribution: log_uniform_values
         min: 1e-10

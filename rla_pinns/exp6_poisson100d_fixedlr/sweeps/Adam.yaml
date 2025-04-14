@@ -1,37 +1,35 @@
 entity: rla-pinns
-project: exp1_poisson5d
-name: ENGD_woodbury
+project: exp6_poisson100d_fixedlr
+name: Adam
 program: ../../train.py
 command:
     - ${env}
     - python
     - ${program}
     - "--wandb"
-    - "--save_checkpoints"
-    - "--optimizer=RNGD"
-    - ${args_no_boolean_flags}
+    - "--optimizer=Adam"
+    - ${args}
 metric:
     goal: minimize
     name: l2_error
 method: random
+run_cap: 50
 parameters:
     batch_frequency:
         value: 1
     boundary_condition:
-        value: cos_sum
+        value: u_weinan_norm
     model:
-        value: mlp-tanh-64-64-48-48
+        value: mlp-tanh-768-768-512-512
     num_seconds:
         value: 7_000
     dim_Omega:
-        value: 5
+        value: 100
     N_Omega:
-        value: 3_000
+        value: 100
     N_dOmega:
-        value: 500
-    RNGD_approximation:
-        value: "exact"
-    RNGD_damping:
+        value: 50
+    Adam_lr:
         distribution: log_uniform_values
-        min: 1e-15
-        max: 1e-5
+        min: 1e-4
+        max: 5e-1

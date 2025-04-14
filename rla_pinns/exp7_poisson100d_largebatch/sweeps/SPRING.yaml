@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp6_log_fokker_planck_9d
-name: SPRING_exact
+project: exp7_poisson100d_largebatch
+name: SPRING
 program: ../../train.py
 command:
     - ${env}
@@ -14,22 +14,20 @@ metric:
     name: l2_error
 method: random
 parameters:
-    equation:
-        value: log-fokker-planck-isotropic
-    boundary_condition:
-        value: gaussian
     batch_frequency:
         value: 1
+    boundary_condition:
+        value: u_weinan_norm
     model:
-        value: mlp-tanh-256-256-128-128
+        value: mlp-tanh-768-768-512-512
     num_seconds:
-        value: 6_000
+        value: 7_000
     dim_Omega:
-        value: 9
+        value: 100
     N_Omega:
-        value: 3_000
+        value: 3000
     N_dOmega:
-        value: 1_000
+        value: 500
     RNGD_approximation:
         value: "exact"
     RNGD_damping:
@@ -40,5 +38,5 @@ parameters:
         distribution: uniform
         min: 0.0
         max: 0.999
-    RNGD_norm_constraint:
-        value: 0.0
+    equation:
+        value: "poisson"
