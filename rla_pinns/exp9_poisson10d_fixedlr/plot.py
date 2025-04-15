@@ -18,7 +18,7 @@ from rla_pinns.wandb_utils import (
 )
 
 entity = "rla-pinns"  # team name on wandb
-project = "exp9_poisson10d_fixed_lr"  # name from the 'Projects' tab on wandb
+project = "exp9_poisson10d_fixedlr"  # name from the 'Projects' tab on wandb
 
 # information for title
 equation = "poisson"
@@ -42,9 +42,9 @@ sweep_ids = {  # ids from the wandb agent
     # "p6bgdypg": "Adam",
     # "fdohey43": "ENGD",
     # "d5ujt0u0": "Hessian-free",
-    "m3qc1mnl": "ENGD (Woodbury)",
+    "iwlgfwhd": "ENGD (Woodbury)",
     # "dvtd4rth": "ENGD (Nystrom)",
-    "dif17pht": "SPRING",
+    "bugoq3kp": "SPRING",
     # "qf0s6jg3": "SPRING (Nystrom)",
 }
 

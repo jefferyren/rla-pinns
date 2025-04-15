@@ -31,7 +31,7 @@ num_params = sum(
 )
 
 # Useful to map sweep ids to human-readable names
-print_sweeps = False
+print_sweeps = False 
 if print_sweeps:
     show_sweeps(entity, project)
     raise Exception("Printed sweeps. Exiting...")
@@ -42,9 +42,9 @@ sweep_ids = {  # ids from the wandb agent
     # "va174qk7": "Adam",
     # "14ls2uo2": "ENGD",
     # "0tjhkabg": "Hessian-free",
-    "tacjf0pi": "ENGD (Woodbury)",
+    "xhz1mrx6": "ENGD (Woodbury)",
     # "2w73cus0": "ENGD (Nystrom)",
-    "eimjo8j1": "SPRING",
+    "pmp7vg9n": "SPRING",
     # "0nnkkbcb": "SPRING (Nystrom)",
 }
 

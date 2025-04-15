@@ -42,9 +42,9 @@ sweep_ids = {  # ids from the wandb agent
     # "p6bgdypg": "Adam",
     # "fdohey43": "ENGD",
     # "d5ujt0u0": "Hessian-free",
-    "zbscn1ou": "ENGD (Woodbury)",
+    "zonqybqv": "ENGD (Woodbury)",
     # "dvtd4rth": "ENGD (Nystrom)",
-    "os6ivmta": "SPRING",
+    "19195v3i": "SPRING",
     # "qf0s6jg3": "SPRING (Nystrom)",
 }
 
