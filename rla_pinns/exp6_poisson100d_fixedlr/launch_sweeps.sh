@@ -8,7 +8,7 @@ cd sweeps/
 # sbatch HessianFree.sh
 
 # Woodbury ENGD
-sbatch ENGD_woodbury.sh
-sbatch SPRING.sh
-# sbatch ENGD_woodbury_nystrom.sh
+# sbatch ENGD_woodbury.sh
+# sbatch SPRING.sh
+sbatch ENGD_nystrom.sh
 # sbatch SPRING_nystrom.sh

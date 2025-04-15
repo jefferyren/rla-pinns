@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp2_poisson10d
-name: SPRING_exact
+project: exp9_poisson10d_fixedlr
+name: SPRING
 program: ../../train.py
 command:
     - ${env}
@@ -25,11 +25,11 @@ parameters:
     dim_Omega:
         value: 10
     N_Omega:
-        value: 100
+        value: 3000 
     N_dOmega:
-        value: 50
+        value: 500
     RNGD_approximation:
-        value: "exact"
+        value: "nystrom"
     RNGD_damping:
         distribution: log_uniform_values
         min: 1e-7
@@ -38,5 +38,13 @@ parameters:
         distribution: uniform
         min: 0.0
         max: 0.999
+    RNGD_norm_constraint:
+        value: 1e-3
     equation:
         value: "poisson"
+    RNGD_lr:
+        distribution: uniform
+        min: 1e-3
+        max: 1e-1
+    RNGD_rank_val:
+        value: 1750

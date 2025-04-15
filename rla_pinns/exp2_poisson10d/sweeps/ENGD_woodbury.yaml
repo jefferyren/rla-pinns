@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp9_poisson10d_fixedlr
-name: SPRING
+project: exp2_poisson10d
+name: ENGD_woodbury
 program: ../../train.py
 command:
     - ${env}
@@ -34,15 +34,5 @@ parameters:
         distribution: log_uniform_values
         min: 1e-7
         max: 1e-1
-    RNGD_momentum:
-        distribution: uniform
-        min: 0.0
-        max: 0.999
-    RNGD_norm_constraint:
-        value: 1e-3
     equation:
         value: "poisson"
-    RNGD_lr:
-        distribution: uniform
-        min: 1e-3
-        max: 1e-1

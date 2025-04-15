@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp10_log_fokker_planck_fixedlr
-name: SPRING_exact
+project: exp2_poisson10d
+name: ENGD_nystrom
 program: ../../train.py
 command:
     - ${env}
@@ -14,37 +14,31 @@ metric:
     name: l2_error
 method: random
 parameters:
-    equation:
-        value: log-fokker-planck-isotropic
-    boundary_condition:
-        value: gaussian
     batch_frequency:
         value: 1
+    boundary_condition:
+        value: u_weinan
     model:
         value: mlp-tanh-256-256-128-128
     num_seconds:
-        value: 20_000
+        value: 7_000
     dim_Omega:
-        value: 9
+        value: 10
     N_Omega:
-        value: 3_000
+        value: 3000
     N_dOmega:
-        value: 1_000
+        value: 500
     RNGD_approximation:
         value: "nystrom"
     RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-10
+        min: 1e-5
         max: 1e-1
     RNGD_momentum:
-        distribution: uniform
-        min: 0.0
-        max: 0.999
+        value: 0.0
     RNGD_norm_constraint:
-        value: 1e-3
+        value: 0.0
     RNGD_rank_val:
-        value: 2000
-    RNGD_lr:
-        distribution: uniform
-        min: 1e-3
-        max: 1e-1
+        value: 1750
+    equation:
+        value: "poisson"
