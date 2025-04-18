@@ -457,11 +457,8 @@ class RNGD(Optimizer):
         out = cholesky_solve(g.unsqueeze(1), cholesky(JJT))
         t4 = perf_counter()
 
-        print(
-            f"Time taken for exact approximation: "
-            f"Compute JJT: {t2 - t1:.4f}s, Cholesky: {t4 - t3:.4f}s"
-        )
-        print(f"Total time: {t4 - t1:.4f}s")
+        print(f"JJT: {t2 - t1:.4f}, Damping: {t3 - t2:.4f}, Inv: {t4-t3:.4f}")
+        print(f"Total time: {t4- t1:.4f}")
         return out
 
 
@@ -482,30 +479,30 @@ def nystrom_stable(
     A: Callable[[Tensor], Tensor], dim: int, sketch_size: int, dt: str, dev: str
 ) -> Tuple[Tensor, Tensor]:
     """Compute a stable Nyström approximation."""
-    # t1 = perf_counter()
+    t1 = perf_counter()
     O = randn(dim, sketch_size, device=dev, dtype=dt)
-    # t2 = perf_counter()
+    t2 = perf_counter()
     O, _ = qr(O)
-    # t3 = perf_counter()
+    t3 = perf_counter()
     Y = A(O)
-    # t4 = perf_counter()
+    t4 = perf_counter()
 
     nu = 1e-7
     Y.add_(O, alpha=nu)
-    # t5 = perf_counter()
+    t5 = perf_counter()
     C = cholesky(O.T @ Y, upper=True)
-    # t6 = perf_counter()
+    t6 = perf_counter()
     B = solve_triangular(C, Y, upper=True, left=False)
-    # t7 = perf_counter()
+    t7 = perf_counter()
     U, Sigma, _ = svd(B, full_matrices=False)
-    # t8 = perf_counter()
+    t8 = perf_counter()
     Lambda = (Sigma**2 - nu).clamp(min=0.0)
-    # t9 = perf_counter()
+    t9 = perf_counter()
 
-    # print(
-    #     f"Time taken for Nyström approximation: "
-    #     f"Omega: {t2 - t1:.4f}s, QR: {t3 - t2:.4f}s, A(O): {t4 - t3:.4f}s, "
-    #     f"Cholesky: {t6 - t5:.4f}s, Solve: {t7 - t6:.4f}s, SVD: {t8 - t7:.4f}s"
-    # )
-    # print(f"Total time: {t9 - t1:.4f}s")
+    print(
+        f"Time taken for Nyström approximation: "
+        f"Omega: {t2 - t1:.4f}s, QR: {t3 - t2:.4f}s, A(O): {t4 - t3:.4f}s, "
+        f"Cholesky: {t6 - t5:.4f}s, Solve: {t7 - t6:.4f}s, SVD: {t8 - t7:.4f}s"
+    )
+    print(f"Total time: {t9 - t1:.4f}s")
     return U, Lambda
