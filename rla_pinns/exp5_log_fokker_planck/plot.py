@@ -31,7 +31,7 @@ num_params = sum(
 )
 
 # Useful to map sweep ids to human-readable names
-print_sweeps = False 
+print_sweeps = False
 if print_sweeps:
     show_sweeps(entity, project)
     raise Exception("Printed sweeps. Exiting...")
@@ -43,9 +43,9 @@ sweep_ids = {  # ids from the wandb agent
     # "fdohey43": "ENGD",
     # "d5ujt0u0": "Hessian-free",
     "zbscn1ou": "ENGD (Woodbury)",
-    # "dvtd4rth": "ENGD (Nystrom)",
+    # "nbip4xj7": "ENGD (Nystrom)",
     "os6ivmta": "SPRING",
-    # "qf0s6jg3": "SPRING (Nystrom)",
+    # "6v0ucr0i": "SPRING (Nystrom)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
