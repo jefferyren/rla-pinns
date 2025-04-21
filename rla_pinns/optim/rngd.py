@@ -505,7 +505,6 @@ class RNGD(Optimizer):
         print(f"JJT: {t2 - t1:.4e}, Damping: {t3 - t2:.4e}, Cholesky: {t4-t3:.4e}, Cholesky solve: {t5-t4:.4e}")
         return out
 
-            self.l
 
 def nystrom_naive(
     apply_A: Callable[[Tensor], Tensor], dim: int, sketch_size: int, dt: str, dev: str
