@@ -450,7 +450,7 @@ class RNGD(Optimizer):
             boundary_inputs,
             boundary_grad_outputs,
         ).detach()
-        cuta.synchronize()
+        cuda.synchronize()
 
         t2 = perf_counter()
         idx = arange(JJT.shape[0], device=dev)
