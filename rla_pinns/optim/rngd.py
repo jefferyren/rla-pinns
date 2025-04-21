@@ -1,6 +1,6 @@
 from math import sqrt
 from time import perf_counter
-from torch import Tensor, zeros_like, cholesky_solve, einsum, arange, cat, randn
+from torch import Tensor, float32, zeros_like, cholesky_solve, einsum, arange, cat, randn
 from typing import List, Dict, Callable, Tuple
 from argparse import ArgumentParser, Namespace
 from torch.nn import Module
@@ -454,11 +454,13 @@ class RNGD(Optimizer):
         idx = arange(JJT.shape[0], device=dev)
         JJT[idx, idx] = JJT.diag() + damping
         t3 = perf_counter()
-        out = cholesky_solve(g.unsqueeze(1), cholesky(JJT))
+        L = cholesky(JJT)
         t4 = perf_counter()
+        out = cholesky_solve(g.unsqueeze(1), L)
+        t5 = perf_counter()
 
-        print(f"JJT: {t2 - t1:.4f}, Damping: {t3 - t2:.4f}, Inv: {t4-t3:.4f}")
-        print(f"Total time: {t4- t1:.4f}")
+        print(f"JJT: {t2 - t1:.4e}, Damping: {t3 - t2:.4e}, Cholesky: {t4-t3:.4e}, Cholesky solve: {t5-t4:.4e}")
+        print(f"Total time: {t5 - t1:.4e}")
         return out
 
 
@@ -484,13 +486,13 @@ def nystrom_stable(
     t2 = perf_counter()
     O, _ = qr(O)
     t3 = perf_counter()
-    Y = A(O)
+    Y = A(O).detach().to(float32)
     t4 = perf_counter()
 
-    nu = 1e-7
+    nu = 1e-5
     Y.add_(O, alpha=nu)
     t5 = perf_counter()
-    C = cholesky(O.T @ Y, upper=True)
+    C = cholesky(O.T.to(float32) @ Y, upper=True)
     t6 = perf_counter()
     B = solve_triangular(C, Y, upper=True, left=False)
     t7 = perf_counter()
@@ -500,9 +502,8 @@ def nystrom_stable(
     t9 = perf_counter()
 
     print(
-        f"Time taken for Nyström approximation: "
-        f"Omega: {t2 - t1:.4f}s, QR: {t3 - t2:.4f}s, A(O): {t4 - t3:.4f}s, "
-        f"Cholesky: {t6 - t5:.4f}s, Solve: {t7 - t6:.4f}s, SVD: {t8 - t7:.4f}s"
+        f"Omega: {t2 - t1:.4e}s, QR: {t3 - t2:.4e}s, A(O): {t4 - t3:.4e}s, "
+        f"Cholesky: {t6 - t5:.4e}s, Solve: {t7 - t6:.4e}s, SVD: {t8 - t7:.4e}s"
     )
-    print(f"Total time: {t9 - t1:.4f}s")
-    return U, Lambda
+    print(f"Total time: {t9 - t1:.4e}s")
+    return U.to(dt), Lambda.to(dt)

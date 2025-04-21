@@ -1,5 +1,5 @@
 
-from torch import cuda, device, randn, manual_seed
+from torch import cuda, device, randn, manual_seed, eye
 from torch.linalg import qr, cholesky, svd, eigh
 from time import time
 
@@ -19,32 +19,38 @@ def time_matrix_function(fn, A, nreps):
 
     print(f"{(end_time - start_time) / nreps:.2e}")
 
+
+def svd_fn(A):
+    return svd(A, full_matrices=False)
+
+
 N = 4000
 S = 1000
-manual_seed(0)
+nreps = 50
+manual_seed(42)
 
 ANN = randn(N, N, device=device)
 ANS = randn(N, S, device=device)
 ASS = randn(S, S, device=device)
-ASS = ASS @ ASS.T  
-nreps = 50
+ASS = ASS @ ASS.T
+
+ANN_chol = ANN @ ANN.T + eye(N, device=device)
 
 print("Cholesky on ASS:")
 time_matrix_function(cholesky, ASS, nreps)
 
 print("Cholesky on ANN:")
-ANN_chol = ANN @ ANN.T
 time_matrix_function(cholesky, ANN_chol, nreps)
 
 print("QR on ANS:")
 time_matrix_function(qr, ANS, nreps)
 
 print("SVD on ANS:")
-time_matrix_function(svd, ANS, nreps)
+time_matrix_function(svd_fn, ANS, nreps)
 
 print("Eigh on ASS:")
 time_matrix_function(eigh, ASS, nreps)
 
 print("SVD on ASS:")
-time_matrix_function(svd, ASS, nreps)
+time_matrix_function(svd_fn, ASS, nreps)
 
