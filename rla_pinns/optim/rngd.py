@@ -1,6 +1,6 @@
 from math import sqrt
 from time import perf_counter
-from torch import Tensor, float32, zeros_like, cholesky_solve, einsum, arange, cat, randn
+from torch import Tensor, cuda, zeros_like, cholesky_solve, einsum, arange, cat, randn
 from typing import List, Dict, Callable, Tuple
 from argparse import ArgumentParser, Namespace
 from torch.nn import Module
@@ -450,13 +450,21 @@ class RNGD(Optimizer):
             boundary_inputs,
             boundary_grad_outputs,
         ).detach()
+        cuta.synchronize()
+
         t2 = perf_counter()
         idx = arange(JJT.shape[0], device=dev)
         JJT[idx, idx] = JJT.diag() + damping
+        cuda.synchronize()
+
         t3 = perf_counter()
         L = cholesky(JJT)
+        cuda.synchronize()
+
         t4 = perf_counter()
         out = cholesky_solve(g.unsqueeze(1), L)
+        cuda.synchronize()
+
         t5 = perf_counter()
 
         print(f"JJT: {t2 - t1:.4e}, Damping: {t3 - t2:.4e}, Cholesky: {t4-t3:.4e}, Cholesky solve: {t5-t4:.4e}")
@@ -483,22 +491,37 @@ def nystrom_stable(
     """Compute a stable Nyström approximation."""
     t1 = perf_counter()
     O = randn(dim, sketch_size, device=dev, dtype=dt)
+    cuda.synchronize()
+
     t2 = perf_counter()
     O, _ = qr(O)
-    t3 = perf_counter()
-    Y = A(O).detach().to(float32)
-    t4 = perf_counter()
+    cuda.synchronize()
 
+    t3 = perf_counter()
+    Y = A(O).detach()
+    cuda.synchronize()
+
+    t4 = perf_counter()
     nu = 1e-5
     Y.add_(O, alpha=nu)
+    cuda.synchronize()
+
     t5 = perf_counter()
-    C = cholesky(O.T.to(float32) @ Y, upper=True)
+    C = cholesky(O.T @ Y, upper=True)
+    cuda.synchronize()
+
     t6 = perf_counter()
     B = solve_triangular(C, Y, upper=True, left=False)
+    cuda.synchronize()
+
     t7 = perf_counter()
     U, Sigma, _ = svd(B, full_matrices=False)
+    cuda.synchronize()
+
     t8 = perf_counter()
     Lambda = (Sigma**2 - nu).clamp(min=0.0)
+    cuda.synchronize()
+
     t9 = perf_counter()
 
     print(
@@ -506,4 +529,4 @@ def nystrom_stable(
         f"Cholesky: {t6 - t5:.4e}s, Solve: {t7 - t6:.4e}s, SVD: {t8 - t7:.4e}s"
     )
     print(f"Total time: {t9 - t1:.4e}s")
-    return U.to(dt), Lambda.to(dt)
+    return U, Lambda
