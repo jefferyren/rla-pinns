@@ -493,16 +493,16 @@ def nystrom_stable(
     O = randn(dim, sketch_size, device=dev, dtype=dt)
     cuda.synchronize()
 
-    t2 = perf_counter()
-    O, _ = qr(O)
-    cuda.synchronize()
+    # t2 = perf_counter()
+    # O, _ = qr(O)
+    # cuda.synchronize()
 
     t3 = perf_counter()
     Y = A(O).detach()
     cuda.synchronize()
 
     t4 = perf_counter()
-    nu = 1e-5
+    nu = 1e-7
     Y.add_(O, alpha=nu)
     cuda.synchronize()
 
@@ -525,7 +525,9 @@ def nystrom_stable(
     t9 = perf_counter()
 
     print(
-        f"Omega: {t2 - t1:.4e}s, QR: {t3 - t2:.4e}s, A(O): {t4 - t3:.4e}s, "
+        f"Omega: {t2 - t1:.4e}s, "
+        # f"QR: {t3 - t2:.4e}s, "
+        f"A(O): {t4 - t3:.4e}s, "
         f"Cholesky: {t6 - t5:.4e}s, Solve: {t7 - t6:.4e}s, SVD: {t8 - t7:.4e}s"
     )
     print(f"Total time: {t9 - t1:.4e}s")
