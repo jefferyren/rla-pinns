@@ -6,7 +6,7 @@ from argparse import ArgumentParser, Namespace
 from torch.nn import Module
 from functools import partial
 from torch.optim import Optimizer
-from torch.linalg import qr, cholesky, solve_triangular, svd
+from torch.linalg import qr, cholesky, solve_triangular, svd, eigh
 from rla_pinns import (
     fokker_planck_isotropic_equation,
     heat_equation,
@@ -423,11 +423,14 @@ class RNGD(Optimizer):
             boundary_inputs,
             boundary_grad_outputs,
         )
-        U, S = nystrom_stable(fn, N, l, dt, dev)
-        arg1 = einsum("ij,j,kj,k -> i", U, (1 / (S + damping)), U, g)
-        arg2 = einsum("ij,kj,k -> i", U, U, g)
-
-        return (arg1 + (g - arg2) / damping).unsqueeze(-1)
+        # U, S = nystrom_stable(fn, N, l, dt, dev)
+        # arg1 = einsum("ij,j,kj,k -> i", U, (1 / (S + damping)), U, g)
+        # arg2 = einsum("ij,kj,k -> i", U, U, g)
+        # out = (arg1 + (g - arg2) / damping).unsqueeze(-1)
+        
+        out = (nystrom_stable_fast(fn, N, l, dt, dev) @ g).unsqueeze(-1)
+        
+        return out
 
     # NOTE: create tests for these function
     def _apply_inv_exact(
@@ -450,20 +453,20 @@ class RNGD(Optimizer):
             boundary_inputs,
             boundary_grad_outputs,
         ).detach()
-        cuda.synchronize()
+        # cuda.synchronize()
 
         t2 = perf_counter()
         idx = arange(JJT.shape[0], device=dev)
         JJT[idx, idx] = JJT.diag() + damping
-        cuda.synchronize()
+        # cuda.synchronize()
 
         t3 = perf_counter()
         L = cholesky(JJT)
-        cuda.synchronize()
+        # cuda.synchronize()
 
         t4 = perf_counter()
         out = cholesky_solve(g.unsqueeze(1), L)
-        cuda.synchronize()
+        # cuda.synchronize()
 
         t5 = perf_counter()
 
@@ -489,46 +492,63 @@ def nystrom_stable(
     A: Callable[[Tensor], Tensor], dim: int, sketch_size: int, dt: str, dev: str
 ) -> Tuple[Tensor, Tensor]:
     """Compute a stable Nyström approximation."""
-    t1 = perf_counter()
     O = randn(dim, sketch_size, device=dev, dtype=dt)
-    cuda.synchronize()
-
-    # t2 = perf_counter()
-    # O, _ = qr(O)
-    # cuda.synchronize()
-
-    t3 = perf_counter()
+    O, _ = qr(O)
     Y = A(O).detach()
-    cuda.synchronize()
-
-    t4 = perf_counter()
     nu = 1e-7
     Y.add_(O, alpha=nu)
-    cuda.synchronize()
+    C = cholesky(O.T @ Y, upper=True)
+    B = solve_triangular(C, Y, upper=True, left=False)
+    U, Sigma, _ = svd(B, full_matrices=False)
+    Lambda = (Sigma**2 - nu).clamp(min=0.0)
+    
+    return U, Lambda
+
+
+def nystrom_stable_fast(
+    A: Callable[[Tensor], Tensor], dim: int, sketch_size: int, dt: str, dev: str
+) -> Tuple[Tensor, Tensor]:
+
+    t1 = perf_counter()
+    O = randn(dim, sketch_size, device=dev, dtype=dt)
+
+    t2 = perf_counter()
+    Y = A(O).detach()
+    
+    t3 = perf_counter()
+    nu = 1e-7
+    Y.add_(O, alpha=nu)
+    
+    t4 = perf_counter()
+    C = cholesky(O.T @ Y, upper=True)
 
     t5 = perf_counter()
-    C = cholesky(O.T @ Y, upper=True)
-    cuda.synchronize()
-
-    t6 = perf_counter()
     B = solve_triangular(C, Y, upper=True, left=False)
-    cuda.synchronize()
+    
+    t6 = perf_counter()
+    BTB = (B.T @ B) / 1e-7
 
     t7 = perf_counter()
-    U, Sigma, _ = svd(B, full_matrices=False)
-    cuda.synchronize()
-
+    idx = arange(sketch_size, device=dev)
+    BTB[idx, idx] = BTB.diag() + 1
+    
     t8 = perf_counter()
-    Lambda = (Sigma**2 - nu).clamp(min=0.0)
-    cuda.synchronize()
-
+    L = cholesky(BTB)
+    
     t9 = perf_counter()
+    invBT = cholesky_solve(B.T, L)
+    
+    t10 = perf_counter()
+    out = -(B @ invBT) / (1e-7**2)
 
+    t11 = perf_counter()
+    idx2 = arange(dim, device=dev)
+    out[idx2, idx2] = out.diag() + (1 / 1e-7)
+
+    t12 = perf_counter()
     print(
-        f"Omega: {t2 - t1:.4e}s, "
-        # f"QR: {t3 - t2:.4e}s, "
-        f"A(O): {t4 - t3:.4e}s, "
-        f"Cholesky: {t6 - t5:.4e}s, Solve: {t7 - t6:.4e}s, SVD: {t8 - t7:.4e}s"
+        f"Omega: {t2 - t1:.2e}\nA(O): {t3 - t2:.2e}\nAdd: {t4-t3:.2e}\nCholesky: {t5 - t4:.2e}\nSolve: {t6-t5:.2e}\n"
+        f"BTB: {t7 - t6:.2e}\nAdd: {t8 - t7:.2e}\nCholesky 2: {t9 - t8:.2e}\nCholesky solve: {t10-t9:.2e}\nBinvBT: {t11 - t10:.2e}\n"
+        f"Add: {t12 - t11:.2e}\nTotal time: {t12 - t1:.2e}"
     )
-    print(f"Total time: {t9 - t1:.4e}s")
-    return U, Lambda
+    return out
