@@ -3,9 +3,9 @@ from typing import List
 from pytest import mark
 from rla_pinns.utils import run_verbose
 
+from torch.linalg import cholesky, solve_triangular
 from torch import norm, randn, float64, manual_seed, diag
 from test.exp1_poisson5d import rngd
-from rla_pinns.optim.rngd import nystrom_naive, nystrom_stable
 
 ARGS = [
     # train with SPRING and RNGD on different equations
@@ -52,6 +52,53 @@ def check_approx(A, A_hat):
     fro_norm_A = norm(A, p="fro")
     error = (fro_norm_diff / fro_norm_A).item()
     return error
+
+
+def nystrom_naive(apply_A, dim: int, sketch_size: int, dt: str, dev: str):
+    Omega = randn(dim, sketch_size, dtype=dt, device=dev)
+    Omega, _ = qr(Omega)
+    AO = apply_A(Omega)
+    OAO = Omega.T @ AO
+    B = cholesky_solve(AO.T, cholesky(OAO))
+    A_hat = AO @ B
+    return A_hat
+
+
+def nystrom_B(A, dim: int, sketch_size: int, dt: str, dev: str):
+    O = randn(dim, sketch_size, device=dev, dtype=dt)
+
+    Y = A(O).detach()
+    nu = 1e-7
+    Y.add_(O, alpha=nu)
+    C = cholesky(O.T @ Y, upper=True)
+    B = solve_triangular(C, Y, upper=True, left=False)
+
+    return B @ B.T
+            check_approx(B, nystrom_B(B.matmul, B.shape[0], val, float64, "cpu"))
+        )
+    for i in range(1, len(r)):
+        assert (errors_B[i - 1] > errors_B[i]), f"Error increases for larger sketch values."
+
+    assert errors_B[-1] < 1e-5, f"Error is too large for the largest sketch value."
+
+
+
+def nystrom_stable(A, dim: int, sketch_size: int, dt: str, dev: str):
+    """Compute a stable Nyström approximation."""
+    O = randn(dim, sketch_size, device=dev, dtype=dt)
+    O, _ = qr(O)
+
+    Y = A(O).detach()
+    nu = 1e-7
+    Y.add_(O, alpha=nu)
+    C = cholesky(O.T @ Y, upper=True)
+    B = solve_triangular(C, Y, upper=True, left=False)
+
+    U, Sigma, _ = svd(B, full_matrices=False)
+    Lambda = (Sigma**2 - nu).clamp(min=0.0)
+
+    return U, Lambda
+
 
 
 def test_nystrom():

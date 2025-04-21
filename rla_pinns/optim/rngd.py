@@ -243,12 +243,13 @@ class RNGD(Optimizer):
         norm_constraint = group["norm_constraint"]
 
         if isinstance(lr, float):
-            if momentum != 0.0:
-                norm_phi = sum([(d ** 2).sum() for d in directions]).sqrt()
-                scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
-            else:
-                scale = lr
-
+            # if momentum != 0.0:
+            #     norm_phi = sum([(d ** 2).sum() for d in directions]).sqrt()
+            #     scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
+            # else:
+            #     scale = lr
+            
+            scale = lr
 
             for p, d in zip(params, directions):
                 p.data.add_(d, alpha=scale)
@@ -426,43 +427,18 @@ class RNGD(Optimizer):
         # out = arg1 + (g - arg2) / damping
         
         B = nystrom_stable_fast(fn, N, self.l, dt, dev)
-        # t6 = perf_counter()
-        BTB = (B.T @ B) / 1e-7
-        # cuda.synchronize()
 
-        # t7 = perf_counter()
+        BTB = B.T @ B
         idx = arange(self.l, device=dev)
-        BTB[idx, idx] = BTB.diag() + 1
-        # cuda.synchronize()
-        
-        # t8 = perf_counter()
+        BTB[idx, idx] = BTB.diag() + damping
+
         L = cholesky(BTB)
-        # cuda.synchronize()
-        
-        # t9 = perf_counter()
         BTg = B.T @ g
-        # cuda.synchronize()
 
-        # t10 = perf_counter()
         invBTg = cholesky_solve(BTg.unsqueeze(-1), L).squeeze(-1)
-        # cuda.synchronize()
-        
-        # t11 = perf_counter()
         BinvBTg = B @ invBTg
-        # cuda.synchronize()
-        
-        # t12 = perf_counter()
-        out = (g / damping) - (BinvBTg / 1e-7**2)
-        # cuda.synchronize()
+        out = (g - BinvBTg) / damping
 
-
-        # t13 = perf_counter()
-        # print(
-        #     f"BTB: {t7 - t6:.2e}\nAdd: {t8 - t7:.2e}\nCholesky 2: {t9 - t8:.2e}\n"
-        #     f"BTg: {t10 - t9:.2e}\nCholesky solve: {t11-t10:.2e}\nBinvBT: {t12 - t11:.2e}\n"    
-        #     f"Add: {t13 - t12:.2e}."
-        # )
-        #
         return out.unsqueeze(-1)
 
     # NOTE: create tests for these function
@@ -478,31 +454,16 @@ class RNGD(Optimizer):
         dev: str,
         damping: float,
     ):
-        t1 = perf_counter()
         JJT = compute_joint_JJT(
             interior_inputs,
             interior_grad_outputs,
             boundary_inputs,
             boundary_grad_outputs,
         ).detach()
-        cuda.synchronize()
-
-        t2 = perf_counter()
         idx = arange(JJT.shape[0], device=dev)
         JJT[idx, idx] = JJT.diag() + damping
-        cuda.synchronize()
-
-        t3 = perf_counter()
         L = cholesky(JJT)
-        cuda.synchronize()
-
-        t4 = perf_counter()
         out = cholesky_solve(g.unsqueeze(1), L)
-        cuda.synchronize()
-
-        t5 = perf_counter()
-
-        print(f"JJT: {t2 - t1:.4e}, Damping: {t3 - t2:.4e}, Cholesky: {t4-t3:.4e}, Cholesky solve: {t5-t4:.4e}")
         return out
 
 
@@ -540,29 +501,11 @@ def nystrom_stable_fast(
     A: Callable[[Tensor], Tensor], dim: int, sketch_size: int, dt: str, dev: str
 ) -> Tuple[Tensor, Tensor]:
 
-    # t1 = perf_counter()
     O = randn(dim, sketch_size, device=dev, dtype=dt)
-    # cuda.synchronize()
-
-    # t2 = perf_counter()
     Y = A(O).detach()
-    # cuda.synchronize()
-    
-    # t3 = perf_counter()
     nu = 1e-7
     Y.add_(O, alpha=nu)
-    # cuda.synchronize()
-    
-    # t4 = perf_counter()
     C = cholesky(O.T @ Y, upper=True)
-    # cuda.synchronize()
-
-    # t5 = perf_counter()
     B = solve_triangular(C, Y, upper=True, left=False)
-    # cuda.synchronize()
 
-    # t6 = perf_counter()
-    # print(
-    #     f"Omega: {t2 - t1:.2e}\nA(O): {t3 - t2:.2e}\nAdd: {t4-t3:.2e}\nCholesky: {t5 - t4:.2e}\nSolve: {t6-t5:.2e}"
-    # )
     return B
