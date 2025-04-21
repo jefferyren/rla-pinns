@@ -511,39 +511,50 @@ def nystrom_stable_fast(
 
     t1 = perf_counter()
     O = randn(dim, sketch_size, device=dev, dtype=dt)
+    cuda.synchronize()
 
     t2 = perf_counter()
     Y = A(O).detach()
+    cuda.synchronize()
     
     t3 = perf_counter()
     nu = 1e-7
     Y.add_(O, alpha=nu)
+    cuda.synchronize()
     
     t4 = perf_counter()
     C = cholesky(O.T @ Y, upper=True)
+    cuda.synchronize()
 
     t5 = perf_counter()
     B = solve_triangular(C, Y, upper=True, left=False)
+    cuda.synchronize()
     
     t6 = perf_counter()
     BTB = (B.T @ B) / 1e-7
+    cuda.synchronize()
 
     t7 = perf_counter()
     idx = arange(sketch_size, device=dev)
     BTB[idx, idx] = BTB.diag() + 1
+    cuda.synchronize()
     
     t8 = perf_counter()
     L = cholesky(BTB)
+    cuda.synchronize()
     
     t9 = perf_counter()
     invBT = cholesky_solve(B.T, L)
+    cuda.synchronize()
     
     t10 = perf_counter()
     out = -(B @ invBT) / (1e-7**2)
+    cuda.synchronize()
 
     t11 = perf_counter()
     idx2 = arange(dim, device=dev)
     out[idx2, idx2] = out.diag() + (1 / 1e-7)
+    cuda.synchronize()
 
     t12 = perf_counter()
     print(
