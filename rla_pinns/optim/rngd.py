@@ -320,7 +320,6 @@ class RNGD(Optimizer):
             N_Omega + N_dOmega,
             dt,
             dev,
-            self.l,
             damping,
         )
 
@@ -381,7 +380,6 @@ class RNGD(Optimizer):
             N_Omega + N_dOmega,
             dt,
             dev,
-            self.l,
             damping,
         )
 
@@ -413,7 +411,6 @@ class RNGD(Optimizer):
         N: int,
         dt: str,
         dev: str,
-        l: int,
         damping: float,
     ):
         fn = partial(
@@ -426,11 +423,47 @@ class RNGD(Optimizer):
         # U, S = nystrom_stable(fn, N, l, dt, dev)
         # arg1 = einsum("ij,j,kj,k -> i", U, (1 / (S + damping)), U, g)
         # arg2 = einsum("ij,kj,k -> i", U, U, g)
-        # out = (arg1 + (g - arg2) / damping).unsqueeze(-1)
+        # out = arg1 + (g - arg2) / damping
         
-        out = (nystrom_stable_fast(fn, N, l, dt, dev) @ g).unsqueeze(-1)
+        B = nystrom_stable_fast(fn, N, self.l, dt, dev)
+        t6 = perf_counter()
+        BTB = (B.T @ B) / 1e-7
+        cuda.synchronize()
+
+        t7 = perf_counter()
+        idx = arange(self.l, device=dev)
+        BTB[idx, idx] = BTB.diag() + 1
+        cuda.synchronize()
         
-        return out
+        t8 = perf_counter()
+        L = cholesky(BTB)
+        cuda.synchronize()
+        
+        t9 = perf_counter()
+        BTg = B.T @ g
+        cuda.synchronize()
+
+        t10 = perf_counter()
+        invBTg = cholesky_solve(BTg.unsqueeze(-1), L).squeeze(-1)
+        cuda.synchronize()
+        
+        t11 = perf_counter()
+        BinvBTg = B @ invBTg
+        cuda.synchronize()
+        
+        t12 = perf_counter()
+        out = (g / damping) - (BinvBTg / 1e-7**2)
+        cuda.synchronize()
+
+
+        t13 = perf_counter()
+        print(
+            f"BTB: {t7 - t6:.2e}\nAdd: {t8 - t7:.2e}\nCholesky 2: {t9 - t8:.2e}\n"
+            f"BTg: {t10 - t9:.2e}\nCholesky solve: {t11-t10:.2e}\nBinvBT: {t12 - t11:.2e}\n"    
+            f"Add: {t13 - t12:.2e}."
+        )
+        
+        return out.unsqueeze(-1)
 
     # NOTE: create tests for these function
     def _apply_inv_exact(
@@ -443,7 +476,6 @@ class RNGD(Optimizer):
         N: int,
         dt: str,
         dev: str,
-        l: int,
         damping: float,
     ):
         t1 = perf_counter()
@@ -453,27 +485,27 @@ class RNGD(Optimizer):
             boundary_inputs,
             boundary_grad_outputs,
         ).detach()
-        # cuda.synchronize()
+        cuda.synchronize()
 
         t2 = perf_counter()
         idx = arange(JJT.shape[0], device=dev)
         JJT[idx, idx] = JJT.diag() + damping
-        # cuda.synchronize()
+        cuda.synchronize()
 
         t3 = perf_counter()
         L = cholesky(JJT)
-        # cuda.synchronize()
+        cuda.synchronize()
 
         t4 = perf_counter()
         out = cholesky_solve(g.unsqueeze(1), L)
-        # cuda.synchronize()
+        cuda.synchronize()
 
         t5 = perf_counter()
 
         print(f"JJT: {t2 - t1:.4e}, Damping: {t3 - t2:.4e}, Cholesky: {t4-t3:.4e}, Cholesky solve: {t5-t4:.4e}")
-        print(f"Total time: {t5 - t1:.4e}")
         return out
 
+            self.l
 
 def nystrom_naive(
     apply_A: Callable[[Tensor], Tensor], dim: int, sketch_size: int, dt: str, dev: str
@@ -529,37 +561,9 @@ def nystrom_stable_fast(
     t5 = perf_counter()
     B = solve_triangular(C, Y, upper=True, left=False)
     cuda.synchronize()
-    
+
     t6 = perf_counter()
-    BTB = (B.T @ B) / 1e-7
-    cuda.synchronize()
-
-    t7 = perf_counter()
-    idx = arange(sketch_size, device=dev)
-    BTB[idx, idx] = BTB.diag() + 1
-    cuda.synchronize()
-    
-    t8 = perf_counter()
-    L = cholesky(BTB)
-    cuda.synchronize()
-    
-    t9 = perf_counter()
-    invBT = cholesky_solve(B.T, L)
-    cuda.synchronize()
-    
-    t10 = perf_counter()
-    out = -(B @ invBT) / (1e-7**2)
-    cuda.synchronize()
-
-    t11 = perf_counter()
-    idx2 = arange(dim, device=dev)
-    out[idx2, idx2] = out.diag() + (1 / 1e-7)
-    cuda.synchronize()
-
-    t12 = perf_counter()
     print(
-        f"Omega: {t2 - t1:.2e}\nA(O): {t3 - t2:.2e}\nAdd: {t4-t3:.2e}\nCholesky: {t5 - t4:.2e}\nSolve: {t6-t5:.2e}\n"
-        f"BTB: {t7 - t6:.2e}\nAdd: {t8 - t7:.2e}\nCholesky 2: {t9 - t8:.2e}\nCholesky solve: {t10-t9:.2e}\nBinvBT: {t11 - t10:.2e}\n"
-        f"Add: {t12 - t11:.2e}\nTotal time: {t12 - t1:.2e}"
+        f"Omega: {t2 - t1:.2e}\nA(O): {t3 - t2:.2e}\nAdd: {t4-t3:.2e}\nCholesky: {t5 - t4:.2e}\nSolve: {t6-t5:.2e}"
     )
-    return out
+    return B
