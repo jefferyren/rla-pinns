@@ -19,6 +19,7 @@ from rla_pinns.optim.utils import (
     apply_joint_JT,
     apply_joint_JJT,
     compute_joint_JJT,
+    apply_joint_JT_tensor
 )
 from rla_pinns.pinn_utils import evaluate_boundary_loss
 from rla_pinns.parse_utils import parse_known_args_and_remove_from_argv
@@ -56,7 +57,7 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
     parser.add_argument(
         f"--{prefix}approximation",
         type=str,
-        choices=["nystrom", "exact"],
+        choices=["nystrom", "exact", "sap"],
         help="Randomized method to approximate the range of a low-rank matrix.",
         default="exact",
     )
@@ -178,12 +179,17 @@ class RNGD(Optimizer):
         elif approximation == "nystrom":
             assert rank_val > 0, "Rank value must be a positive integer."
             self._apply_inverse = self._apply_inv_sketch
+        elif approximation == "sap":
+            assert rank_val > 0, "Rank value must be a positive integer."
 
         else:
             raise ValueError(f"Randomization method {approximation} not supported.")
 
         if momentum != 0.0:
-            self._step_fn = self._spring_step
+            if approximation == "exact" or approximation == "nystrom":
+                self._step_fn = self._spring_step
+            else:
+                self._step_fn = self._sap_step
             # initialize phi
             (group,) = self.param_groups
             for p in group["params"]:
@@ -243,14 +249,12 @@ class RNGD(Optimizer):
         norm_constraint = group["norm_constraint"]
 
         if isinstance(lr, float):
-            if momentum != 0.0:
-                norm_phi = sum([(d ** 2).sum() for d in directions]).sqrt()
-                scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
-            else:
-                scale = lr
-            
-            # scale = lr
-
+            # if momentum != 0.0:
+            #     norm_phi = sum([(d ** 2).sum() for d in directions]).sqrt()
+            #     scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
+            # else:
+            #     scale = lr
+            scale = lr            
             for p, d in zip(params, directions):
                 p.data.add_(d, alpha=scale)
 
@@ -401,6 +405,69 @@ class RNGD(Optimizer):
         step = [self.state[p]["phi"] / sqrt(1 - momentum ** (2 * (self.steps + 1))) for p in params]
         return step
 
+    def _sap_step(
+        self,
+        interior_inputs: Dict[int, Tensor],
+        interior_grad_outputs: Dict[int, Tensor],
+        boundary_inputs: Dict[int, Tensor],
+        boundary_grad_outputs: Dict[int, Tensor],
+        residuals: Tensor,
+    ):
+        (group,) = self.param_groups
+        params = group["params"]
+        damping = group["damping"]
+        momentum = group["momentum"]
+        (dev,) = {p.device for p in params}
+        (dt,) = {p.dtype for p in params}
+        (N_Omega,) = {
+            t.shape[0]
+            for t in list(interior_inputs.values())
+            + list(interior_grad_outputs.values())
+        }
+        (N_dOmega,) = {
+            t.shape[0]
+            for t in list(boundary_inputs.values())
+            + list(boundary_grad_outputs.values())
+        }
+
+        J_phi = apply_joint_J(
+            interior_inputs,
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs,
+            [self.state[p]["phi"].unsqueeze(-1) for p in params],
+        ).squeeze(-1)
+
+        zeta = residuals - J_phi.mul_(momentum)
+
+        Omega = randn(self.l, N_Omega + N_dOmega, device=dev, dtype=dt)
+        OJ = apply_joint_JT_tensor(
+            interior_inputs,
+            interior_grad_outputs,
+            boundary_inputs,
+            boundary_grad_outputs,
+            Omega.T,
+        ).T
+        
+        OZeta = einsum("ij,j->i", Omega, zeta)
+
+        JJT_h = einsum("ij,kj->ik", OJ, OJ)
+
+        idx = arange(self.l, device=dev)
+        JJT_h[idx, idx] = JJT_h.diag() + damping
+        L = cholesky(JJT_h)
+
+        invZeta = cholesky_solve(OZeta.unsqueeze(-1), L).squeeze(-1)
+        step = einsum("ij,i->j", OJ, invZeta)
+
+        step = step.split([p.numel() for p in params], dim=0)
+
+        for p, s in zip(params, step):
+            self.state[p]["phi"].mul_(momentum).add_(s.view(p.shape))
+
+        step = [self.state[p]["phi"] / sqrt(1 - momentum ** (2 * (self.steps + 1))) for p in params]
+        return step
+
     # NOTE: create tests for these function
     def _apply_inv_sketch(
         self,
@@ -421,10 +488,6 @@ class RNGD(Optimizer):
             boundary_inputs,
             boundary_grad_outputs,
         )
-        # U, S = nystrom_stable(fn, N, l, dt, dev)
-        # arg1 = einsum("ij,j,kj,k -> i", U, (1 / (S + damping)), U, g)
-        # arg2 = einsum("ij,kj,k -> i", U, U, g)
-        # out = arg1 + (g - arg2) / damping
         
         B = nystrom_stable_fast(fn, N, self.l, dt, dev)
 
