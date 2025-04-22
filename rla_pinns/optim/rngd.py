@@ -243,13 +243,13 @@ class RNGD(Optimizer):
         norm_constraint = group["norm_constraint"]
 
         if isinstance(lr, float):
-            # if momentum != 0.0:
-            #     norm_phi = sum([(d ** 2).sum() for d in directions]).sqrt()
-            #     scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
-            # else:
-            #     scale = lr
+            if momentum != 0.0:
+                norm_phi = sum([(d ** 2).sum() for d in directions]).sqrt()
+                scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
+            else:
+                scale = lr
             
-            scale = lr
+            # scale = lr
 
             for p, d in zip(params, directions):
                 p.data.add_(d, alpha=scale)
