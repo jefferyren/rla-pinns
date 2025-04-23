@@ -44,6 +44,6 @@ parameters:
         max: 1e-1
     RNGD_rank_val:
         distribution: categorical
-        value: [10, 15, 30]
+        values: [10, 15, 30]
     equation:
         value: "poisson"

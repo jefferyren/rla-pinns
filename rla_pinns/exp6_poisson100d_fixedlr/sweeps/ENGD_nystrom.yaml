@@ -41,6 +41,7 @@ parameters:
     RNGD_momentum:
         value: 0.0
     RNGD_rank_val:
-        value: [10, 15, 30]
+        distribution: categorical
+        values: [10, 15, 30]
     equation:
         value: "poisson"
