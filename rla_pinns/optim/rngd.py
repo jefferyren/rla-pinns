@@ -1,13 +1,9 @@
 from math import sqrt
-from time import perf_counter
-from torch import Tensor, cuda, zeros_like, cholesky_solve, einsum, arange, cat, randn
-from typing import List, Dict, Callable, Tuple
+from torch import Tensor, zeros_like, cat
+from typing import List, Dict, Tuple
 from argparse import ArgumentParser, Namespace
-from hessianfree.cg import cg
 from torch.nn import Module
-from functools import partial
 from torch.optim import Optimizer
-from torch.linalg import qr, cholesky, solve_triangular, svd, eigh
 from rla_pinns import (
     fokker_planck_isotropic_equation,
     heat_equation,
@@ -18,9 +14,6 @@ from rla_pinns.optim.utils import (
     evaluate_losses_with_layer_inputs_and_grad_outputs,
     apply_joint_J,
     apply_joint_JT,
-    apply_joint_JJT,
-    compute_joint_JJT,
-    apply_joint_JT_tensor,
 )
 from rla_pinns.optim.rand_utils import (
     pcg_nystrom,
@@ -171,15 +164,6 @@ class RNGD(Optimizer):
             idx for idx, layer in enumerate(self.layers) if list(layer.parameters())
         ]
         self.steps = 0
-
-        self.Ds = sum(
-            [
-                p.numel()
-                for layer in self.layers
-                for p in layer.parameters()
-                if p.requires_grad
-            ]
-        )
 
         self.l = rank_val
         self._approximation = approximation

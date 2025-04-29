@@ -9,7 +9,6 @@ from rla_pinns.optim.rand_utils import (
 )
 from torch.linalg import cholesky, solve_triangular
 from torch import norm, randn, float64, manual_seed, diag
-from test.exp1_poisson5d import rngd
 
 ARGS = [
     # train with SPRING and RNGD on different equations
