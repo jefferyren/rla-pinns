@@ -1,14 +1,11 @@
-from torch import Tensor, cuda, zeros_like, cholesky_solve, einsum, arange, cat, randn
+from torch import Tensor, cholesky_solve, einsum, arange, randn
 from typing import List, Dict, Callable, Tuple
 from hessianfree.cg import cg
 from functools import partial
-from torch.linalg import qr, cholesky, solve_triangular, svd, eigh
+from torch.linalg import qr, cholesky, solve_triangular, svd
 from rla_pinns.optim.utils import (
-    apply_joint_J,
-    apply_joint_JT,
     apply_joint_JJT,
     compute_joint_JJT,
-    apply_joint_JT_tensor,
 )
 
 
