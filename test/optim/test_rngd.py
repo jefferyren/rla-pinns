@@ -2,7 +2,11 @@ from time import time
 from typing import List
 from pytest import mark
 from rla_pinns.utils import run_verbose
-
+from rla_pinns.optim.rand_utils import (
+    nystrom_naive,
+    nystrom_stable,
+    nystrom_stable_fast,
+)
 from torch.linalg import cholesky, solve_triangular
 from torch import norm, randn, float64, manual_seed, diag
 from test.exp1_poisson5d import rngd
@@ -35,70 +39,26 @@ ARGS = [
 ARG_IDS = ["_".join(cmd) for cmd in ARGS]
 
 
-@mark.parametrize("args", ARGS, ids=ARG_IDS)
-def test_rngd(args: List[str]) -> None:
-    """Test the training script (integration test)."""
-    # Run the training script with the provided arguments
-    run_verbose(["python", rngd.__file__] + args)
+# NOTE: This test is no longer valid as the new SPRING rescales the steps for bias corrections, and it doens't use the norm constraint
+# @mark.parametrize("args", ARGS, ids=ARG_IDS)
+# def test_rngd(args: List[str]) -> None:
+#     """Test the training script (integration test)."""
+#     # Run the training script with the provided arguments
+#     run_verbose(["python", rngd.__file__] + args)
 
 
-def check_approx(A, A_hat):
+def check_approx(A, A_hat, is_B):
     if isinstance(A_hat, tuple):
         U, S = A_hat
         A_hat = U @ diag(S) @ U.T
+    elif is_B:
+        A_hat = A_hat @ A_hat.T
 
     diff = A - A_hat
     fro_norm_diff = norm(diff, p="fro")
     fro_norm_A = norm(A, p="fro")
     error = (fro_norm_diff / fro_norm_A).item()
     return error
-
-
-def nystrom_naive(apply_A, dim: int, sketch_size: int, dt: str, dev: str):
-    Omega = randn(dim, sketch_size, dtype=dt, device=dev)
-    Omega, _ = qr(Omega)
-    AO = apply_A(Omega)
-    OAO = Omega.T @ AO
-    B = cholesky_solve(AO.T, cholesky(OAO))
-    A_hat = AO @ B
-    return A_hat
-
-
-def nystrom_B(A, dim: int, sketch_size: int, dt: str, dev: str):
-    O = randn(dim, sketch_size, device=dev, dtype=dt)
-
-    Y = A(O).detach()
-    nu = 1e-7
-    Y.add_(O, alpha=nu)
-    C = cholesky(O.T @ Y, upper=True)
-    B = solve_triangular(C, Y, upper=True, left=False)
-
-    return B @ B.T
-            check_approx(B, nystrom_B(B.matmul, B.shape[0], val, float64, "cpu"))
-        )
-    for i in range(1, len(r)):
-        assert (errors_B[i - 1] > errors_B[i]), f"Error increases for larger sketch values."
-
-    assert errors_B[-1] < 1e-5, f"Error is too large for the largest sketch value."
-
-
-
-def nystrom_stable(A, dim: int, sketch_size: int, dt: str, dev: str):
-    """Compute a stable Nyström approximation."""
-    O = randn(dim, sketch_size, device=dev, dtype=dt)
-    O, _ = qr(O)
-
-    Y = A(O).detach()
-    nu = 1e-7
-    Y.add_(O, alpha=nu)
-    C = cholesky(O.T @ Y, upper=True)
-    B = solve_triangular(C, Y, upper=True, left=False)
-
-    U, Sigma, _ = svd(B, full_matrices=False)
-    Lambda = (Sigma**2 - nu).clamp(min=0.0)
-
-    return U, Lambda
-
 
 
 def test_nystrom():
@@ -110,14 +70,25 @@ def test_nystrom():
 
     errors_naive = []
     errors_stable = []
+    errors_fast = []
     for val in r:
         manual_seed(1)
         errors_naive.append(
-            check_approx(B, nystrom_naive(B.matmul, B.shape[0], val, float64, "cpu"))
+            check_approx(
+                B, nystrom_naive(B.matmul, B.shape[0], val, float64, "cpu"), False
+            )
         )
         manual_seed(1)
         errors_stable.append(
-            check_approx(B, nystrom_stable(B.matmul, B.shape[0], val, float64, "cpu"))
+            check_approx(
+                B, nystrom_stable(B.matmul, B.shape[0], val, float64, "cpu"), False
+            )
+        )
+        manual_seed(1)
+        errors_fast.append(
+            check_approx(
+                B, nystrom_stable_fast(B.matmul, B.shape[0], val, float64, "cpu"), True
+            )
         )
 
     for i in range(1, len(r)):
@@ -127,6 +98,9 @@ def test_nystrom():
         assert (
             errors_stable[i - 1] > errors_stable[i]
         ), f"Error increases for larger sketch values in stable version."
+        assert (
+            errors_fast[i - 1] > errors_fast[i]
+        ), f"Error increases for larger sketch values in fast version."
 
     assert (
         errors_naive[-1] < 1e-5
@@ -134,6 +108,9 @@ def test_nystrom():
     assert (
         errors_stable[-1] < 1e-5
     ), f"Error is too large for the largest sketch value in stable version."
+    assert (
+        errors_fast[-1] < 1e-5
+    ), f"Error is too large for the largest sketch value in fast version."
 
     start_naive = time()
     manual_seed(1)
@@ -145,8 +122,14 @@ def test_nystrom():
     nystrom_stable(B.matmul, B.shape[0], 25, float64, "cpu")
     end_stable = time()
 
+    start_fast = time()
+    manual_seed(1)
+    nystrom_stable_fast(B.matmul, B.shape[0], 25, float64, "cpu")
+    end_fast = time()
+
     print("Time for naive version:", end_naive - start_naive)
     print("Time for stable version:", end_stable - start_stable)
+    print("Time for fast version:", end_fast - start_fast)
 
     # assert (
     #     end_naive - start_naive > end_stable - start_stable

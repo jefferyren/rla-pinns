@@ -218,9 +218,10 @@ def apply_joint_JT_tensor(
     )
 
     # Flatten each tensor in the list and concatenate them
-    flat_params = [p.flatten(0, -2) if p.dim() > 1 else p.unsqueeze(0) for p in param_list]
+    flat_params = [
+        p.flatten(0, -2) if p.dim() > 1 else p.unsqueeze(0) for p in param_list
+    ]
     return torch.cat(flat_params, dim=0)
-
 
 
 def apply_joint_JJT(
