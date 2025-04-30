@@ -1,6 +1,6 @@
-entity: andresguzco
-project: rla-pinns
-name: SPRING_exact
+entity: rla-pinns
+project: exp11_poisson5d_large
+name: SPRING_nystrom_10k
 program: ../../train.py
 command:
     - ${env}

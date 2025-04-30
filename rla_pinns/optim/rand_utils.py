@@ -9,6 +9,7 @@ from rla_pinns.optim.utils import (
 )
 
 
+# NOTE: create test that increases the number of iterations to ascertain we recover the exact solve
 def pcg_nystrom(
     interior_inputs: Dict[int, Tensor],
     interior_grad_outputs: Dict[int, Tensor],

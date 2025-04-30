@@ -44,19 +44,23 @@ sweep_ids = {  # ids from the wandb agent
     "0tjhkabg": "Hessian-free",
     "tacjf0pi": "ENGD (Woodbury)",
     "r9btns6h": "ENGD (Nystrom)",
+    "0vkyyewf": "ENGD (PCG)",
     "eimjo8j1": "SPRING",
     "yiyvtrbn": "SPRING (Nystrom)",
+    "z5d2f864": "SPRING (PCG)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
 colors = {
     "SGD": sequential.Reds_4.mpl_colors[-2],
     "Adam": sequential.Reds_4.mpl_colors[-1],
-    "ENGD": sequential.Blues_5.mpl_colors[-3],
-    "ENGD (Woodbury)": sequential.Blues_5.mpl_colors[-2],
-    "ENGD (Nystrom)": sequential.Blues_5.mpl_colors[-1],
-    "SPRING": sequential.Greens_4.mpl_colors[-2],
-    "SPRING (Nystrom)": sequential.Greens_4.mpl_colors[-1],
+    "ENGD": sequential.Blues_5.mpl_colors[-4],
+    "ENGD (Woodbury)": sequential.Blues_5.mpl_colors[-3],
+    "ENGD (Nystrom)": sequential.Blues_5.mpl_colors[-2],
+    "ENGD (PCG)": sequential.Blues_5.mpl_colors[-1],
+    "SPRING": sequential.Greens_4.mpl_colors[-3],
+    "SPRING (Nystrom)": sequential.Greens_4.mpl_colors[-2],
+    "SPRING (PCG)": sequential.Greens_4.mpl_colors[-1],
     "Hessian-free": "black",
 }
 
@@ -66,8 +70,10 @@ linestyles = {
     "ENGD": "-",
     "ENGD (Woodbury)": "-",
     "ENGD (Nystrom)": "-",
+    "ENGD (PCG)": "-",
     "SPRING": "-",
     "SPRING (Nystrom)": "-",
+    "SPRING (PCG)": "-",
     "Hessian-free": "-",
 }
 

@@ -17,8 +17,8 @@ from rla_pinns.wandb_utils import (
     show_sweeps,
 )
 
-entity = "andresguzco"  # team name on wandb
-project = "rla-pinns"  # name from the 'Projects' tab on wandb
+entity = "aguzmanc-org"  # team name on wandb
+project = "exp11_poisson5d_large"  # name from the 'Projects' tab on wandb
 
 # information for title
 equation = "poisson"
@@ -31,20 +31,20 @@ num_params = sum(
 )
 
 # Useful to map sweep ids to human-readable names
-print_sweeps = False
+print_sweeps = True 
 if print_sweeps:
     show_sweeps(entity, project)
     raise Exception("Printed sweeps. Exiting...")
 
 
 sweep_ids = {  # ids from the wandb agent
-    "oeig58vb": "SGD",
-    "va174qk7": "Adam",
-    "14ls2uo2": "ENGD",
-    "0tjhkabg": "Hessian-free",
+    # "oeig58vb": "SGD",
+    # "va174qk7": "Adam",
+    # "14ls2uo2": "ENGD",
+    # "0tjhkabg": "Hessian-free",
     "tacjf0pi": "ENGD (Woodbury)",
     "r9btns6h": "ENGD (Nystrom)",
-    "eimjo8j1": "SPRING",
+    "u0i46tss": "SPRING",
     "yiyvtrbn": "SPRING (Nystrom)",
 }
 

@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp1_poisson5d
-name: ENGD_woodbury
+project: exp11_poisson5d_large
+name: ENGD_woodbury_5k
 program: ../../train.py
 command:
     - ${env}

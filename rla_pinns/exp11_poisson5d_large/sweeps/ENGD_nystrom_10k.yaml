@@ -1,6 +1,6 @@
-entity: andresguzco
-project: rla-pinns
-name: ENGD_nystrom
+entity: rla-pinns
+project: exp11_poisson5d_large
+name: ENGD_nystrom_10k
 program: ../../train.py
 command:
     - ${env}
