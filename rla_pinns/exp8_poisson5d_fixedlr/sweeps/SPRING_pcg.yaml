@@ -1,6 +1,6 @@
 entity: rla-pinns
 project: exp8_poisson5d_fixedlr
-name: SPRING_nystorm
+name: SPRING_pcg
 program: ../../train.py
 command:
     - ${env}
@@ -29,7 +29,7 @@ parameters:
     N_dOmega:
         value: 500
     RNGD_approximation:
-        value: "nystrom"
+        value: "pcg"
     RNGD_damping:
         distribution: log_uniform_values
         min: 1e-6

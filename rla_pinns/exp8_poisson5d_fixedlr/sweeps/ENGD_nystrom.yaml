@@ -32,14 +32,15 @@ parameters:
         value: "nystrom"
     RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-11
-        max: 1e-3
+        min: 1e-7
+        max: 1e-1
     RNGD_momentum:
         value: 0.0
     RNGD_norm_constraint:
         value: 0.0
     RNGD_rank_val:
-        value: 1750
+        distribution: categorical
+        values: [175, 350, 525, 700]
     RNGD_lr:
         distribution: uniform
         min: 1e-3

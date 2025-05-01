@@ -12,3 +12,5 @@ cd sweeps/
 # sbatch SPRING.sh
 sbatch ENGD_nystrom.sh
 sbatch SPRING_nystrom.sh
+sbatch ENGD_pcg.sh
+sbatch SPRING_pcg.sh
