@@ -17,7 +17,7 @@ from rla_pinns.wandb_utils import (
     show_sweeps,
 )
 
-entity = "aguzmanc-org"  # team name on wandb
+entity = "rla-pinns"  # team name on wandb
 project = "exp11_poisson5d_large"  # name from the 'Projects' tab on wandb
 
 # information for title
@@ -31,7 +31,7 @@ num_params = sum(
 )
 
 # Useful to map sweep ids to human-readable names
-print_sweeps = True 
+print_sweeps = False 
 if print_sweeps:
     show_sweeps(entity, project)
     raise Exception("Printed sweeps. Exiting...")
@@ -42,10 +42,10 @@ sweep_ids = {  # ids from the wandb agent
     # "va174qk7": "Adam",
     # "14ls2uo2": "ENGD",
     # "0tjhkabg": "Hessian-free",
-    "tacjf0pi": "ENGD (Woodbury)",
-    "r9btns6h": "ENGD (Nystrom)",
-    "u0i46tss": "SPRING",
-    "yiyvtrbn": "SPRING (Nystrom)",
+    "ggz5645c": "ENGD (Woodbury)",
+    "ffusgxnj": "ENGD (Nystrom)",
+    "xvkh7kes": "SPRING",
+    "13643rk9": "SPRING (Nystrom)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
