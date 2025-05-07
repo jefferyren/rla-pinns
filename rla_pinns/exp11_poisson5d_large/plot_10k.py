@@ -18,12 +18,12 @@ from rla_pinns.wandb_utils import (
 )
 
 entity = "rla-pinns"  # team name on wandb
-project = "exp6_poisson100d_fixedlr"  # name from the 'Projects' tab on wandb
+project = "exp11_poisson5d_large"  # name from the 'Projects' tab on wandb
 
 # information for title
 equation = "poisson"
-architecture = "mlp-tanh-768-768-512-512"
-dim_Omega = 100
+architecture = "mlp-tanh-64-64-48-48"
+dim_Omega = 5
 num_params = sum(
     p.numel()
     for layer in set_up_layers(architecture, equation, dim_Omega)
@@ -31,36 +31,32 @@ num_params = sum(
 )
 
 # Useful to map sweep ids to human-readable names
-print_sweeps = False 
+print_sweeps = False
 if print_sweeps:
     show_sweeps(entity, project)
     raise Exception("Printed sweeps. Exiting...")
 
 
 sweep_ids = {  # ids from the wandb agent
-    # "agtgmknd": "SGD",
-    # "p6bgdypg": "Adam",
-    # "fdohey43": "ENGD",
-    # "d5ujt0u0": "Hessian-free",
-    "uw7ye8u0": "ENGD (Woodbury)",
-    "h3zflw65": "ENGD (Nystrom)",
-    # "gqv9hgxc": "ENGD (PCG)",
-    "gh8vlzxy": "SPRING",
-    "esi2r0ri": "SPRING (Nystrom)",
-    # "zwfkk0ti": "SPRING (PCG)",
+    # "oeig58vb": "SGD",
+    # "va174qk7": "Adam",
+    # "14ls2uo2": "ENGD",
+    # "0tjhkabg": "Hessian-free",
+    "ggz5645c": "ENGD (Woodbury)",
+    "ffusgxnj": "ENGD (Nystrom)",
+    "xvkh7kes": "SPRING",
+    "13643rk9": "SPRING (Nystrom)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
 colors = {
     "SGD": sequential.Reds_4.mpl_colors[-2],
     "Adam": sequential.Reds_4.mpl_colors[-1],
-    "ENGD": sequential.Blues_5.mpl_colors[-4],
-    "ENGD (Woodbury)": sequential.Blues_5.mpl_colors[-3],
-    "ENGD (Nystrom)": sequential.Blues_5.mpl_colors[-2],
-    "ENGD (PCG)": sequential.Blues_5.mpl_colors[-1],
-    "SPRING": sequential.Greens_4.mpl_colors[-3],
-    "SPRING (Nystrom)": sequential.Greens_4.mpl_colors[-2],
-    "SPRING (PCG)": sequential.Greens_4.mpl_colors[-1],
+    "ENGD": sequential.Blues_5.mpl_colors[-3],
+    "ENGD (Woodbury)": sequential.Blues_5.mpl_colors[-2],
+    "ENGD (Nystrom)": sequential.Blues_5.mpl_colors[-1],
+    "SPRING": sequential.Greens_4.mpl_colors[-2],
+    "SPRING (Nystrom)": sequential.Greens_4.mpl_colors[-1],
     "Hessian-free": "black",
 }
 
@@ -70,10 +66,8 @@ linestyles = {
     "ENGD": "-",
     "ENGD (Woodbury)": "-",
     "ENGD (Nystrom)": "-",
-    "ENGD (PCG)": "-",
     "SPRING": "-",
     "SPRING (Nystrom)": "-",
-    "SPRING (PCG)": "-",
     "Hessian-free": "-",
 }
 
@@ -103,23 +97,14 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    y_to_ylabel = {"loss": "Loss", "l2_error": r"$L_2$ error"}
+    y_to_ylabel = {"loss": "Loss", "l2_error": "$L_2$ error"}
     x_to_xlabel = {"step": "Iteration", "time": "Time (s)"}
 
-    # Create a 2x2 figure to hold all plots
-    with plt.rc_context(
-        bundles.neurips2023(
-            rel_width=1.0, 
-            nrows=4,
-            ncols=4,
-            usetex=not args.disable_tex
-        )
-    ):
-        fig, axes = plt.subplots(2, 2)
-        axes_flat = axes.flatten()
-
-        # Loop over each subplot (x, y combo)
-        for ax, ((x, xlabel), (y, ylabel)) in zip(axes_flat, product(x_to_xlabel.items(), y_to_ylabel.items())):
+    for (x, xlabel), (y, ylabel) in product(x_to_xlabel.items(), y_to_ylabel.items()):
+        with plt.rc_context(
+            bundles.neurips2023(rel_width=1.0, usetex=not args.disable_tex)
+        ):
+            fig, ax = plt.subplots(1, 1)
             ax.set_xlabel(xlabel)
             ax.set_xscale("log")
             ax.set_ylabel(ylabel)
@@ -127,7 +112,6 @@ if __name__ == "__main__":
             ax.set_title(f"{dim_Omega}d {equation.capitalize()} ($D={num_params}$)")
             ax.grid(True, alpha=0.5)
 
-            # Plot each optimizer's history
             for sweep_id, label in sweep_ids.items():
                 df_history, _ = load_best_run(
                     entity,
@@ -139,7 +123,7 @@ if __name__ == "__main__":
                 )
                 x_data = {
                     "step": df_history["step"] + 1,
-                    "time": df_history["time"] - df_history["time"].min(),
+                    "time": df_history["time"] - min(df_history["time"]),
                 }[x]
                 ax.plot(
                     x_data,
@@ -149,23 +133,8 @@ if __name__ == "__main__":
                     linestyle=linestyles[label],
                 )
 
-        # One shared legend for all subplots
-        handles, labels = axes_flat[0].get_legend_handles_labels()
-        fig.legend(
-            handles,
-            labels,
-            loc="lower center",
-            # adjust legend to not overlap with xlabel
-            bbox_to_anchor=(0.5, -0.1),
-            # shorter lines so legend fits into a single line in the main text
-            handlelength=1.35,
-            # reduce space between columns to fit into a single line
-            ncols=8,
-            columnspacing=0.9,
-        )
-
-        out_file = path.join(HEREDIR, "metric_summary.pdf")
-        plt.savefig(out_file, bbox_inches="tight")
+            ax.legend()
+            plt.savefig(path.join(HEREDIR, f"{y}_over_{x}.pdf"), bbox_inches="tight")
 
     # export sweep and run descriptions to LaTeX
     # TEXDIR = path.join(HEREDIR, "tex")
@@ -180,4 +149,4 @@ if __name__ == "__main__":
     #     for sweep in show_sweeps(entity, project):
     #         WandbSweepFormatter.to_tex(TEXDIR, sweep.config)
     # else:
-    #     print("Skipping LaTeX export of sweeps and best runs.")
+    #     print("Skipping LaTeX export of sweeps and best r
