@@ -43,11 +43,11 @@ sweep_ids = {  # ids from the wandb agent
     # "14ls2uo2": "ENGD",
     # "0tjhkabg": "Hessian-free",
     "xhz1mrx6": "ENGD (Woodbury)",
-    "4swsghr8": "ENGD (Nystrom)",
-    "5moc4vo9": "ENGD (PCG)",
+    # "4swsghr8": "ENGD (Nystrom)",
+    # "5moc4vo9": "ENGD (PCG)",
     "pmp7vg9n": "SPRING",
-    "hunl13d4": "SPRING (Nystrom)",
-    "byipwpo4": "SPRING (PCG)",
+    # "hunl13d4": "SPRING (Nystrom)",
+    # "byipwpo4": "SPRING (PCG)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
@@ -103,19 +103,20 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    y_to_ylabel = {"loss": "Loss", "l2_error": r"$L_2$ error"}
+    # y_to_ylabel = {"loss": "Loss", "l2_error": r"$L_2$ error"}
+    y_to_ylabel = {"l2_error": r"$L_2$ error"}
     x_to_xlabel = {"step": "Iteration", "time": "Time (s)"}
 
     # Create a 2x2 figure to hold all plots
     with plt.rc_context(
         bundles.neurips2023(
             rel_width=1.0, 
-            nrows=4,
+            nrows=2,
             ncols=4,
             usetex=not args.disable_tex
         )
     ):
-        fig, axes = plt.subplots(2, 2)
+        fig, axes = plt.subplots(1, 2)
         axes_flat = axes.flatten()
 
         # Loop over each subplot (x, y combo)
@@ -164,7 +165,7 @@ if __name__ == "__main__":
             columnspacing=0.9,
         )
 
-        out_file = path.join(HEREDIR, "metric_summary.pdf")
+        out_file = path.join(HEREDIR, "l2.pdf")
         plt.savefig(out_file, bbox_inches="tight")
 
     # export sweep and run descriptions to LaTeX

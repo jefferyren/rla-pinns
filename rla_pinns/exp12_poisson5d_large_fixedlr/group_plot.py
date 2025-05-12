@@ -5,6 +5,7 @@ from itertools import product
 from os import path
 
 from matplotlib import pyplot as plt
+from matplotlib.ticker import MaxNLocator
 from tueplots import bundles
 
 from rla_pinns.exp12_poisson5d_large_fixedlr import plot_1k as SMALL
@@ -12,6 +13,8 @@ from rla_pinns.exp12_poisson5d_large_fixedlr.plot_1k import colors, linestyles
 from rla_pinns.exp12_poisson5d_large_fixedlr import plot_5k as MEDIUM
 from rla_pinns.exp12_poisson5d_large_fixedlr import plot_10k as BIG
 from rla_pinns.wandb_utils import load_best_run
+
+BATCH_SIZES = [1000, 5000, 10000]
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Summarize the experiments on heat 1d in one figure.")
@@ -28,14 +31,16 @@ if __name__ == "__main__":
     IGNORE = {"ENGD (diagonal)"}
 
     # Define axes labels
-    y_to_ylabel = {"loss": "Loss", "l2_error": "$L_2$ error"}
-    x_to_xlabel = {"step": "Iteration", "time": "Time [s]"}
+    # y_to_ylabel = {"loss": "Loss", "l2_error": "$L_2$ error"}
+    y_to_ylabel = {"l2_error": "$L_2$ error"}
+    # x_to_xlabel = {"step": "Iteration", "time": "Time [s]"}
+    x_to_xlabel = {"time": "Time [s]"}
 
     # Build 4x3 grid
     with plt.rc_context(
         bundles.neurips2023(
             rel_width=1.0,
-            nrows=4,
+            nrows=1,
             ncols=3,
             usetex=not args.disable_tex,
         ),
@@ -45,12 +50,13 @@ if __name__ == "__main__":
             r"\usepackage[group-separator={,}, group-minimum-digits={3}]{siunitx}"
         )
 
-        fig, axs = plt.subplots(4, len(COLUMNS))
-
+        fig, axs = plt.subplots(1, len(COLUMNS), figsize=(6, 1.5), sharey="row")
+        
         # Loop through each combination to fill each row
         for row_index, ((x, xlabel), (y, ylabel)) in enumerate(product(x_to_xlabel.items(), y_to_ylabel.items())):
+            i = 0
             for col_index, exp in enumerate(COLUMNS):
-                ax = axs[row_index, col_index]
+                ax = axs[col_index]
 
                 # Axis formatting
                 ax.set_xscale("log")
@@ -60,13 +66,12 @@ if __name__ == "__main__":
                 if col_index == 0:
                     ax.set_ylabel(ylabel)
 
-                # Title per column
-                D = exp.num_params
                 if args.disable_tex:
-                    title = f"D={D}"
+                    title = f"N={BATCH_SIZES[i]}"
                 else:
-                    title = rf"$D=\num{{{D}}}$"
+                    title = rf"$N=\num{BATCH_SIZES[i]}$"
                 ax.set_title(title)
+                i += 1
 
                 # Plot each optimizer run
                 for sweep_id, name in exp.sweep_ids.items():
@@ -99,19 +104,19 @@ if __name__ == "__main__":
                     ax.set_xlim(left=1)
 
         # Shared legend at bottom
-        handles, labels = axs[0, 0].get_legend_handles_labels()
+        handles, labels = axs[0].get_legend_handles_labels()
         fig.legend(
             handles,
             labels,
             loc="lower center",
-            bbox_to_anchor=(0.5, -0.05),
+            bbox_to_anchor=(0.5, -0.13),
             ncol=len(labels),
             handlelength=1.35,
             columnspacing=0.9,
-            frameon=False,
+            frameon=True,
         )
 
         # plt.tight_layout(rect=[0, 0, 1, 0.95])
-        out_file = path.join(path.dirname(path.abspath(__file__)), "summary.pdf")
+        out_file = path.join(path.dirname(path.abspath(__file__)), "l2_fixedlr.pdf")
         plt.savefig(out_file, bbox_inches="tight")
         print(f"Saved combined figure to {out_file}")

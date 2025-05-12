@@ -43,10 +43,10 @@ sweep_ids = {  # ids from the wandb agent
     # "fdohey43": "ENGD",
     # "d5ujt0u0": "Hessian-free",
     "uw7ye8u0": "ENGD (Woodbury)",
-    "h3zflw65": "ENGD (Nystrom)",
+    # "h3zflw65": "ENGD (Nystrom)",
     # "gqv9hgxc": "ENGD (PCG)",
     "gh8vlzxy": "SPRING",
-    "esi2r0ri": "SPRING (Nystrom)",
+    # "esi2r0ri": "SPRING (Nystrom)",
     # "zwfkk0ti": "SPRING (PCG)",
 }
 
@@ -103,19 +103,20 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    y_to_ylabel = {"loss": "Loss", "l2_error": r"$L_2$ error"}
+    # y_to_ylabel = {"loss": "Loss", "l2_error": r"$L_2$ error"}
+    y_to_ylabel = {"l2_error": r"$L_2$ error"}
     x_to_xlabel = {"step": "Iteration", "time": "Time (s)"}
 
     # Create a 2x2 figure to hold all plots
     with plt.rc_context(
         bundles.neurips2023(
             rel_width=1.0, 
-            nrows=4,
+            nrows=1,
             ncols=4,
             usetex=not args.disable_tex
         )
     ):
-        fig, axes = plt.subplots(2, 2)
+        fig, axes = plt.subplots(1, 2, sharey="row")
         axes_flat = axes.flatten()
 
         # Loop over each subplot (x, y combo)
@@ -164,7 +165,7 @@ if __name__ == "__main__":
             columnspacing=0.9,
         )
 
-        out_file = path.join(HEREDIR, "metric_summary.pdf")
+        out_file = path.join(HEREDIR, "l2.pdf")
         plt.savefig(out_file, bbox_inches="tight")
 
     # export sweep and run descriptions to LaTeX
