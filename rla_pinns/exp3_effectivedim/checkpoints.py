@@ -146,7 +146,7 @@ def main():
     parser.add_argument(
         "--damping",
         type=list,
-        default=[1e-5, 1e-7],
+        default=[1e-5],
         help="Damping parameter for effective dimension calculation.",
     )
     args = parser.parse_args()
