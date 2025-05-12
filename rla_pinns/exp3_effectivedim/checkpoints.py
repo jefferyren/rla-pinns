@@ -94,7 +94,7 @@ def evaluate_checkpoint(checkpoint: str, damping: float) -> Tuple[float, int]:
     return d_eff, num_params
 
 
-def process_checkpoints(checkpoint_dir, damping):
+def process_checkpoints(checkpoint_dir, damping, optimizer):
     d_effs = {}
     steps = set()
     dim_Omega = set()
@@ -106,6 +106,10 @@ def process_checkpoints(checkpoint_dir, damping):
         checkpoint_name = path.splitext(path.basename(checkpoint))[0]
         info = checkpoint_name.split("_")
         opt = info[-2]
+
+        if opt != optimizer:
+            continue
+        
         step = int(info[-1][-7:])  # Extract the last word
         N_Omega = int(info[1][:-1])  # Extract the third last word
 
@@ -149,6 +153,12 @@ def main():
         default=[1e-5],
         help="Damping parameter for effective dimension calculation.",
     )
+    parser.add_argument(
+        "--optimizer",
+        type=str,
+        default="ENGDw",
+        help="Optimizer used in the experiment.",
+    )
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
 
@@ -159,7 +169,7 @@ def main():
     d_effs = list()
 
     for val in args.damping:
-        d, e, p, s, dims = process_checkpoints(checkpoint_dir, val)
+        d, e, p, s, dims = process_checkpoints(checkpoint_dir, val, args.optimizer)
 
         dim_Omega = dim_Omega | {d}
         equation = equation | {e}
