@@ -45,7 +45,7 @@ def get_effective_dim(kernel, damping):
     return d_eff
 
 
-def evaluate_checkpoint(checkpoint: str, damping: float) -> Tuple[float, int]:
+def evaluate_checkpoint(checkpoint: str) -> Tuple[float, int]:
     """Evaluate a single checkpoint and return its eigenvalues."""
     checkpoint_name = path.splitext(path.basename(checkpoint))[0]
     print(f"Processing checkpoint {checkpoint_name}.")
@@ -61,8 +61,7 @@ def evaluate_checkpoint(checkpoint: str, damping: float) -> Tuple[float, int]:
     X_dOmega = data["X_dOmega"]
     y_dOmega = data["y_dOmega"]
 
-    if config["optimizer"] in ["ENGDw", "SPRING"]:
-        damping = config["RNGD_damping"]
+    damping = config["RNGD_damping"]
 
     layers = set_up_layers(architecture, equation, dim_Omega)
     layers = [layer.to(X_Omega.device, X_Omega.dtype) for layer in layers]
@@ -94,7 +93,7 @@ def evaluate_checkpoint(checkpoint: str, damping: float) -> Tuple[float, int]:
     return d_eff, num_params
 
 
-def process_checkpoints(checkpoint_dir, damping, optimizer):
+def process_checkpoints(checkpoint_dir, optimizer):
     d_effs = {}
     steps = set()
     dim_Omega = set()
@@ -109,11 +108,11 @@ def process_checkpoints(checkpoint_dir, damping, optimizer):
 
         if opt != optimizer:
             continue
-        
+
         step = int(info[-1][-7:])  # Extract the last word
         N_Omega = int(info[1][:-1])  # Extract the third last word
 
-        d, params = evaluate_checkpoint(checkpoint, damping)
+        d, params = evaluate_checkpoint(checkpoint)
 
         if opt not in d_effs.keys():
             d_effs[opt] = []
@@ -148,12 +147,6 @@ def main():
         help="Disable TeX rendering in matplotlib.",
     )
     parser.add_argument(
-        "--damping",
-        type=list,
-        default=[1e-5],
-        help="Damping parameter for effective dimension calculation.",
-    )
-    parser.add_argument(
         "--optimizer",
         type=str,
         default="ENGDw",
@@ -162,76 +155,32 @@ def main():
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
 
-    dim_Omega = set()
-    equation = set()
-    num_params = set()
-    steps = set()
-    d_effs = list()
-
-    for val in args.damping:
-        d, e, p, s, dims = process_checkpoints(checkpoint_dir, val, args.optimizer)
-
-        dim_Omega = dim_Omega | {d}
-        equation = equation | {e}
-        num_params = num_params | {p}
-        steps = steps | set(s)
-        d_effs.append(dims)
-
-    (dim_Omega,) = dim_Omega
-    (equation,) = equation
-    (num_params,) = num_params
+    dim_Omega, equation, num_params, steps, d_effs = process_checkpoints(checkpoint_dir, args.optimizer)
 
     # Plot all effective dimensions for a given experiment
     HEREDIR = path.dirname(path.abspath(__file__))
     with plt.rc_context(
         bundles.neurips2023(rel_width=0.5, usetex=not args.disable_tex)
     ):
-        if len(args.damping) > 1:
-            fig, ax = plt.subplots(1, len(args.damping))
-            i = 0
-            for damp, ds in zip(args.damping, d_effs):
+        fig, ax = plt.subplots(1, 1)
+        ax.set_xlabel("Steps")
+        ax.set_xscale("log")
+        ax.set_ylabel("Efective dimension")
 
-                ax[i].set_xlabel("Steps")
-                ax[i].set_xscale("log")
+        ax.set_title(f"{dim_Omega}D {equation} (D = {num_params})" if args.disable_tex else rf"${dim_Omega}D {equation} (D = {num_params})$")
+        ax.grid(True, alpha=0.5)
 
-                if i == 0:
-                    ax[i].set_ylabel("Efective dimension")
+        for opt_name, d_vals in d_effs.items():
+            name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
+            ax.plot(
+                sorted(steps),
+                d_vals,
+                label=name,
+                color=COLORS[name],
+                linestyle=LINESTYLE[name],
+            )
 
-                ax[i].set_title(f"D = {num_params}" if args.disable_tex else rf"$D = {num_params}$")
-                ax[i].grid(True, alpha=0.5)
-
-                for opt_name, d_vals in ds.items():
-                    name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
-                    ax[i].plot(
-                        sorted(list(steps)),
-                        d_vals,
-                        label=name,
-                        color=COLORS[name],
-                        linestyle=LINESTYLE[name],
-                    )
-
-                ax[i].legend()
-            i += 1
-        else:
-            fig, ax = plt.subplots(1, 1)
-            ax.set_xlabel("Steps")
-            ax.set_xscale("log")
-            ax.set_ylabel("Efective dimension")
-
-            ax.set_title(f"D = {num_params}" if args.disable_tex else rf"$D = {num_params}$")
-            ax.grid(True, alpha=0.5)
-
-            for opt_name, d_vals in d_effs[0].items():
-                name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
-                ax.plot(
-                    sorted(list(steps)),
-                    d_vals,
-                    label=name,
-                    color=COLORS[name],
-                    linestyle=LINESTYLE[name],
-                )
-
-            ax.legend()
+        ax.legend()
 
         plt.savefig(
             path.join(HEREDIR, f"effective_dim_over_step.pdf"), bbox_inches="tight"
