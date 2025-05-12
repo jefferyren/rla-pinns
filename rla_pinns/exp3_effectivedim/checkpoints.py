@@ -146,7 +146,7 @@ def main():
     parser.add_argument(
         "--damping",
         type=list,
-        default=[1e-3, 1e-5, 1e-7],
+        default=[1e-5],
         help="Damping parameter for effective dimension calculation.",
     )
     args = parser.parse_args()
@@ -170,14 +170,13 @@ def main():
     (dim_Omega,) = dim_Omega
     (equation,) = equation
     (num_params,) = num_params
-    steps = sorted(list(steps))
 
     # Plot all effective dimensions for a given experiment
     HEREDIR = path.dirname(path.abspath(__file__))
     with plt.rc_context(
-        bundles.neurips2023(rel_width=1.0, usetex=not args.disable_tex)
+        bundles.neurips2023(rel_width=0.5, usetex=not args.disable_tex)
     ):
-        fig, ax = plt.subplots(1, 3)
+        fig, ax = plt.subplots(1, 1)
 
         i = 0
         for damp, ds in zip(args.damping, d_effs):
@@ -194,7 +193,7 @@ def main():
             for opt_name, d_vals in ds.items():
                 name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
                 ax[i].plot(
-                    steps,
+                    sorted(list(steps)),
                     d_vals,
                     label=name,
                     color=COLORS[name],
