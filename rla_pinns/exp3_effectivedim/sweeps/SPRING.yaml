@@ -22,22 +22,22 @@ parameters:
     batch_frequency:
         value: 1
     boundary_condition:
-        value: cos_sum
+        value: u_weinan_norm
     model:
-        value: mlp-tanh-64-64-48-48
+        value: mlp-tanh-768-768-512-512
     num_seconds:
         value: 0
     dim_Omega:
-        value: 5
+        value: 100
     N_Omega:
-        value: 3_000
+        value: 100
     N_dOmega:
-        value: 500
+        value: 50
     RNGD_approximation:
         value: "exact"
     RNGD_damping:
-        value: 0.00000000924659397766
+        value: 0.030115619317292664
     RNGD_momentum:
-       value: 0.8894027902079155
+       value: 0.9838568119785346
     RNGD_lr:
-        value: 0.003945168281629107
+        value: 0.0923615166236114
