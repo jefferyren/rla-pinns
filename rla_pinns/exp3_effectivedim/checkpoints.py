@@ -212,7 +212,7 @@ def main():
             ax.set_title(f"Damping = {damp}")
             ax.grid(True, alpha=0.5)
 
-            for opt_name, d_vals in ds.items():
+            for opt_name, d_vals in zip(d_effs[0].keys(), d_effs[0].values()):
                 name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
                 ax.plot(
                     sorted(list(steps)),
