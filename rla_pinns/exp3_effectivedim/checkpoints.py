@@ -152,22 +152,20 @@ def main():
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
 
-    d_effs = []
     dim_Omega = set()
     equation = set()
     num_params = set()
     steps = set()
-    ds = list()
+    d_effs = list()
 
     for val in args.damping:
         d, e, p, s, d_effs = process_checkpoints(checkpoint_dir, val)
 
-        d_effs.append(d)
         dim_Omega = dim_Omega | {d}
         equation = equation | {e}
         num_params = num_params | {p}
         steps = steps | set(s)
-        ds.append(d_effs)
+        d_effs.append(d_effs)
 
     (dim_Omega,) = dim_Omega
     (equation,) = equation
