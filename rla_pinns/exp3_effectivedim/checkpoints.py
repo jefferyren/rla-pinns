@@ -178,7 +178,7 @@ def main():
         bundles.neurips2023(rel_width=0.5, usetex=not args.disable_tex)
     ):
         if len(args.damping) > 1:
-            fig, ax = plt.subplots(1, len(args.damping)
+            fig, ax = plt.subplots(1, len(args.damping))
             i = 0
             for damp, ds in zip(args.damping, d_effs):
 
