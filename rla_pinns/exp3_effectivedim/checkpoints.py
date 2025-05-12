@@ -160,6 +160,7 @@ def main():
 
     for val in args.damping:
         d, e, p, s = process_checkpoints(checkpoint_dir, val)
+        print(f"d: {d}, equation: {e}, num_params: {p}, steps: {s}")
 
         d_effs.append(d)
         dim_Omega = dim_Omega | {d}
