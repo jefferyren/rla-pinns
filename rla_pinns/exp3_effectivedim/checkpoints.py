@@ -177,23 +177,44 @@ def main():
     with plt.rc_context(
         bundles.neurips2023(rel_width=0.5, usetex=not args.disable_tex)
     ):
-        fig, ax = plt.subplots(1, 1)
+        if len(args.damping) > 1:
+            fig, ax = plt.subplots(1, len(args.damping)
+            i = 0
+            for damp, ds in zip(args.damping, d_effs):
 
-        i = 0
-        for damp, ds in zip(args.damping, d_effs):
+                ax[i].set_xlabel("Steps")
+                ax[i].set_xscale("log")
 
-            ax[i].set_xlabel("Steps")
-            ax[i].set_xscale("log")
+                if i == 0:
+                    ax[i].set_ylabel("Efective dimension")
 
-            if i == 0:
-                ax[i].set_ylabel("Efective dimension")
+                ax[i].set_title(f"Damping = {damp}")
+                ax[i].grid(True, alpha=0.5)
 
-            ax[i].set_title(f"Damping = {damp}")
-            ax[i].grid(True, alpha=0.5)
+                for opt_name, d_vals in ds.items():
+                    name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
+                    ax[i].plot(
+                        sorted(list(steps)),
+                        d_vals,
+                        label=name,
+                        color=COLORS[name],
+                        linestyle=LINESTYLE[name],
+                    )
+
+                ax[i].legend()
+            i += 1
+        else:
+            fig, ax = plt.subplots(1, 1)
+            ax.set_xlabel("Steps")
+            ax.set_xscale("log")
+            ax.set_ylabel("Efective dimension")
+
+            ax.set_title(f"Damping = {damp}")
+            ax.grid(True, alpha=0.5)
 
             for opt_name, d_vals in ds.items():
                 name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
-                ax[i].plot(
+                ax.plot(
                     sorted(list(steps)),
                     d_vals,
                     label=name,
@@ -201,11 +222,11 @@ def main():
                     linestyle=LINESTYLE[name],
                 )
 
-            # ax[i].legend()
+            ax.legend()
+
         plt.savefig(
             path.join(HEREDIR, f"Effective_dim_over_step.pdf"), bbox_inches="tight"
         )
-        i += 1
 
 
 if __name__ == "__main__":
