@@ -160,7 +160,6 @@ def main():
 
     for val in args.damping:
         d, e, p, s = process_checkpoints(checkpoint_dir, val)
-        print(f"d: {d}, equation: {e}, num_params: {p}, steps: {s}")
 
         d_effs.append(d)
         dim_Omega = dim_Omega | {d}
@@ -212,7 +211,7 @@ def main():
             ax.set_title(f"Damping = {damp}")
             ax.grid(True, alpha=0.5)
 
-            for opt_name, d_vals in zip(d_effs[0].keys(), d_effs[0].values()):
+            for opt_name, d_vals in d_effs[0].items():
                 name = "ENGD (Woodbury)" if opt_name == "ENGDw" else opt_name
                 ax.plot(
                     sorted(list(steps)),
@@ -225,7 +224,7 @@ def main():
             ax.legend()
 
         plt.savefig(
-            path.join(HEREDIR, f"Effective_dim_over_step.pdf"), bbox_inches="tight"
+            path.join(HEREDIR, f"effective_dim_over_step.pdf"), bbox_inches="tight"
         )
 
 
