@@ -183,7 +183,7 @@ def main():
         ax.legend()
 
         plt.savefig(
-            path.join(HEREDIR, f"effective_dim_over_step.pdf"), bbox_inches="tight"
+            path.join(HEREDIR, f"effective_dim_over_step_{"engd" if args.optimizer == "ENGDw" else "spring"}.pdf"), bbox_inches="tight"
         )
 
 
