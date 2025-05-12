@@ -125,7 +125,7 @@ def process_checkpoints(checkpoint_dir, damping):
     (equation,) = equation
     (num_params,) = num_params
     steps = sorted(list(steps))
-    return dim_Omega, equation, num_params, steps
+    return dim_Omega, equation, num_params, steps, d_effs
 
 
 def main():
@@ -157,15 +157,17 @@ def main():
     equation = set()
     num_params = set()
     steps = set()
+    ds = list()
 
     for val in args.damping:
-        d, e, p, s = process_checkpoints(checkpoint_dir, val)
+        d, e, p, s, d_effs = process_checkpoints(checkpoint_dir, val)
 
         d_effs.append(d)
         dim_Omega = dim_Omega | {d}
         equation = equation | {e}
         num_params = num_params | {p}
         steps = steps | set(s)
+        ds.append(d_effs)
 
     (dim_Omega,) = dim_Omega
     (equation,) = equation
