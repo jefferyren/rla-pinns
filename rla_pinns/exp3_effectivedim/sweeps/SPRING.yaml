@@ -36,8 +36,8 @@ parameters:
     RNGD_approximation:
         value: "exact"
     RNGD_damping:
-        value: 0.00000000068115846837
+        value: 0.00000000924659397766
     RNGD_momentum:
-       value: 0.8269661781185692
+       value: 0.8894027902079155
     RNGD_lr:
-        value: 0.06350179731929617
+        value: 0.003945168281629107
