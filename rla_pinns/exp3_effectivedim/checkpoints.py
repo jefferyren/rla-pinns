@@ -187,7 +187,7 @@ def main():
                 if i == 0:
                     ax[i].set_ylabel("Efective dimension")
 
-                ax[i].set_title(f"Damping = {damp}")
+                ax[i].set_title(f"D = {num_params}" if args.disable_tex else rf"$D = {num_params}$")
                 ax[i].grid(True, alpha=0.5)
 
                 for opt_name, d_vals in ds.items():
