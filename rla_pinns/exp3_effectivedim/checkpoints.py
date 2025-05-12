@@ -61,16 +61,19 @@ def evaluate_checkpoint(checkpoint: str, damping: float) -> Tuple[float, int]:
     X_dOmega = data["X_dOmega"]
     y_dOmega = data["y_dOmega"]
 
+    if config["optimizer"] in ["ENGDw", "SPRING"]:
+        damping = config["RNGD_damping"]
+
     layers = set_up_layers(architecture, equation, dim_Omega)
     layers = [layer.to(X_Omega.device, X_Omega.dtype) for layer in layers]
     model = Sequential(*layers).to(X_Omega.device)
     model.load_state_dict(data["model"])
 
     (
-        interior_loss,
-        boundary_loss,
-        interior_residual,
-        boundary_residual,
+        _,
+        _,
+        _,
+        _,
         interior_inputs,
         interior_grad_outputs,
         boundary_inputs,
@@ -153,18 +156,21 @@ def main():
     dim_Omega = set()
     equation = set()
     num_params = set()
+    steps = set()
 
     for val in args.damping:
         d, e, p, s = process_checkpoints(checkpoint_dir, val)
 
-        d_effs.append(s)
+        d_effs.append(d)
         dim_Omega = dim_Omega | {d}
         equation = equation | {e}
         num_params = num_params | {p}
+        steps = steps | {s}
 
     (dim_Omega,) = dim_Omega
     (equation,) = equation
     (num_params,) = num_params
+    steps = sorted(list(steps))
 
     # Plot all effective dimensions for a given experiment
     HEREDIR = path.dirname(path.abspath(__file__))
