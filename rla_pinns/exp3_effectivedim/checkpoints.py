@@ -169,11 +169,11 @@ def main():
         ax.set_xscale("log")
         ax.set_ylabel("Efective dimension")
 
-        ax.set_title(
-            f"{dim_Omega}d Poisson (D = {num_params})"
-            if args.disable_tex
-            else rf"${dim_Omega}d Poisson (D = {num_params})$"
-        )
+        # ax.set_title(
+        #     f"{dim_Omega}d Poisson (D = {num_params})"
+        #     if args.disable_tex
+        #     else rf"${dim_Omega}d Poisson (D = {num_params})$"
+        # )
         ax.grid(True, alpha=0.5)
 
         for opt_name, d_vals in d_effs.items():
