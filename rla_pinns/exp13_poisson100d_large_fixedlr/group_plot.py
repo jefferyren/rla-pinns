@@ -8,16 +8,18 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from tueplots import bundles
 
-from rla_pinns.exp12_poisson5d_large_fixedlr import plot_1k as SMALL
-from rla_pinns.exp12_poisson5d_large_fixedlr.plot_1k import colors, linestyles
-from rla_pinns.exp12_poisson5d_large_fixedlr import plot_5k as MEDIUM
-from rla_pinns.exp12_poisson5d_large_fixedlr import plot_10k as BIG
+from rla_pinns.exp13_poisson100d_large_fixedlr import plot_100 as SMALL
+from rla_pinns.exp13_poisson100d_large_fixedlr.plot_1k import colors, linestyles
+from rla_pinns.exp13_poisson100d_large_fixedlr import plot_500 as MEDIUM
+from rla_pinns.exp13_poisson100d_large_fixedlr import plot_1k as BIG
 from rla_pinns.wandb_utils import load_best_run
 
 BATCH_SIZES = [1000, 5000, 10000]
 
 if __name__ == "__main__":
-    parser = ArgumentParser(description="Summarize the experiments on heat 1d in one figure.")
+    parser = ArgumentParser(
+        description="Summarize the experiments on heat 1d in one figure."
+    )
     parser.add_argument(
         "--disable_tex",
         action="store_true",
@@ -46,14 +48,16 @@ if __name__ == "__main__":
         ),
     ):
         # enable siunitx grouping for D titles
-        plt.rcParams["text.latex.preamble"] += (
-            r"\usepackage[group-separator={,}, group-minimum-digits={3}]{siunitx}"
-        )
+        plt.rcParams[
+            "text.latex.preamble"
+        ] += r"\usepackage[group-separator={,}, group-minimum-digits={3}]{siunitx}"
 
         fig, axs = plt.subplots(1, len(COLUMNS), figsize=(6, 1.5), sharey="row")
-        
+
         # Loop through each combination to fill each row
-        for row_index, ((x, xlabel), (y, ylabel)) in enumerate(product(x_to_xlabel.items(), y_to_ylabel.items())):
+        for row_index, ((x, xlabel), (y, ylabel)) in enumerate(
+            product(x_to_xlabel.items(), y_to_ylabel.items())
+        ):
             i = 0
             for col_index, exp in enumerate(COLUMNS):
                 ax = axs[col_index]
@@ -90,7 +94,11 @@ if __name__ == "__main__":
                         "time": df_history["time"] - df_history["time"].min(),
                     }[x]
                     # Only label once (first row)
-                    label = name if row_index == 0 and col_index == 0 and "*" not in name else None
+                    label = (
+                        name
+                        if row_index == 0 and col_index == 0 and "*" not in name
+                        else None
+                    )
                     ax.plot(
                         x_data,
                         df_history[y],

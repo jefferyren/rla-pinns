@@ -155,7 +155,9 @@ def main():
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
 
-    dim_Omega, equation, num_params, steps, d_effs = process_checkpoints(checkpoint_dir, args.optimizer)
+    dim_Omega, equation, num_params, steps, d_effs = process_checkpoints(
+        checkpoint_dir, args.optimizer
+    )
 
     # Plot all effective dimensions for a given experiment
     HEREDIR = path.dirname(path.abspath(__file__))
@@ -167,7 +169,11 @@ def main():
         ax.set_xscale("log")
         ax.set_ylabel("Efective dimension")
 
-        ax.set_title(f"{dim_Omega}D {equation} (D = {num_params})" if args.disable_tex else rf"${dim_Omega}D {equation} (D = {num_params})$")
+        ax.set_title(
+            f"{dim_Omega}D {equation} (D = {num_params})"
+            if args.disable_tex
+            else rf"${dim_Omega}D {equation} (D = {num_params})$"
+        )
         ax.grid(True, alpha=0.5)
 
         for opt_name, d_vals in d_effs.items():
@@ -183,7 +189,11 @@ def main():
         ax.legend()
 
         plt.savefig(
-            path.join(HEREDIR, f"effective_dim_over_step_{"engd" if args.optimizer == "ENGDw" else "spring"}.pdf"), bbox_inches="tight"
+            path.join(
+                HEREDIR,
+                f"effective_dim_over_step_{'engd' if args.optimizer == 'ENGDw' else 'spring'}.pdf",
+            ),
+            bbox_inches="tight",
         )
 
 

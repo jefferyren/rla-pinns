@@ -22,8 +22,8 @@ project = "exp13_poisson100d_large_fixedlr"  # name from the 'Projects' tab on w
 
 # information for title
 equation = "poisson"
-architecture = "mlp-tanh-64-64-48-48"
-dim_Omega = 5
+architecture = "mlp-tanh-768-768-512-512"
+dim_Omega = 100
 num_params = sum(
     p.numel()
     for layer in set_up_layers(architecture, equation, dim_Omega)
@@ -31,7 +31,7 @@ num_params = sum(
 )
 
 # Useful to map sweep ids to human-readable names
-print_sweeps = False 
+print_sweeps = False
 if print_sweeps:
     show_sweeps(entity, project)
     raise Exception("Printed sweeps. Exiting...")
@@ -44,8 +44,8 @@ sweep_ids = {  # ids from the wandb agent
     # "0tjhkabg": "Hessian-free",
     # "ec21dqc6": "ENGD (Woodbury)",
     # "fsxpdoms": "ENGD (Nystrom)",
-    "gto5ep5k": "SPRING",
-    "x9u551s6": "SPRING (Nystrom)",
+    "5kgypmtd": "SPRING",
+    "pmjkv4ad": "SPRING (Nystrom)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/

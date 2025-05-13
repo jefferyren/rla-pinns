@@ -22,8 +22,8 @@ project = "exp13_poisson100d_large_fixedlr"  # name from the 'Projects' tab on w
 
 # information for title
 equation = "poisson"
-architecture = "mlp-tanh-64-64-48-48"
-dim_Omega = 5
+architecture = "mlp-tanh-768-768-512-512"
+dim_Omega = 100
 num_params = sum(
     p.numel()
     for layer in set_up_layers(architecture, equation, dim_Omega)
@@ -44,8 +44,8 @@ sweep_ids = {  # ids from the wandb agent
     # "0tjhkabg": "Hessian-free",
     # "gz41z5ui": "ENGD (Woodbury)",
     # "y1q4nd48": "ENGD (Nystrom)",
-    "ju91d6zk": "SPRING",
-    "gg7p3ft7": "SPRING (Nystrom)",
+    "c2u7750m": "SPRING",
+    "jsrusi19": "SPRING (Nystrom)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/

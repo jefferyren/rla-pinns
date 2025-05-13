@@ -30,7 +30,7 @@ num_params = sum(
     for p in layer.parameters()
 )
 # Useful to map sweep ids to human-readable names
-print_sweeps = False 
+print_sweeps = False
 if print_sweeps:
     show_sweeps(entity, project)
     raise Exception("Printed sweeps. Exiting...")

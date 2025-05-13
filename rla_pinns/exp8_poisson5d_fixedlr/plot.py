@@ -31,7 +31,7 @@ num_params = sum(
 )
 
 # Useful to map sweep ids to human-readable names
-print_sweeps = False 
+print_sweeps = False
 if print_sweeps:
     show_sweeps(entity, project)
     raise Exception("Printed sweeps. Exiting...")
@@ -110,17 +110,16 @@ if __name__ == "__main__":
     # Create a 2x2 figure to hold all plots
     with plt.rc_context(
         bundles.neurips2023(
-            rel_width=1.0, 
-            nrows=2,
-            ncols=4,
-            usetex=not args.disable_tex
+            rel_width=1.0, nrows=2, ncols=4, usetex=not args.disable_tex
         )
     ):
         fig, axes = plt.subplots(1, 2)
         axes_flat = axes.flatten()
 
         # Loop over each subplot (x, y combo)
-        for ax, ((x, xlabel), (y, ylabel)) in zip(axes_flat, product(x_to_xlabel.items(), y_to_ylabel.items())):
+        for ax, ((x, xlabel), (y, ylabel)) in zip(
+            axes_flat, product(x_to_xlabel.items(), y_to_ylabel.items())
+        ):
             ax.set_xlabel(xlabel)
             ax.set_xscale("log")
             ax.set_ylabel(ylabel)

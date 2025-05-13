@@ -1,4 +1,3 @@
-
 """Plot the best runs from each tuned optimizer in a single figure"""
 
 from argparse import ArgumentParser
@@ -55,7 +54,7 @@ colors = {
     "SPRING": sequential.Greens_4.mpl_colors[-3],
     "Hessian-free": "black",
 }
-linestyles = {label: '-' for label in sweep_ids.values()}
+linestyles = {label: "-" for label in sweep_ids.values()}
 
 HEREDIR = path.dirname(path.abspath(__file__))
 DATADIR = path.join(HEREDIR, "best_runs")
@@ -90,17 +89,16 @@ if __name__ == "__main__":
     # Create a 2x2 figure to hold all plots
     with plt.rc_context(
         bundles.neurips2023(
-            rel_width=1.0, 
-            nrows=2,
-            ncols=4,
-            usetex=not args.disable_tex
+            rel_width=1.0, nrows=2, ncols=4, usetex=not args.disable_tex
         )
     ):
         fig, axes = plt.subplots(1, 2, sharey="row")
         axes_flat = axes.flatten()
 
         # Loop over each subplot (x, y combo)
-        for ax, ((x, xlabel), (y, ylabel)) in zip(axes_flat, product(x_to_xlabel.items(), y_to_ylabel.items())):
+        for ax, ((x, xlabel), (y, ylabel)) in zip(
+            axes_flat, product(x_to_xlabel.items(), y_to_ylabel.items())
+        ):
             ax.set_xlabel(xlabel)
             ax.set_xscale("log")
             ax.set_ylabel(ylabel)
