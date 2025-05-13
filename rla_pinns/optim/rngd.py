@@ -67,12 +67,6 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
         default=0.0,
         help="Momentum parameter for the optimizer.",
     )
-    parser.add_argument(
-        f"--{prefix}norm_constraint",
-        type=float,
-        default=0.0,
-        help="Norm constraint parameter for the SPRING step.",
-    )
 
     args = parse_known_args_and_remove_from_argv(parser)
 
@@ -82,11 +76,6 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
         setattr(args, lr, float(getattr(args, lr)))
 
     if getattr(args, lr) == "grid_line_search":
-        assert (
-            args.RNGD_norm_constraint == 0.0
-        ), "Norm constraint is not supported with grid line search."
-        # generate the grid from the command line arguments and overwrite the
-        # `lr` entry with a tuple containing the grid
         grid = parse_grid_line_search_args(verbose=verbose)
         setattr(args, lr, (getattr(args, lr), grid))
 
@@ -134,7 +123,6 @@ class RNGD(Optimizer):
         approximation: str = "exact",
         rank_val: int = 0,
         momentum: float = 0.0,
-        norm_constraint: float = 1e-3,
         *,
         maximize: bool = False,
     ):
@@ -145,7 +133,6 @@ class RNGD(Optimizer):
             damping=damping,
             maximize=maximize,
             momentum=momentum,
-            norm_constraint=norm_constraint,
             approximation=approximation,
             rank_val=rank_val,
             equation=equation,
@@ -230,18 +217,10 @@ class RNGD(Optimizer):
         (group,) = self.param_groups
         lr = group["lr"]
         params = group["params"]
-        momentum = group["momentum"]
-        norm_constraint = group["norm_constraint"]
 
         if isinstance(lr, float):
-            if momentum != 0.0:
-                norm_phi = sum([(d**2).sum() for d in directions]).sqrt()
-                scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
-            else:
-                scale = lr
-            # scale = lr
             for p, d in zip(params, directions):
-                p.data.add_(d, alpha=scale)
+                p.data.add_(d, alpha=lr)
 
         else:
             if lr[0] == "grid_line_search":
