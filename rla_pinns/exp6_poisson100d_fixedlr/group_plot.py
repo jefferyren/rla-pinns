@@ -14,6 +14,8 @@ from rla_pinns.exp6_poisson100d_fixedlr import plot as BIG
 from rla_pinns.wandb_utils import load_best_run
 
 BATCH_SIZES = [1000, 5000, 10000]
+DIMS = [5, 10, 100]
+PARAMS = [10065, 118145, 1325057]
 
 if __name__ == "__main__":
     parser = ArgumentParser(
@@ -51,7 +53,7 @@ if __name__ == "__main__":
             "text.latex.preamble"
         ] += r"\usepackage[group-separator={,}, group-minimum-digits={3}]{siunitx}"
 
-        fig, axs = plt.subplots(1, len(COLUMNS), figsize=(6, 1.5), sharey="row")
+        fig, axs = plt.subplots(1, len(COLUMNS), figsize=(6, 1.5))
         # Loop through each combination to fill each row
         for row_index, ((x, xlabel), (y, ylabel)) in enumerate(
             product(x_to_xlabel.items(), y_to_ylabel.items())
@@ -69,9 +71,9 @@ if __name__ == "__main__":
                     ax.set_ylabel(ylabel)
 
                 if args.disable_tex:
-                    title = f"{dim_Omega}d {equation.capitalize()} ($D={num_params}$)"
+                    title = f"{DIMS[i]}d Poisson ($D={PARAMS[i]}$)"
                 else:
-                    title = rf"{dim_Omega}d {equation.capitalize()} ($D={num_params}$)"
+                    title = rf"{DIMS[i]}d Poisson ($D={PARAMS[i]}$)"
                 ax.set_title(title)
                 i += 1
 
@@ -123,6 +125,6 @@ if __name__ == "__main__":
         )
 
         # plt.tight_layout(rect=[0, 0, 1, 0.95])
-        out_file = path.join(path.dirname(path.abspath(__file__)), "l2_line_search.pdf")
+        out_file = path.join(path.dirname(path.abspath(__file__)), "l2_grouped.pdf")
         plt.savefig(out_file, bbox_inches="tight")
         print(f"Saved combined figure to {out_file}")

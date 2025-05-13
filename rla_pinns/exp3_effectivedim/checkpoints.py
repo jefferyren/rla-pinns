@@ -170,9 +170,9 @@ def main():
         ax.set_ylabel("Efective dimension")
 
         ax.set_title(
-            f"{dim_Omega}D Poisson (D = {num_params})"
+            f"{dim_Omega}d Poisson (D = {num_params})"
             if args.disable_tex
-            else rf"${dim_Omega}D Poisson (D = {num_params})$"
+            else rf"${dim_Omega}d Poisson (D = {num_params})$"
         )
         ax.grid(True, alpha=0.5)
 
