@@ -117,7 +117,7 @@ def process_checkpoints(checkpoint_dir, optimizer):
 
         if opt not in d_effs.keys():
             d_effs[opt] = []
-        d_effs[opt].append(d.item())
+        d_effs[opt].append(d)
 
         steps = steps | {step}
         dim_Omega = dim_Omega | {N_Omega}
