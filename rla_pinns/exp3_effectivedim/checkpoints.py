@@ -168,7 +168,7 @@ def main():
         fig, ax = plt.subplots(1, 1)
         ax.set_xlabel("Steps")
         ax.set_xscale("log")
-        ax.set_ylabel("Eff. Dim. as % of N.")
+        ax.set_ylabel("Eff. Dim. as %% of N.")
 
         # ax.set_title(
         #     f"{dim_Omega}d Poisson (D = {num_params})"
