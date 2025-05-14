@@ -90,6 +90,7 @@ def evaluate_checkpoint(checkpoint: str) -> Tuple[float, int]:
 
     d_eff = get_effective_dim(JJT, damping)
     num_params = sum(p.numel() for layer in layers for p in layer.parameters())
+    d_eff = d_eff.item() / (X_Omega.shape[0] + X_dOmega.shape[0])
     return d_eff, num_params
 
 
@@ -128,7 +129,7 @@ def process_checkpoints(checkpoint_dir, optimizer):
     (equation,) = equation
     (num_params,) = num_params
     steps = sorted(list(steps))
-    return dim_Omega, equation, num_params, steps, d_effs
+    return steps, d_effs
 
 
 def main():
@@ -155,7 +156,7 @@ def main():
     args = parser.parse_args()
     checkpoint_dir = path.abspath(args.checkpoint_dir)
 
-    dim_Omega, equation, num_params, steps, d_effs = process_checkpoints(
+    steps, d_effs = process_checkpoints(
         checkpoint_dir, args.optimizer
     )
 
@@ -167,7 +168,7 @@ def main():
         fig, ax = plt.subplots(1, 1)
         ax.set_xlabel("Steps")
         ax.set_xscale("log")
-        ax.set_ylabel("Efective dimension")
+        ax.set_ylabel("Eff. Dim. as % of N.")
 
         # ax.set_title(
         #     f"{dim_Omega}d Poisson (D = {num_params})"
