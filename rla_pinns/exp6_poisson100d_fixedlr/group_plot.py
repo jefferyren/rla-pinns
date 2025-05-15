@@ -13,9 +13,22 @@ from rla_pinns.exp9_poisson10d_fixedlr import plot as MEDIUM
 from rla_pinns.exp6_poisson100d_fixedlr import plot as BIG
 from rla_pinns.wandb_utils import load_best_run
 
-BATCH_SIZES = [1000, 5000, 10000]
-DIMS = [5, 10, 100]
-PARAMS = [10065, 118145, 1325057]
+BATCH_SIZES = [1000, 10000]
+DIMS = [5, 100]
+PARAMS = [10065, 1325057]
+
+EXTRA = [
+    {      
+        "entity": "andresguzco",
+        'exp': 'rla-pinns',
+        'id': 'tacjf0pi',
+    },
+    {
+        "entity": "rla-pinns",
+        'exp': 'exp4_poisson100d',
+        'id': 'elqquiw6',
+    },
+]
 
 if __name__ == "__main__":
     parser = ArgumentParser(
@@ -30,7 +43,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Experiments as columns
-    COLUMNS = [SMALL, MEDIUM, BIG]
+    COLUMNS = [SMALL, BIG]
     IGNORE = {"ENGD (diagonal)"}
 
     # Define axes labels
@@ -44,7 +57,7 @@ if __name__ == "__main__":
         bundles.neurips2023(
             rel_width=1.0,
             nrows=1,
-            ncols=3,
+            ncols=2,
             usetex=not args.disable_tex,
         ),
     ):
@@ -53,7 +66,7 @@ if __name__ == "__main__":
             "text.latex.preamble"
         ] += r"\usepackage[group-separator={,}, group-minimum-digits={3}]{siunitx}"
 
-        fig, axs = plt.subplots(1, len(COLUMNS), figsize=(6, 1.5))
+        fig, axs = plt.subplots(1, len(COLUMNS))
         # Loop through each combination to fill each row
         for row_index, ((x, xlabel), (y, ylabel)) in enumerate(
             product(x_to_xlabel.items(), y_to_ylabel.items())
@@ -106,6 +119,32 @@ if __name__ == "__main__":
                         color=colors[name],
                         linestyle=linestyles[name],
                     )
+
+                line_search, _ = load_best_run(
+                    EXTRA[i - 1]["entity"],
+                    EXTRA[i - 1]["exp"],
+                    EXTRA[i - 1]["id"],
+                    save=False,
+                    update=False,
+                    savedir=exp.DATADIR,
+                )
+                x_data = {
+                    "step": line_search["step"] + 1,
+                    "time": line_search["time"] - line_search["time"].min(),
+                }[x]
+                ax.plot(
+                    x_data,
+                    line_search[y],
+                    label="ENGD-W (Line Search)",
+                    color=colors["SGD"],
+                    linestyle=linestyles["SGD"],
+                )
+                
+
+                
+
+                
+
 
                 # For time-based plots, ensure positive x-axis
                 if x == "time":

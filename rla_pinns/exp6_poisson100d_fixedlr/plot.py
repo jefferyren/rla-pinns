@@ -105,15 +105,16 @@ if __name__ == "__main__":
 
     # y_to_ylabel = {"loss": "Loss", "l2_error": r"$L_2$ error"}
     y_to_ylabel = {"l2_error": r"$L_2$ error"}
-    x_to_xlabel = {"step": "Iteration", "time": "Time (s)"}
+    # x_to_xlabel = {"step": "Iteration", "time": "Time (s)"}
+    x_to_xlabel = {"time": "Time (s)"}
 
     # Create a 2x2 figure to hold all plots
     with plt.rc_context(
         bundles.neurips2023(
-            rel_width=1.0, nrows=1, ncols=4, usetex=not args.disable_tex
+            rel_width=0.5, nrows=1, ncols=4, usetex=not args.disable_tex
         )
     ):
-        fig, axes = plt.subplots(1, 2, sharey="row")
+        fig, axes = plt.subplots(1, 1, sharey="row")
         axes_flat = axes.flatten()
 
         # Loop over each subplot (x, y combo)
@@ -148,6 +149,26 @@ if __name__ == "__main__":
                     color=colors[label],
                     linestyle=linestyles[label],
                 )
+            
+            line_search, _ = load_best_run(
+                entity,
+                'exp4_poisson100d',
+                "elqquiw6",
+                save=True,
+                update=args.update,
+                savedir=DATADIR,
+            )
+            x_data = {
+                "step": line_search["step"] + 1,
+                "time": line_search["time"] - line_search["time"].min(),
+            }[x]
+            ax.plot(
+                x_data,
+                line_search[y],
+                label="ENGD-W (Line Search)",
+                color=colors["SGD"],
+                linestyle=linestyles["SGD"],
+            )
 
         # One shared legend for all subplots
         handles, labels = axes_flat[0].get_legend_handles_labels()

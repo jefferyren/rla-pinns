@@ -148,6 +148,25 @@ if __name__ == "__main__":
                     color=colors[label],
                     linestyle=linestyles[label],
                 )
+            line_search, _ = load_best_run(
+                'andresguzco',
+                'rla-pinns',
+                "tacjf0pi",
+                save=True,
+                update=args.update,
+                savedir=DATADIR,
+            )
+            x_data = {
+                "step": line_search["step"] + 1,
+                "time": line_search["time"] - line_search["time"].min(),
+            }[x]
+            ax.plot(
+                x_data,
+                line_search[y],
+                label="ENGD-W (Line Search)",
+                color=colors["SGD"],
+                linestyle=linestyles["SGD"],
+            )
 
         # One shared legend for all subplots
         handles, labels = axes_flat[0].get_legend_handles_labels()
