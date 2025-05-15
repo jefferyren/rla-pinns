@@ -102,18 +102,18 @@ def main():
     input_tensor = input_tensor.T @ input_tensor # Make it symmetric
 
     # Benchmark function1
-    time1 = benchmark(test_nystrom_stable, input_tensor, args.l, args.mu, iterations=args.iterations, device=args.device)
-    print(f"Average execution time of function1 on {device}: {time1:.6f} seconds")
+    time_stable = benchmark(test_nystrom_stable, input_tensor, args.l, args.mu, iterations=args.iterations, device=args.device)
+    print(f"Average execution time of Stable on {device}: {time_stable:.6f} seconds")
 
     # Benchmark function2
-    time2 = benchmark(test_nystrom_fast, input_tensor, args.l, args.mu, iterations=args.iterations, device=args.device)
-    print(f"Average execution time of function2 on {device}: {time2:.6f} seconds")
+    time_efficient = benchmark(test_nystrom_fast, input_tensor, args.l, args.mu, iterations=args.iterations, device=args.device)
+    print(f"Average execution time of GPU-efficient on {device}: {time_efficient:.6f} seconds")
 
     # Compare and report
-    if time1 < time2:
-        print(f"GPU-efficient is faster than Stable by {time2 / time1:.2f}x seconds per iteration")
+    if time_efficient < time_stable:
+        print(f"GPU-efficient is faster than Stable by {time_stable / time_efficient:.2f}x seconds per iteration")
     else:
-        print(f"Stable is faster than GPU-efficient by {time1 / time2:.2f}x seconds per iteration")
+        print(f"Stable is faster than GPU-efficient by {time_efficient / time_stable:.2f}x seconds per iteration")
 
     
 
