@@ -20,6 +20,7 @@ from rla_pinns.optim.rand_utils import (
     apply_inv_exact,
     apply_inv_sketch,
     sketch_and_project,
+    apply_inv_sketch_naive,
 )
 from rla_pinns.pinn_utils import evaluate_boundary_loss
 from rla_pinns.parse_utils import parse_known_args_and_remove_from_argv
@@ -57,7 +58,7 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
     parser.add_argument(
         f"--{prefix}approximation",
         type=str,
-        choices=["nystrom", "exact", "sap", "pcg"],
+        choices=["nystrom", "exact", "sap", "pcg", "naive"],
         help="Randomized method to approximate the range of a low-rank matrix.",
         default="exact",
     )
@@ -109,6 +110,7 @@ class RNGD(Optimizer):
 
     STEP_FUNCTIONS = {
         "nystrom": apply_inv_sketch,
+        "naive": apply_inv_sketch_naive,
         "exact": apply_inv_exact,
         "sap": sketch_and_project,
         "pcg": pcg_nystrom,
@@ -159,7 +161,7 @@ class RNGD(Optimizer):
             assert (
                 rank_val == 0 or rank_val is None
             ), "Rank value is not used with exact approximation. Has to be zero or None."
-        elif approximation in ["nystrom", "sap", "pcg"]:
+        elif approximation in ["nystrom", "sap", "pcg", "naive"]:
             assert rank_val > 0, "Rank value must be a positive integer."
         else:
             raise ValueError(f"Randomization method {approximation} not supported.")
@@ -270,7 +272,6 @@ class RNGD(Optimizer):
         momentum = group["momentum"]
         (dev,) = {p.device for p in params}
         (dt,) = {p.dtype for p in params}
-        N = len(residuals)
 
         if momentum != 0.0:
             J_phi = apply_joint_J(

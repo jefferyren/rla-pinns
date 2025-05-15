@@ -14,7 +14,7 @@ from rla_pinns.exp13_poisson100d_large_fixedlr import plot_500 as MEDIUM
 from rla_pinns.exp13_poisson100d_large_fixedlr import plot_1k as BIG
 from rla_pinns.wandb_utils import load_best_run
 
-BATCH_SIZES = [1000, 5000, 10000]
+BATCH_SIZES = [100, 500, 1000]
 
 if __name__ == "__main__":
     parser = ArgumentParser(

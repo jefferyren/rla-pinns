@@ -1,4 +1,4 @@
-from torch import Tensor, cholesky_solve, einsum, arange, randn
+from torch import Tensor, cholesky_solve, einsum, arange, randn, diag
 from typing import List, Dict, Callable, Tuple
 from hessianfree.cg import cg
 from functools import partial
@@ -84,7 +84,7 @@ def apply_inv_sketch(
     damping: float,
     l: int,
 ):
-    N = len(g)
+    """Apply the inverse of the GPU-efficient Nyström approximation to g."""
     fn = partial(
         apply_joint_JJT,
         interior_inputs,
@@ -95,6 +95,34 @@ def apply_inv_sketch(
     B = nystrom_stable_fast(fn, len(g), l, dt, dev)
     out = apply_B(B, damping, g)
     return out.unsqueeze(-1)
+
+# NOTE: create tests for these function
+def apply_inv_sketch_naive(
+    interior_inputs: Dict[int, Tensor],
+    interior_grad_outputs: Dict[int, Tensor],
+    boundary_inputs: Dict[int, Tensor],
+    boundary_grad_outputs: Dict[int, Tensor],
+    g: Tensor,
+    dt: str,
+    dev: str,
+    damping: float,
+    l: int,
+):
+    """Apply the inverse of the stable Nyström approximation to g."""
+    fn = partial(
+        apply_joint_JJT,
+        interior_inputs,
+        interior_grad_outputs,
+        boundary_inputs,
+        boundary_grad_outputs,
+    )
+    U, Lambda = nystrom_stable(fn, len(g), l, dt, dev)
+    
+    UTg = U.T @ g
+    rhs = (g - U @ UTg) / damping
+    lhs = U @ (diag(1 / (Lambda + damping)) @ UTg)
+
+    return (rhs + lhs).unsqueeze(-1)
 
 
 # NOTE: create tests for these function
@@ -109,6 +137,7 @@ def apply_inv_exact(
     damping: float,
     l: int,
 ):
+    """Apply the inverse of the exact joint JJT to g."""
     JJT = compute_joint_JJT(
         interior_inputs,
         interior_grad_outputs,
@@ -165,7 +194,6 @@ def nystrom_stable(
     B = solve_triangular(C, Y, upper=True, left=False)
     U, Sigma, _ = svd(B, full_matrices=False)
     Lambda = (Sigma**2 - nu).clamp(min=0.0)
-
     return U, Lambda
 
 
