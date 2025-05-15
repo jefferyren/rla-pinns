@@ -44,6 +44,7 @@ sweep_ids = {  # ids from the wandb agent
     # "0tjhkabg": "Hessian-free",
     "si6vihue": "ENGD (Woodbury)",
     "fv83yp7p": "ENGD (Nystrom)",
+    "t1ub9wt4": "ENGD (Naive)",
     # "x89ea5bz": "SPRING",
     # "bqwzojmu": "SPRING (Nystrom)",
 }
@@ -55,6 +56,7 @@ colors = {
     "ENGD": sequential.Blues_5.mpl_colors[-3],
     "ENGD (Woodbury)": sequential.Blues_5.mpl_colors[-2],
     "ENGD (Nystrom)": sequential.Blues_5.mpl_colors[-1],
+    "ENGD (Naive)": sequential.Reds_4.mpl_colors[-2],
     "SPRING": sequential.Greens_4.mpl_colors[-2],
     "SPRING (Nystrom)": sequential.Greens_4.mpl_colors[-1],
     "Hessian-free": "black",
@@ -66,6 +68,7 @@ linestyles = {
     "ENGD": "-",
     "ENGD (Woodbury)": "-",
     "ENGD (Nystrom)": "-",
+    "ENGD (Naive)": "-",
     "SPRING": "-",
     "SPRING (Nystrom)": "-",
     "Hessian-free": "-",

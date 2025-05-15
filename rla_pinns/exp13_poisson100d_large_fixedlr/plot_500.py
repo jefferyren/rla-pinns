@@ -45,6 +45,7 @@ sweep_ids = {  # ids from the wandb agent
     # "9e4kfe24": "ENGD (Nystrom)",
     "y2dwo1qx": "SPRING",
     "o3fz5atc": "SPRING (Nystrom)",
+    "pt4ji858": "SPRING (Naive)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
@@ -56,6 +57,7 @@ colors = {
     "ENGD (Nystrom)": sequential.Blues_5.mpl_colors[-1],
     "SPRING": sequential.Greens_4.mpl_colors[-2],
     "SPRING (Nystrom)": sequential.Greens_4.mpl_colors[-1],
+    "SPRING (Naive)": sequential.Reds_4.mpl_colors[-2],
     "Hessian-free": "black",
 }
 
@@ -67,6 +69,7 @@ linestyles = {
     "ENGD (Nystrom)": "-",
     "SPRING": "-",
     "SPRING (Nystrom)": "-",
+    "SPRING (Naive)": "-",
     "Hessian-free": "-",
 }
 

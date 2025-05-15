@@ -147,16 +147,16 @@ if __name__ == "__main__":
         plt.savefig(out_file, bbox_inches="tight")
 
     # export sweep and run descriptions to LaTeX
-    # TEXDIR = path.join(HEREDIR, "tex")
-    # makedirs(TEXDIR, exist_ok=True)
+    TEXDIR = path.join(HEREDIR, "tex")
+    makedirs(TEXDIR, exist_ok=True)
 
-    # if args.update:  # only if online access is possible
-    #     for sweep_id in sweep_ids:
-    #         _, meta = load_best_run(entity, project, sweep_id, savedir=DATADIR)
-    #         sweep_args = meta.to_dict()["config"][0]
-    #         WandbRunFormatter.to_tex(TEXDIR, sweep_args)
+    if args.update:  # only if online access is possible
+        for sweep_id in sweep_ids:
+            _, meta = load_best_run(entity, project, sweep_id, savedir=DATADIR)
+            sweep_args = meta.to_dict()["config"][0]
+            WandbRunFormatter.to_tex(TEXDIR, sweep_args)
 
-    #     for sweep in show_sweeps(entity, project):
-    #         WandbSweepFormatter.to_tex(TEXDIR, sweep.config)
-    # else:
-    #     print("Skipping LaTeX export of sweeps and best runs.")
+        for sweep in show_sweeps(entity, project):
+            WandbSweepFormatter.to_tex(TEXDIR, sweep.config)
+    else:
+        print("Skipping LaTeX export of sweeps and best runs.")
