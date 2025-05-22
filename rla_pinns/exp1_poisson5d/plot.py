@@ -17,8 +17,8 @@ from rla_pinns.wandb_utils import (
     show_sweeps,
 )
 
-entity = "andresguzco"  # team name on wandb
-project = "rla-pinns"  # name from the 'Projects' tab on wandb
+entity = "rla-pinns"
+project = "exp1_poisson5d"  
 
 # information for title
 equation = "poisson"

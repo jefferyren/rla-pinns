@@ -1,5 +1,5 @@
-entity: andresguzco
-project: rla-pinns
+entity: rla-pinns
+project: exp1_poisson5d
 name: SPRING
 program: ../../train.py
 command:

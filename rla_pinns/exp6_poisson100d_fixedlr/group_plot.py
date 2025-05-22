@@ -19,7 +19,7 @@ PARAMS = [10065, 1325057]
 
 EXTRA = [
     {      
-        "entity": "andresguzco",
+        "entity": ..., # project name
         'exp': 'rla-pinns',
         'id': 'tacjf0pi',
     },
