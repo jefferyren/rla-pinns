@@ -165,6 +165,9 @@ class WandbRunFormatter:
             "KFAC_ema_factor": "exponential moving average",
             "KFAC_initialize_to_identity": "initialize Kronecker factors to identity",
         },
+        "RNGD": {
+            "RNGD_damping": "damping",
+        },
     }
 
     @classmethod
@@ -216,6 +219,11 @@ class WandbRunFormatter:
         elif optimizer == "KFAC" and args["KFAC_lr"] == "auto":
             optimizer = "KFAC_auto"
             hyperparams = {k: v for k, v in hyperparams.items() if k != "KFAC_momentum"}
+        elif optimizer == "RNGD":
+            if args["RNGD_momentum"] == 0:
+                optimizer = "ENGD-W"
+            else:
+                optimizer = "SPRING"
 
         # create human-readable description
         text = ", ".join(

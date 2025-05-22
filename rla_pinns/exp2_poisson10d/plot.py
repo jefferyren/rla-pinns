@@ -43,9 +43,9 @@ sweep_ids = {  # ids from the wandb agent
     # "fdohey43": "ENGD",
     # "d5ujt0u0": "Hessian-free",
     "z0mwgnch": "ENGD (Woodbury)",
-    "ux6k9tey": "ENGD (Nystrom)",
+    # "ux6k9tey": "ENGD (Nystrom)",
     "zehp7qyb": "SPRING",
-    "sq17ycz1": "SPRING (Nystrom)",
+    # "sq17ycz1": "SPRING (Nystrom)",
 }
 
 # color options: https://jiffyclub.github.io/palettable/colorbrewer/
@@ -106,7 +106,7 @@ if __name__ == "__main__":
             rel_width=1.0, nrows=4, ncols=4, usetex=not args.disable_tex
         )
     ):
-        fig, axes = plt.subplots(2, 2)
+        fig, axes = plt.subplots(2, 2, sharey="row")
         axes_flat = axes.flatten()
 
         # Loop over each subplot (x, y combo)
@@ -157,20 +157,20 @@ if __name__ == "__main__":
             columnspacing=0.9,
         )
 
-        out_file = path.join(HEREDIR, "metric_summary.pdf")
+        out_file = path.join(HEREDIR, "l2.pdf")
         plt.savefig(out_file, bbox_inches="tight")
 
     # export sweep and run descriptions to LaTeX
-    # TEXDIR = path.join(HEREDIR, "tex")
-    # makedirs(TEXDIR, exist_ok=True)
+    TEXDIR = path.join(HEREDIR, "tex")
+    makedirs(TEXDIR, exist_ok=True)
 
-    # if args.update:  # only if online access is possible
-    #     for sweep_id in sweep_ids:
-    #         _, meta = load_best_run(entity, project, sweep_id, savedir=DATADIR)
-    #         sweep_args = meta.to_dict()["config"][0]
-    #         WandbRunFormatter.to_tex(TEXDIR, sweep_args)
+    if args.update:  # only if online access is possible
+        for sweep_id in sweep_ids:
+            _, meta = load_best_run(entity, project, sweep_id, savedir=DATADIR)
+            sweep_args = meta.to_dict()["config"][0]
+            WandbRunFormatter.to_tex(TEXDIR, sweep_args)
 
-    #     for sweep in show_sweeps(entity, project):
-    #         WandbSweepFormatter.to_tex(TEXDIR, sweep.config)
-    # else:
-    #     print("Skipping LaTeX export of sweeps and best runs.")
+        for sweep in show_sweeps(entity, project):
+            WandbSweepFormatter.to_tex(TEXDIR, sweep.config)
+    else:
+        print("Skipping LaTeX export of sweeps and best runs.")

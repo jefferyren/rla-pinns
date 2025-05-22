@@ -42,7 +42,7 @@ sweep_ids = {
     "14ls2uo2": "ENGD",
     "0tjhkabg": "Hessian-free",
     "tacjf0pi": "ENGD (Woodbury)",
-    # "eimjo8j1": "SPRING",
+    "eimjo8j1": "SPRING",
 }
 
 # color and style definitions...
@@ -82,17 +82,16 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # y_to_ylabel = {"loss": "Loss", "l2_error": r"$L_2$ error"}
-    y_to_ylabel = {"l2_error": r"$L_2$ error"}
+    y_to_ylabel = {"loss": "Loss", "l2_error": r"$L_2$ error"}
     x_to_xlabel = {"step": "Iteration", "time": "Time (s)"}
 
     # Create a 2x2 figure to hold all plots
     with plt.rc_context(
         bundles.neurips2023(
-            rel_width=1.0, nrows=2, ncols=4, usetex=not args.disable_tex
+            rel_width=1.0, nrows=4, ncols=4, usetex=not args.disable_tex
         )
     ):
-        fig, axes = plt.subplots(1, 2, sharey="row")
+        fig, axes = plt.subplots(2, 2, sharey="row")
         axes_flat = axes.flatten()
 
         # Loop over each subplot (x, y combo)

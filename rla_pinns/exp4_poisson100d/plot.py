@@ -97,14 +97,22 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    y_to_ylabel = {"loss": "Loss", "l2_error": "$L_2$ error"}
+    y_to_ylabel = {"loss": "Loss", "l2_error": r"$L_2$ error"}
     x_to_xlabel = {"step": "Iteration", "time": "Time (s)"}
 
-    for (x, xlabel), (y, ylabel) in product(x_to_xlabel.items(), y_to_ylabel.items()):
-        with plt.rc_context(
-            bundles.neurips2023(rel_width=1.0, usetex=not args.disable_tex)
+    # Create a 2x2 figure to hold all plots
+    with plt.rc_context(
+        bundles.neurips2023(
+            rel_width=1.0, nrows=4, ncols=4, usetex=not args.disable_tex
+        )
+    ):
+        fig, axes = plt.subplots(2, 2, sharey="row")
+        axes_flat = axes.flatten()
+
+        # Loop over each subplot (x, y combo)
+        for ax, ((x, xlabel), (y, ylabel)) in zip(
+            axes_flat, product(x_to_xlabel.items(), y_to_ylabel.items())
         ):
-            fig, ax = plt.subplots(1, 1)
             ax.set_xlabel(xlabel)
             ax.set_xscale("log")
             ax.set_ylabel(ylabel)
@@ -112,6 +120,7 @@ if __name__ == "__main__":
             ax.set_title(f"{dim_Omega}d {equation.capitalize()} ($D={num_params}$)")
             ax.grid(True, alpha=0.5)
 
+            # Plot each optimizer's history
             for sweep_id, label in sweep_ids.items():
                 df_history, _ = load_best_run(
                     entity,
@@ -123,7 +132,7 @@ if __name__ == "__main__":
                 )
                 x_data = {
                     "step": df_history["step"] + 1,
-                    "time": df_history["time"] - min(df_history["time"]),
+                    "time": df_history["time"] - df_history["time"].min(),
                 }[x]
                 ax.plot(
                     x_data,
@@ -133,20 +142,35 @@ if __name__ == "__main__":
                     linestyle=linestyles[label],
                 )
 
-            ax.legend()
-            plt.savefig(path.join(HEREDIR, f"{y}_over_{x}.pdf"), bbox_inches="tight")
+        # One shared legend for all subplots
+        handles, labels = axes_flat[0].get_legend_handles_labels()
+        fig.legend(
+            handles,
+            labels,
+            loc="lower center",
+            # adjust legend to not overlap with xlabel
+            bbox_to_anchor=(0.5, -0.1),
+            # shorter lines so legend fits into a single line in the main text
+            handlelength=1.35,
+            # reduce space between columns to fit into a single line
+            ncols=8,
+            columnspacing=0.9,
+        )
+
+        out_file = path.join(HEREDIR, "l2.pdf")
+        plt.savefig(out_file, bbox_inches="tight")
 
     # export sweep and run descriptions to LaTeX
-    # TEXDIR = path.join(HEREDIR, "tex")
-    # makedirs(TEXDIR, exist_ok=True)
+    TEXDIR = path.join(HEREDIR, "tex")
+    makedirs(TEXDIR, exist_ok=True)
 
-    # if args.update:  # only if online access is possible
-    #     for sweep_id in sweep_ids:
-    #         _, meta = load_best_run(entity, project, sweep_id, savedir=DATADIR)
-    #         sweep_args = meta.to_dict()["config"][0]
-    #         WandbRunFormatter.to_tex(TEXDIR, sweep_args)
+    if args.update:  # only if online access is possible
+        for sweep_id in sweep_ids:
+            _, meta = load_best_run(entity, project, sweep_id, savedir=DATADIR)
+            sweep_args = meta.to_dict()["config"][0]
+            WandbRunFormatter.to_tex(TEXDIR, sweep_args)
 
-    #     for sweep in show_sweeps(entity, project):
-    #         WandbSweepFormatter.to_tex(TEXDIR, sweep.config)
-    # else:
-    #     print("Skipping LaTeX export of sweeps and best runs.")
+        for sweep in show_sweeps(entity, project):
+            WandbSweepFormatter.to_tex(TEXDIR, sweep.config)
+    else:
+        print("Skipping LaTeX export of sweeps and best runs.")

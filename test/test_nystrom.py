@@ -81,7 +81,7 @@ def parse_args():
         '--p', type=int, default=10000,
     )
     parser.add_argument(
-        '--l', type=int, default=250,
+        '--l', type=int, default=1750,
     )
     parser.add_argument(
         '--mu', type=float, default=1e-7,
@@ -98,7 +98,7 @@ def main():
     device = torch.device(args.device)
 
     # Create random input tensor on the specified device
-    input_tensor = torch.randn(args.n, args.p, device=device)
+    input_tensor = torch.randn(args.n, args.n, device=device)
     input_tensor = input_tensor.T @ input_tensor # Make it symmetric
 
     # Benchmark function1

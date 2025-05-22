@@ -32,17 +32,17 @@ if __name__ == "__main__":
     IGNORE = {"ENGD (diagonal)"}
 
     # Define axes labels
-    # y_to_ylabel = {"loss": "Loss", "l2_error": "$L_2$ error"}
-    y_to_ylabel = {"l2_error": "$L_2$ error"}
-    # x_to_xlabel = {"step": "Iteration", "time": "Time [s]"}
-    x_to_xlabel = {"time": "Time [s]"}
+    y_to_ylabel = {"loss": "Loss", "l2_error": "$L_2$ error"}
+    # y_to_ylabel = {"l2_error": "$L_2$ error"}
+    x_to_xlabel = {"step": "Iteration", "time": "Time [s]"}
+    # x_to_xlabel = {"time": "Time [s]"}
 
     # Build 4x3 grid
     with plt.rc_context(
         bundles.neurips2023(
             rel_width=1.0,
-            nrows=1,
-            ncols=3,
+            nrows=6,
+            ncols=4,
             usetex=not args.disable_tex,
         ),
     ):
@@ -51,14 +51,14 @@ if __name__ == "__main__":
             "text.latex.preamble"
         ] += r"\usepackage[group-separator={,}, group-minimum-digits={3}]{siunitx}"
 
-        fig, axs = plt.subplots(1, len(COLUMNS), figsize=(6, 1.5), sharey="row")
+        fig, axs = plt.subplots(4, len(COLUMNS), sharey="row")
         # Loop through each combination to fill each row
         for row_index, ((x, xlabel), (y, ylabel)) in enumerate(
             product(x_to_xlabel.items(), y_to_ylabel.items())
         ):
             i = 0
             for col_index, exp in enumerate(COLUMNS):
-                ax = axs[col_index]
+                ax = axs[row_index, col_index]
 
                 # Axis formatting
                 ax.set_xscale("log")
@@ -110,12 +110,12 @@ if __name__ == "__main__":
                     ax.set_xlim(left=1)
 
         # Shared legend at bottom
-        handles, labels = axs[0].get_legend_handles_labels()
+        handles, labels = axs[0, 0].get_legend_handles_labels()
         fig.legend(
             handles,
             labels,
             loc="lower center",
-            bbox_to_anchor=(0.5, -0.13),
+            bbox_to_anchor=(0.5, -0.05),
             ncol=len(labels),
             handlelength=1.35,
             columnspacing=0.9,
