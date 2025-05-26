@@ -14,6 +14,7 @@ from os import makedirs, path
 from sys import argv
 from time import time
 from typing import Iterable, List, Tuple
+from time import perf_counter
 
 import wandb
 from hessianfree.optimizer import HessianFree
@@ -695,6 +696,7 @@ def main():  # noqa: C901
                 Returns:
                     The linearization point and the loss.
                 """
+                t0 = perf_counter()
                 loss_interior, residual_interior, _ = eval_interior_loss(
                     layers,
                     X_Omega,  # noqa: B023, see note above
@@ -705,6 +707,7 @@ def main():  # noqa: C901
                     X_dOmega,  # noqa: B023, see note above
                     y_dOmega,  # noqa: B023, see note above
                 )
+                
                 # we want to linearize residual w.r.t. the parameters to obtain
                 # the GGN. This established the connection between the loss and
                 # the concatenated boundary and interior residuals.
@@ -719,14 +722,20 @@ def main():  # noqa: C901
                 # HOTFIX Append the interior and boundary loss to loss_storage
                 # so we can extract them for logging and plotting
                 loss_storage.append((loss_interior.detach(), loss_boundary.detach()))
-
+                cuda.synchronize()
+                t1 = perf_counter()
+                print(f"{t1 - t0:.4f}s to compute the loss")
                 return loss, residual
 
             forward = partial(forward, loss_storage=loss_storage)
             if isinstance(optimizer, HessianFreeCached):
                 optimizer.step(X_Omega, y_Omega, X_dOmega, y_dOmega, forward)
             else:
+                t0 = perf_counter()
                 optimizer.step(forward)
+                cuda.synchronize()
+                t1 = perf_counter()
+                print(f"{t1 - t0:.4f}s to take step.")
             loss_interior, loss_boundary = loss_storage[0]
 
         else:
