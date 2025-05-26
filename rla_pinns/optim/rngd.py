@@ -295,6 +295,7 @@ class RNGD(Optimizer):
         else:
             zeta = residuals
 
+        t0 = perf_counter()
         step = self.STEP_FUNCTIONS[self._approximation](
             interior_inputs,
             interior_grad_outputs,
@@ -306,6 +307,8 @@ class RNGD(Optimizer):
             damping,
             self.l,
         )
+        cuda.synchronize()
+        t1 = perf_counter()
 
         step = [
             s.squeeze(-1)
@@ -317,6 +320,8 @@ class RNGD(Optimizer):
                 step,
             )
         ]
+        cuda.synchronize()
+        t2 = perf_counter()
 
         if momentum != 0.0:
             for p, s in zip(params, step):
@@ -328,5 +333,9 @@ class RNGD(Optimizer):
             ]
         else:
             step = [s.view(p.shape) for s, p in zip(step, params)]
+        t3 = perf_counter()
+        print(f"{t1 - t0:.4f}s to compute the step function.")
+        print(f"{t2 - t1:.4f}s to apply the joint J^T.")
+        print(f"{t3 - t2:.4f}s to reshape the step.")
 
         return step
