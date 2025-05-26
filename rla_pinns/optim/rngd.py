@@ -1,5 +1,6 @@
 from math import sqrt
-from torch import Tensor, zeros_like, cat
+from time import perf_counter
+from torch import Tensor, zeros_like, cat, cuda
 from typing import List, Dict, Tuple
 from argparse import ArgumentParser, Namespace
 from torch.nn import Module
@@ -174,7 +175,8 @@ class RNGD(Optimizer):
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
     ) -> Tuple[Tensor, Tensor]:
-
+        
+        t0 = perf_counter()
         (
             interior_loss,
             boundary_loss,
@@ -195,6 +197,8 @@ class RNGD(Optimizer):
         interior_residual = interior_residual.detach() / sqrt(N_Omega)
 
         epsilon = -cat([interior_residual, boundary_residual]).flatten()
+        cuda.synchronize()
+        t1 = perf_counter()
 
         directions = self._get_directions(
             interior_inputs,
@@ -205,7 +209,12 @@ class RNGD(Optimizer):
         )
         self._update_parameters(directions, X_Omega, y_Omega, X_dOmega, y_dOmega)
         self.steps += 1
+        cuda.synchronize()
+        t2 = perf_counter()
 
+        print(f"{t1 - t0:.4f}s to compute the loss.")
+        print(f"{t2 - t1:.4f}s to compute the directions and update parameters.")
+        print(f"{t2 - t0:.4f}s to compute the step.")
         return interior_loss, boundary_loss
 
     def _update_parameters(
