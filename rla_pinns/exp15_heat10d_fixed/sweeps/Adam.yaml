@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: exp15_heat100d_fixed
+project: exp14_heat10d
 name: Adam
 program: ../../train.py
 command:
@@ -18,13 +18,13 @@ parameters:
     batch_frequency:
         value: 1
     boundary_condition:
-        value: u_weinan_norm
+        value: sin_sum
     model:
-        value: mlp-tanh-768-768-512-512
+        value: mlp-tanh-256-256-128-128
     num_seconds:
         value: 7_000
     dim_Omega:
-        value: 100
+        value: 10
     N_Omega:
         value: 100
     N_dOmega:
@@ -33,3 +33,5 @@ parameters:
         distribution: log_uniform_values
         min: 1e-4
         max: 5e-1
+    equation:
+        value: "heat"

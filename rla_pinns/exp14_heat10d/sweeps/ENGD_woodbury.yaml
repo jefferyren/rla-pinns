@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp15_heat100d_fixed
-name: SPRING_nsytrom
+project: exp14_heat10d
+name: ENGD_woodbury
 program: ../../train.py
 command:
     - ${env}
@@ -17,30 +17,22 @@ parameters:
     batch_frequency:
         value: 1
     boundary_condition:
-        value: u_weinan_norm
+        value: sin_sum
     model:
-        value: mlp-tanh-768-768-512-512
+        value: mlp-tanh-256-256-128-128
     num_seconds:
-        value: 7_000
+        value: 3_000
     dim_Omega:
-        value: 100
+        value: 4
     N_Omega:
-        value: 100
+        value: 3_000
     N_dOmega:
-        value: 50
+        value: 500
     RNGD_approximation:
-        value: "nystrom"
+        value: "exact"
     RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-9
-        max: 1e-1
-    RNGD_momentum:
-        distribution: uniform
-        min: 0.0
-        max: 0.999
-    RNGD_norm_constraint:
-        value: 0.0
-    RNGD_rank_val:
-        value: 75
+        min: 0.0000001
+        max: 0.001
     equation:
-        value: "poisson"
+        value: "heat"
