@@ -1,6 +1,6 @@
 entity: rla-pinns
-project: exp14_heat10d
-name: SPRING
+project: exp14_heat4d
+name: ENGD_woodbury
 program: ../../train.py
 command:
     - ${env}
@@ -23,7 +23,7 @@ parameters:
     num_seconds:
         value: 3_000
     dim_Omega:
-        value: 10
+        value: 4
     N_Omega:
         value: 3_000
     N_dOmega:
@@ -34,9 +34,9 @@ parameters:
         distribution: log_uniform_values
         min: 0.0000001
         max: 0.001
-    RNGD_momentum:
-        distribution: uniform
-        min: 0.8
-        max: 0.999
     equation:
         value: "heat"
+    RNGD_lr:
+        distribution: log_uniform_values
+        min: 1e-3
+        max: 1e-1
