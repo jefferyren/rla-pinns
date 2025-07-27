@@ -189,41 +189,6 @@ def compute_joint_JJT(
     return JJT
 
 
-def apply_joint_JT_tensor(
-    interior_inputs: Dict[int, Tensor],
-    interior_grad_outputs: Dict[int, Tensor],
-    boundary_inputs: Dict[int, Tensor],
-    boundary_grad_outputs: Dict[int, Tensor],
-    M: Tensor,
-) -> Tensor:
-    """Compute the Jacobian-transpose-Jacobian product and return as a single tensor.
-
-    Args:
-        interior_inputs: The layer inputs for the interior loss.
-        interior_grad_outputs: The layer gradient outputs for the interior loss.
-        boundary_inputs: The layer inputs for the boundary loss.
-        boundary_grad_outputs: The layer gradient outputs for the boundary loss.
-        M: The matrix to multiply the transpose Jacobian with. Shape (N_total, K)
-
-    Returns:
-        A tensor of shape (P, K), where P is the total number of parameters.
-    """
-    # Get output from apply_joint_JT
-    param_list = apply_joint_JT(
-        interior_inputs,
-        interior_grad_outputs,
-        boundary_inputs,
-        boundary_grad_outputs,
-        M,
-    )
-
-    # Flatten each tensor in the list and concatenate them
-    flat_params = [
-        p.flatten(0, -2) if p.dim() > 1 else p.unsqueeze(0) for p in param_list
-    ]
-    return torch.cat(flat_params, dim=0)
-
-
 def apply_joint_JJT(
     interior_inputs: Dict[int, Tensor],
     interior_grad_outputs: Dict[int, Tensor],
