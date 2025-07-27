@@ -38,8 +38,6 @@ parameters:
         max: 0.001
     RNGD_momentum:
         value: 0.0
-    RNGD_norm_constraint:
-        value: 0.0
     RNGD_lr:
         distribution: uniform
         min: 0.001

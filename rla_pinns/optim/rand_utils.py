@@ -2,8 +2,6 @@ from torch import Tensor, cholesky_solve, einsum, arange, randn, diag
 from typing import List, Dict, Callable, Tuple
 from hessianfree.cg import cg
 from functools import partial
-from torch import cuda
-from time import perf_counter
 from torch.linalg import qr, cholesky, solve_triangular, svd
 from rla_pinns.optim.utils import (
     apply_joint_JJT,
@@ -140,31 +138,21 @@ def apply_inv_exact(
     l: int,
 ):
     """Apply the inverse of the exact joint JJT to g."""
-    t0 = perf_counter()
     JJT = compute_joint_JJT(
         interior_inputs,
         interior_grad_outputs,
         boundary_inputs,
         boundary_grad_outputs,
     ).detach()
-    cuda.synchronize()
-    t1 = perf_counter()
+
     idx = arange(JJT.shape[0], device=dev)
     JJT[idx, idx] = JJT.diag() + damping
-    cuda.synchronize()
-    t2 = perf_counter()
+
 
     L = cholesky(JJT)
-    cuda.synchronize()
-    t3 = perf_counter()
-    out = cholesky_solve(g.unsqueeze(1), L)
-    cuda.synchronize()
-    t4 = perf_counter()
 
-    print(f"{t1 - t0:.4f}s to compute JJT")
-    print(f"{t2 - t1:.4f}s to add damping")
-    print(f"{t3 - t2:.4f}s to compute cholesky")
-    print(f"{t4 - t3:.4f}s to solve cholesky")
+    out = cholesky_solve(g.unsqueeze(1), L)
+
     return out
 
 

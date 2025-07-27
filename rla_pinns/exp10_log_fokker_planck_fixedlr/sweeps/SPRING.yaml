@@ -40,8 +40,6 @@ parameters:
         distribution: uniform
         min: 0.8
         max: 0.999
-    RNGD_norm_constraint:
-        value: 0.001
     RNGD_lr:
         distribution: uniform
         min: 0.001
