@@ -42,5 +42,5 @@ parameters:
         value: "heat"
     RNGD_lr:
         distribution: log_uniform_values
-        min: 1e-3
-        max: 1e-1
+        min: 0.001
+        max: 0.1
