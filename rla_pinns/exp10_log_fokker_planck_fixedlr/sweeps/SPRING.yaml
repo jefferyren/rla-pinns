@@ -34,15 +34,15 @@ parameters:
         value: "exact"
     RNGD_damping:
         distribution: log_uniform_values
-        min: 1e-10
-        max: 1e-1
+        min: 0.00001
+        max: 0.001
     RNGD_momentum:
         distribution: uniform
-        min: 0.0
+        min: 0.8
         max: 0.999
     RNGD_norm_constraint:
-        value: 1e-3
+        value: 0.001
     RNGD_lr:
         distribution: uniform
-        min: 1e-3
-        max: 1e-1
+        min: 0.001
+        max: 0.1
