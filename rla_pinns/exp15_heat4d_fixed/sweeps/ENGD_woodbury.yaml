@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: exp14_heat4d
+project: exp15_heat4d_fixed
 name: ENGD_woodbury
 program: ../../train.py
 command:
