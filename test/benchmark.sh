@@ -24,7 +24,7 @@ COMBOS=(
 )
 
 # Number of iterations inside each Python benchmark
-ITERATIONS=100
+ITERATIONS=20
 
 for combo in "${COMBOS[@]}"; do
   read -r n l <<<"$combo"
