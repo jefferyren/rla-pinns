@@ -12,5 +12,6 @@
 # python ../yaml_to_sh.py sweeps/SPRING.yaml sweeps/SPRING.sh --qos=m2 --array=50
 # python ../yaml_to_sh.py sweeps/ENGD_nystrom.yaml sweeps/ENGD_nystrom.sh --qos=m3 --array=50
 # python ../yaml_to_sh.py sweeps/SPRING_nystrom.yaml sweeps/SPRING_nystrom.sh --qos=m4 --array=50
-python ../yaml_to_sh.py sweeps/ENGD_pcg.yaml sweeps/ENGD_pcg.sh --qos=m3 --array=50
-python ../yaml_to_sh.py sweeps/SPRING_pcg.yaml sweeps/SPRING_pcg.sh --qos=m4 --array=50
+# python ../yaml_to_sh.py sweeps/ENGD_pcg.yaml sweeps/ENGD_pcg.sh --qos=m3 --array=50
+# python ../yaml_to_sh.py sweeps/SPRING_pcg.yaml sweeps/SPRING_pcg.sh --qos=m4 --array=50
+python ../yaml_to_sh.py sweeps/KFAC.yaml sweeps/KFAC.sh --qos=m2 --array=50
