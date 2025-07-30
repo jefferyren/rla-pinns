@@ -23,7 +23,7 @@ parameters:
     num_seconds:
         value: 3_000
     dim_Omega:
-        value: 10
+        value: 4
     N_Omega:
         value: 3_000
     N_dOmega:

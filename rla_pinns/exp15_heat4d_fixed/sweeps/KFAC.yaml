@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: exp15_heat10d_fixed
+project: exp15_heat4d_fixed
 name: KFAC
 program: ../../train.py
 command:
