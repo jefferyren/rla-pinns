@@ -1,5 +1,5 @@
 entity: rla-pinns
-project: exp5_log_fokker_planck
+project: exp18_log_fokker_planck_smallbatch
 name: ENGD_woodbury
 program: ../../train.py
 command:
@@ -27,9 +27,9 @@ parameters:
     dim_Omega:
         value: 9
     N_Omega:
-        value: 3_000
+        value: 300
     N_dOmega:
-        value: 1_000
+        value: 100
     RNGD_approximation:
         value: "exact"
     RNGD_damping:
