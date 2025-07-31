@@ -38,5 +38,3 @@ parameters:
         max: 0.00000001
     RNGD_momentum:
         value: 0.0
-    RNGD_norm_constraint:
-        value: 0.0

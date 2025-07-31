@@ -13,4 +13,4 @@ echo "[DEBUG] Host name: " `hostname`
 source  ~/miniforge3/etc/profile.d/conda.sh
 conda activate rla_pinns
 
-wandb agent --count 1 rla-pinns/exp5_log_fokker_planck/qsk6tno5
+wandb agent --count 1 rla-pinns/exp5_log_fokker_planck/q2kme9n5
