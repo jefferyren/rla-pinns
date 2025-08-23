@@ -138,6 +138,8 @@ class RNGD(Optimizer):
             approximation=approximation,
             rank_val=rank_val,
             equation=equation,
+            beta=0.0,
+            alpha=0.0,
         )
         super().__init__(params, defaults)
 
@@ -171,6 +173,7 @@ class RNGD(Optimizer):
             for p in group["params"]:
                 self.state[p]["phi"] = zeros_like(p)
 
+
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
     ) -> Tuple[Tensor, Tensor]:
@@ -203,6 +206,7 @@ class RNGD(Optimizer):
             boundary_grad_outputs,
             epsilon,
         )
+
         self._update_parameters(directions, X_Omega, y_Omega, X_dOmega, y_dOmega)
         self.steps += 1
         return interior_loss, boundary_loss
