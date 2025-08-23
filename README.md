@@ -1,9 +1,9 @@
 # Improving Energy Natural Gradient Descent through Woodbury, Momentum, and Randomization
 
 <p align="center">
-  <!-- <a href="https://github.com/andresguzco/ef-vfm/blob/main/LICENSE"> -->
-  <!--   <img alt="MIT License" src="https://img.shields.io/badge/License-MIT-yellow.svg"> -->
-  <!-- </a> -->
+  <a href="https://github.com/andresguzco/rla-pinns/blob/main/LICENSE">
+    <img alt="MIT License" src="https://img.shields.io/badge/License-MIT-yellow.svg">
+  </a>
   <!-- <a href="https://openreview.net/pdf?id=kjtvCSkSsy"> -->
   <!--   <img alt="Openreview" src="https://img.shields.io/badge/review-OpenReview-blue"> -->
   <!-- </a> -->
