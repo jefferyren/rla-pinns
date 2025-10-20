@@ -317,7 +317,7 @@ class RNGD(Optimizer):
                 self.state[p]["phi"].mul_(momentum).add_(s)
 
             step = [
-                self.state[p]["phi"] / sqrt(1 - momentum ** (2 * (self.steps + 1)))
+                self.state[p]["phi"]
                 for p in params
             ]
         else:
