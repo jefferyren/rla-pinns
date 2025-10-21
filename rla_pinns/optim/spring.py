@@ -4,6 +4,7 @@ from argparse import ArgumentParser, Namespace
 from math import sqrt
 from typing import List, Tuple
 
+import torch
 from torch import Tensor, arange, cat, cholesky_solve, zeros_like
 from torch.linalg import cholesky, inv
 from torch.nn import Module
@@ -125,6 +126,8 @@ class SPRING(Optimizer):
         momentum: float = 0.99,
         norm_constraint: float = 1e-3,
         equation: str = "poisson",
+        lb_window: int = 0,  # lookback window, 0 = no momentum
+        beta0: float = 0.9,  # initial momentum factor
     ):
         """Set up the SPRING optimizer.
 
@@ -147,7 +150,7 @@ class SPRING(Optimizer):
         defaults = dict(
             lr=lr,
             damping=damping,
-            decay_factor=momentum,
+            decay_factor=momentum,  # same as beta
             norm_constraint=norm_constraint,
         )
         params = sum((list(layer.parameters()) for layer in layers), [])
@@ -169,6 +172,22 @@ class SPRING(Optimizer):
         (group,) = self.param_groups
         for p in group["params"]:
             self.state[p]["phi"] = zeros_like(p)
+
+        # ADDED NEW PART FOR ADAPTIVE MOMENTUM
+        self.p = int(lb_window)
+        self._use_adaptive_beta = self.p > 0
+
+        if self._use_adaptive_beta:
+            (dev,) = {p.device for p in group["params"]}
+            (dt,)  = {p.dtype  for p in group["params"]}
+
+            self._res_buffer = torch.zeros(2 * self.p, device=dev, dtype=dt)
+            self._buf_idx = 0
+            self._r_hat = torch.tensor(1.0, device=dev, dtype=dt)
+            self._checkpoint_idx = torch.tensor(1, device=dev)  # int-like tensor
+
+            # seed beta (decay_factor) for the very first steps
+            group["decay_factor"] = float(beta0)
 
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
@@ -223,6 +242,13 @@ class SPRING(Optimizer):
         interior_residual = interior_residual.detach() / sqrt(N_Omega)
 
         epsilon = -cat([interior_residual, boundary_residual]).flatten()
+
+        # ADAPTIVE PART 
+        if self._use_adaptive_beta:
+        # Using the √N-normalized concatenated residual (scale cancels in the ratio)
+            res_norm = epsilon.norm()  # scalar
+            self._res_buffer[self._buf_idx % (2 * self.p)] = res_norm
+            self._buf_idx += 1
 
         O_phi = apply_joint_J(
             interior_inputs,
@@ -279,8 +305,62 @@ class SPRING(Optimizer):
                 grid_line_search(f, params, directions, grid)
 
         self.steps += 1
+        # NEW: maybe update beta (= decay_factor) for the next step
+        if self._use_adaptive_beta:
+            self._maybe_update_beta()
 
         return interior_loss, boundary_loss
+
+    def _maybe_update_beta(self):
+        with torch.no_grad():
+            """Update group['decay_factor'] (beta) every p steps after a 2p warm-up"""
+            if (self.steps % self.p != 0) or (self._buf_idx < 2 * self.p):
+                return
+
+            (group,) = self.param_groups
+            p = self.p
+            two_p = 2 * p
+            idx = self._buf_idx
+            dev = self._res_buffer.device
+            dt  = self._res_buffer.dtype
+
+            # last p entries (t) vs previous p entries (t-p)
+            t_idx  = torch.arange(1, p + 1, device=dev)
+            tp_idx = torch.arange(p + 1, 2 * p + 1, device=dev)
+            idxs_t  = (idx - t_idx)  % two_p
+            idxs_tp = (idx - tp_idx) % two_p
+
+            eps_t  = (self._res_buffer.index_select(0, idxs_t)  ** 2).sum()
+            eps_tp = (self._res_buffer.index_select(0, idxs_tp) ** 2).sum()
+            # numerical guard
+            eps_tp = torch.clamp(eps_tp, min=torch.finfo(dt).eps)
+
+            r_ip = eps_t / eps_tp
+            r_ip = torch.minimum(torch.tensor(1.0, device=dev, dtype=dt), r_ip)
+
+            # a_n = n^{log n}
+            n_old = self._checkpoint_idx
+            n_new = self._checkpoint_idx + 1
+            n_old_f = n_old.to(dt)
+            n_new_f = n_new.to(dt)
+
+            # guard log(1)
+            a_old = torch.pow(n_old_f, torch.log(n_old_f + 1e-12))
+            a_new = torch.pow(n_new_f, torch.log(n_new_f))
+            alph  = a_old / a_new
+
+            # r_hat ← α r_hat + (1-α) * min(1, r_ip)
+            self._r_hat = alph * self._r_hat + (1.0 - alph) * r_ip
+
+            # ρ = max(0, 1 - r_hat^{1/p});  β = (1-ρ)/(1+ρ)
+            rho = torch.clamp(1.0 - torch.pow(self._r_hat, 1.0 / float(p)), min=0.0, max=1.0)
+            beta_new = (1.0 - rho) / (1.0 + rho)  # in [0,1)
+
+            # Optional safety clamp (uncomment if desired):
+            # beta_new = torch.clamp(beta_new, 0.0, 0.999)
+
+            group["decay_factor"] = float(beta_new.item())   # used next step
+            self._checkpoint_idx = n_new
 
     def _eval_loss(self, X: Tensor, y: Tensor, loss_type: str) -> Tensor:
         """Evaluate the loss.
