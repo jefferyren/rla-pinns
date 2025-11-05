@@ -596,6 +596,13 @@ def main():  # noqa: C901
     # check that the equation was correctly passed to PDE-aware optimizers
     if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
         assert optimizer.equation == equation
+        
+        # Debug SPRING adaptive momentum initialization
+        if isinstance(optimizer, SPRING):
+            use_adaptive = getattr(optimizer, '_use_adaptive_beta', None)
+            p = getattr(optimizer, 'p', None) 
+            buf_idx = getattr(optimizer, '_buf_idx', None)
+            print(f"DEBUG: SPRING initialization - adaptive_beta={use_adaptive}, p={p}, buf_idx={buf_idx}", flush=True)
 
     config = vars(args) | vars(optimizer_args) | {"cmd": cmd}
 
