@@ -129,6 +129,7 @@ class SPRING(Optimizer):
         lb_window: int = 30,  # lookback window, 0 = no momentum
         beta0: float = 0.9,  # initial momentum factor
     ):
+        print("SPRING __init__ method entered!", flush=True)
         """Set up the SPRING optimizer.
 
         Args:
@@ -196,6 +197,7 @@ class SPRING(Optimizer):
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
     ) -> Tuple[Tensor, Tensor]:
+        print("SPRING step method entered!", flush=True)
         """Take a step.
 
         Args:
