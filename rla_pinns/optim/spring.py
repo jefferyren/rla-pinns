@@ -147,6 +147,7 @@ class SPRING(Optimizer):
             ValueError: If the optimizer is used with per-parameter options.
             ValueError: If the equation is not supported.
         """
+        print(f"SPRING.__init__ called with lr={lr}, damping={damping}, momentum={momentum}", flush=True)
         defaults = dict(
             lr=lr,
             damping=damping,
@@ -206,17 +207,21 @@ class SPRING(Optimizer):
         Returns:
             Tuple of the interior and boundary loss before taking the step.
         """
-        print(f"SPRING step() method called - step {self.steps}", flush=True)
-        
-        (group,) = self.param_groups
-        params = group["params"]
-        lr = group["lr"]
-        damping = group["damping"]
-        decay_factor = group["decay_factor"]
-        norm_constraint = group["norm_constraint"]
+        try:
+            print(f"SPRING step() method called - step {self.steps}", flush=True)
+            
+            (group,) = self.param_groups
+            params = group["params"]
+            lr = group["lr"]
+            damping = group["damping"]
+            decay_factor = group["decay_factor"]
+            norm_constraint = group["norm_constraint"]
 
-        #DEBUG:
-        print(f"SPRING step {self.steps}: decay_factor={decay_factor}, damping={damping}", flush=True)
+            #DEBUG:
+            print(f"SPRING step {self.steps}: decay_factor={decay_factor}, damping={damping}", flush=True)
+        except Exception as e:
+            print(f"SPRING step() EXCEPTION: {e}", flush=True)
+            raise
         # compute OOT
         (
             interior_loss,
