@@ -129,7 +129,7 @@ class SPRING(Optimizer):
         lb_window: int = 30,  # lookback window, 0 = no momentum
         beta0: float = 0.9,  # initial momentum factor
     ):
-        print("SPRING __init__ method entered!", flush=True)
+        print(f"SPRING __init__ method entered with lb_window={lb_window}, beta0={beta0}!", flush=True)
         """Set up the SPRING optimizer.
 
         Args:
@@ -181,6 +181,7 @@ class SPRING(Optimizer):
         # ADDED NEW PART FOR ADAPTIVE MOMENTUM
         self.p = int(lb_window)
         self._use_adaptive_beta = self.p > 0
+        print(f"DEBUG: SPRING adaptive momentum setup: p={self.p}, _use_adaptive_beta={self._use_adaptive_beta}", flush=True)
 
         if self._use_adaptive_beta:
             (dev,) = {p.device for p in group["params"]}
@@ -193,6 +194,9 @@ class SPRING(Optimizer):
 
             # seed beta (decay_factor) for the very first steps
             group["decay_factor"] = float(beta0)
+            print(f"DEBUG: SPRING adaptive momentum initialized with beta0={beta0}, buffer size={2 * self.p}", flush=True)
+        else:
+            print(f"DEBUG: SPRING adaptive momentum disabled (p={self.p})", flush=True)
 
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
