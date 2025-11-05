@@ -129,7 +129,7 @@ class SPRING(Optimizer):
         momentum: float = 0.99,
         norm_constraint: float = 1e-3,
         equation: str = "poisson",
-        lb_window: int = 30,  # lookback window, 0 = no momentum
+        lb_window: int = 0,  # lookback window, 0 = no momentum
         beta0: float = 0.9,  # initial momentum factor
         **kwargs,  # Accept any additional keyword arguments
     ):
