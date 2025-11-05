@@ -72,4 +72,8 @@ def set_up_optimizer(
     else:
         param_representation = sum((list(layer.parameters()) for layer in layers), [])
 
-    return cls(param_representation, **args_dict), args
+    print(f"DEBUG: About to create optimizer {optimizer} using class {cls} with args {args_dict}", flush=True)
+    optimizer_instance = cls(param_representation, **args_dict)
+    print(f"DEBUG: Created optimizer instance: {type(optimizer_instance)} from {type(optimizer_instance).__module__}", flush=True)
+    
+    return optimizer_instance, args

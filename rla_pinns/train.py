@@ -596,7 +596,8 @@ def main():  # noqa: C901
     # check that the equation was correctly passed to PDE-aware optimizers
     if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
         assert optimizer.equation == equation
-        print(f"DEBUG: Using optimizer {type(optimizer).__name__} with equation {optimizer.equation}", flush=True)
+        print(f"DEBUG: Using optimizer {type(optimizer).__name__} from module {type(optimizer).__module__} with equation {optimizer.equation}", flush=True)
+        print(f"DEBUG: Optimizer class location: {type(optimizer)}", flush=True)
 
     config = vars(args) | vars(optimizer_args) | {"cmd": cmd}
 
