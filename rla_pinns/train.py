@@ -596,8 +596,6 @@ def main():  # noqa: C901
     # check that the equation was correctly passed to PDE-aware optimizers
     if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
         assert optimizer.equation == equation
-        print(f"DEBUG: Using optimizer {type(optimizer).__name__} from module {type(optimizer).__module__} with equation {optimizer.equation}", flush=True)
-        print(f"DEBUG: Optimizer class location: {type(optimizer)}", flush=True)
 
     config = vars(args) | vars(optimizer_args) | {"cmd": cmd}
 
@@ -626,8 +624,6 @@ def main():  # noqa: C901
         optimizer.zero_grad()
 
         if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
-            print(f"DEBUG: Taking PINN optimizer step with {type(optimizer).__name__}", flush=True)
-            
             # If it's SPRING, check the momentum-related attributes
             if isinstance(optimizer, SPRING):
                 print(f"DEBUG: SPRING optimizer step {getattr(optimizer, 'steps', 'unknown')}", flush=True)
@@ -636,6 +632,16 @@ def main():  # noqa: C901
                     decay_factor = group.get('decay_factor', 'unknown')
                     damping = group.get('damping', 'unknown')
                     print(f"DEBUG: SPRING decay_factor={decay_factor}, damping={damping}", flush=True)
+                
+                # Debug adaptive momentum
+                if hasattr(optimizer, '_use_adaptive_beta') and hasattr(optimizer, 'p') and hasattr(optimizer, '_buf_idx'):
+                    use_adaptive = getattr(optimizer, '_use_adaptive_beta', False)
+                    p = getattr(optimizer, 'p', 0)
+                    buf_idx = getattr(optimizer, '_buf_idx', 0)
+                    steps = getattr(optimizer, 'steps', 0)
+                    
+                    if steps > 0 and steps % 10 == 0:  # Print every 10 steps to avoid spam
+                        print(f"DEBUG: SPRING adaptive_beta={use_adaptive}, p={p}, buf_idx={buf_idx}, should_update={(steps % p == 0) and (buf_idx >= 2 * p)}", flush=True)
             
             loss_interior, loss_boundary = optimizer.step(
                 X_Omega, y_Omega, X_dOmega, y_dOmega
