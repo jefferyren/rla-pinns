@@ -128,8 +128,19 @@ class SPRING(Optimizer):
         equation: str = "poisson",
         lb_window: int = 30,  # lookback window, 0 = no momentum
         beta0: float = 0.9,  # initial momentum factor
+        **kwargs,  # Accept any additional keyword arguments
     ):
         print(f"SPRING __init__ method entered with lb_window={lb_window}, beta0={beta0}!", flush=True)
+        
+        # If lb_window or beta0 are not provided in kwargs, use defaults for adaptive momentum
+        if 'lb_window' not in kwargs and lb_window == 30:
+            # Enable adaptive momentum by default
+            lb_window = 30
+        if 'beta0' not in kwargs and beta0 == 0.9:
+            # Use default initial momentum factor
+            beta0 = 0.9
+            
+        print(f"SPRING using lb_window={lb_window}, beta0={beta0} for adaptive momentum", flush=True)
         """Set up the SPRING optimizer.
 
         Args:
