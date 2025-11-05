@@ -594,8 +594,9 @@ def main():  # noqa: C901
     check_all_args_parsed()
 
     # check that the equation was correctly passed to PDE-aware optimizers
-    if isinstance(optimizer, (KFAC, ENGD, RNGD)):
+    if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
         assert optimizer.equation == equation
+        print(f"DEBUG: Using optimizer {type(optimizer).__name__} with equation {optimizer.equation}", flush=True)
 
     config = vars(args) | vars(optimizer_args) | {"cmd": cmd}
 
@@ -624,6 +625,7 @@ def main():  # noqa: C901
         optimizer.zero_grad()
 
         if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
+            print(f"DEBUG: Taking PINN optimizer step with {type(optimizer).__name__}", flush=True)
             loss_interior, loss_boundary = optimizer.step(
                 X_Omega, y_Omega, X_dOmega, y_dOmega
             )
