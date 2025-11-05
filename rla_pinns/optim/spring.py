@@ -72,6 +72,18 @@ def parse_SPRING_args(verbose: bool = False, prefix="SPRING_") -> Namespace:
         help="The equation to solve.",
         default="poisson",
     )
+    parser.add_argument(
+        f"--{prefix}lb_window",
+        type=int,
+        help="Lookback window for adaptive momentum (0 = no adaptive momentum).",
+        default=30,
+    )
+    parser.add_argument(
+        f"--{prefix}beta0",
+        type=float,
+        help="Initial momentum factor for adaptive momentum.",
+        default=0.9,
+    )
 
     args = parse_known_args_and_remove_from_argv(parser)
 
