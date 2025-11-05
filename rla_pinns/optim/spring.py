@@ -97,6 +97,9 @@ class SPRING(Optimizer):
 
     See https://arxiv.org/pdf/2401.10190v1 for details.
     """
+    
+    # TEST: This should print when the class is loaded
+    print("LOADING SPRING CLASS - UPDATED VERSION", flush=True)
 
     LOSS_EVALUATORS = {
         "poisson": {
