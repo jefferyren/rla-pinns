@@ -167,6 +167,9 @@ class SPRING(Optimizer):
         self.equation = equation
         self.steps = 0
         self.layers = layers
+        
+        # DEBUG: Confirm SPRING optimizer is being used
+        print(f"SPRING optimizer initialized with damping={damping}, momentum={momentum}", flush=True)
 
         # initialize phi
         (group,) = self.param_groups
@@ -211,7 +214,7 @@ class SPRING(Optimizer):
         norm_constraint = group["norm_constraint"]
 
         #DEBUG:
-        print(f"SPRING step {self.steps}: decay_factor={decay_factor}, damping={damping}")
+        print(f"SPRING step {self.steps}: decay_factor={decay_factor}, damping={damping}", flush=True)
         # compute OOT
         (
             interior_loss,
