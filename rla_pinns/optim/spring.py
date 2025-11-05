@@ -210,6 +210,8 @@ class SPRING(Optimizer):
         decay_factor = group["decay_factor"]
         norm_constraint = group["norm_constraint"]
 
+        #DEBUG:
+        print(f"SPRING step {self.steps}: decay_factor={decay_factor}, damping={damping}")
         # compute OOT
         (
             interior_loss,
@@ -245,7 +247,6 @@ class SPRING(Optimizer):
 
         # ADAPTIVE PART 
         if self._use_adaptive_beta:
-        # Using the √N-normalized concatenated residual (scale cancels in the ratio)
             res_norm = epsilon.norm()  # scalar
             self._res_buffer[self._buf_idx % (2 * self.p)] = res_norm
             self._buf_idx += 1
