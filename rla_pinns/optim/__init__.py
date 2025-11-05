@@ -65,6 +65,13 @@ def set_up_optimizer(
             )
         args_dict["equation"] = equation
 
+    # Add adaptive momentum parameters for SPRING optimizer
+    if optimizer == "SPRING":
+        args_dict["lb_window"] = 30  # Enable adaptive momentum with 30-step lookback
+        args_dict["beta0"] = 0.9     # Initial momentum factor
+        if verbose:
+            print(f"Adding SPRING adaptive momentum: lb_window=30, beta0=0.9")
+
     if optimizer in {"KFAC", "SPRING", "RNGD", "HessianFreeCached"}:
         param_representation = layers
     elif optimizer == "ENGD":
