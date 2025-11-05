@@ -627,6 +627,16 @@ def main():  # noqa: C901
 
         if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
             print(f"DEBUG: Taking PINN optimizer step with {type(optimizer).__name__}", flush=True)
+            
+            # If it's SPRING, check the momentum-related attributes
+            if isinstance(optimizer, SPRING):
+                print(f"DEBUG: SPRING optimizer step {getattr(optimizer, 'steps', 'unknown')}", flush=True)
+                if hasattr(optimizer, 'param_groups') and optimizer.param_groups:
+                    group = optimizer.param_groups[0]
+                    decay_factor = group.get('decay_factor', 'unknown')
+                    damping = group.get('damping', 'unknown')
+                    print(f"DEBUG: SPRING decay_factor={decay_factor}, damping={damping}", flush=True)
+            
             loss_interior, loss_boundary = optimizer.step(
                 X_Omega, y_Omega, X_dOmega, y_dOmega
             )
