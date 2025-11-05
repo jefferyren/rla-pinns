@@ -189,53 +189,27 @@ class SPRING(Optimizer):
         for p in group["params"]:
             self.state[p]["phi"] = zeros_like(p)
 
-        # ADDED NEW PART FOR ADAPTIVE MOMENTUM
-        self.p = int(lb_window)
-        self._use_adaptive_beta = self.p > 0
+        # ALWAYS ENABLE ADAPTIVE MOMENTUM BY DEFAULT
+        self.p = 30  # Default lookback window
+        self._use_adaptive_beta = True  # Always enable adaptive momentum
         print(f"DEBUG: SPRING adaptive momentum setup: p={self.p}, _use_adaptive_beta={self._use_adaptive_beta}", flush=True)
 
-        if self._use_adaptive_beta:
-            (dev,) = {p.device for p in group["params"]}
-            (dt,)  = {p.dtype  for p in group["params"]}
+        # Always initialize adaptive momentum
+        (dev,) = {p.device for p in group["params"]}
+        (dt,)  = {p.dtype  for p in group["params"]}
 
-            self._res_buffer = torch.zeros(2 * self.p, device=dev, dtype=dt)
-            self._buf_idx = 0
-            self._r_hat = torch.tensor(1.0, device=dev, dtype=dt)
-            self._checkpoint_idx = torch.tensor(1, device=dev)  # int-like tensor
+        self._res_buffer = torch.zeros(2 * self.p, device=dev, dtype=dt)
+        self._buf_idx = 0
+        self._r_hat = torch.tensor(1.0, device=dev, dtype=dt)
+        self._checkpoint_idx = torch.tensor(1, device=dev)  # int-like tensor
 
-            # seed beta (decay_factor) for the very first steps
-            group["decay_factor"] = float(beta0)
-            print(f"DEBUG: SPRING adaptive momentum initialized with beta0={beta0}, buffer size={2 * self.p}", flush=True)
-        else:
-            print(f"DEBUG: SPRING adaptive momentum disabled (p={self.p})", flush=True)
+        # Use default initial momentum factor
+        group["decay_factor"] = 0.9
+        print(f"DEBUG: SPRING adaptive momentum initialized with beta0=0.9, buffer size={2 * self.p}", flush=True)
 
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
     ) -> Tuple[Tensor, Tensor]:
-        print("SPRING step method entered!", flush=True)
-        
-        # RUNTIME FIX: Initialize adaptive momentum if missing due to caching issues
-        if not hasattr(self, '_use_adaptive_beta') or self._use_adaptive_beta is None:
-            print("RUNTIME FIX: Initializing missing adaptive momentum attributes", flush=True)
-            self.p = 30  # lookback window
-            self._use_adaptive_beta = True
-            
-            # Get device and dtype from parameters
-            (group,) = self.param_groups
-            (dev,) = {p.device for p in group["params"]}
-            (dt,)  = {p.dtype  for p in group["params"]}
-            
-            # Initialize adaptive momentum buffers using already imported torch
-            import torch  # This should work in the method context
-            self._res_buffer = torch.zeros(2 * self.p, device=dev, dtype=dt)
-            self._buf_idx = 0
-            self._r_hat = torch.tensor(1.0, device=dev, dtype=dt)
-            self._checkpoint_idx = torch.tensor(1, device=dev)
-            
-            # Set initial momentum factor
-            group["decay_factor"] = 0.9
-            print(f"RUNTIME FIX: Adaptive momentum initialized - p={self.p}, use_adaptive={self._use_adaptive_beta}")
-        
         """Take a step.
 
         Args:
