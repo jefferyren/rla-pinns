@@ -206,6 +206,8 @@ class SPRING(Optimizer):
         Returns:
             Tuple of the interior and boundary loss before taking the step.
         """
+        print(f"SPRING step() method called - step {self.steps}", flush=True)
+        
         (group,) = self.param_groups
         params = group["params"]
         lr = group["lr"]
