@@ -38,6 +38,7 @@ def set_up_optimizer(
     Returns:
         The optimizer and the parsed arguments.
     """
+    print("DEBUG: Inside setup  optimizer")
     cls, parser_func = {
         "KFAC": (KFAC, parse_KFAC_args),
         "SGD": (SGD, parse_SGD_args),

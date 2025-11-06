@@ -588,6 +588,7 @@ def main():  # noqa: C901
     print(f"Number of parameters: {sum(p.numel() for p in model.parameters())}")
 
     # OPTIMIZER
+    print("DEBUG: Setting up optimizer")
     optimizer, optimizer_args = set_up_optimizer(
         layers, args.optimizer, equation, verbose=True
     )
