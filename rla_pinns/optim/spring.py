@@ -97,9 +97,6 @@ class SPRING(Optimizer):
 
     See https://arxiv.org/pdf/2401.10190v1 for details.
     """
-    
-    # TEST: This should print when the class is loaded
-    print("LOADING SPRING CLASS - UPDATED VERSION", flush=True)
 
     LOSS_EVALUATORS = {
         "poisson": {
@@ -131,19 +128,7 @@ class SPRING(Optimizer):
         equation: str = "poisson",
         lb_window: int = 30,  # lookback window, 0 = no momentum
         beta0: float = 0.9,  # initial momentum factor
-        **kwargs,  # Accept any additional keyword arguments
     ):
-        print(f"SPRING __init__ method entered with lb_window={lb_window}, beta0={beta0}!", flush=True)
-        
-        # If lb_window or beta0 are not provided in kwargs, use defaults for adaptive momentum
-        if 'lb_window' not in kwargs and lb_window == 30:
-            # Enable adaptive momentum by default
-            lb_window = 30
-        if 'beta0' not in kwargs and beta0 == 0.9:
-            # Use default initial momentum factor
-            beta0 = 0.9
-            
-        print(f"SPRING using lb_window={lb_window}, beta0={beta0} for adaptive momentum", flush=True)
         """Set up the SPRING optimizer.
 
         Args:
@@ -162,7 +147,6 @@ class SPRING(Optimizer):
             ValueError: If the optimizer is used with per-parameter options.
             ValueError: If the equation is not supported.
         """
-        print(f"SPRING.__init__ called with lr={lr}, damping={damping}, momentum={momentum}", flush=True)
         defaults = dict(
             lr=lr,
             damping=damping,
@@ -183,32 +167,27 @@ class SPRING(Optimizer):
         self.equation = equation
         self.steps = 0
         self.layers = layers
-        
-        # DEBUG: Confirm SPRING optimizer is being used
-        print(f"SPRING optimizer initialized with damping={damping}, momentum={momentum}", flush=True)
 
         # initialize phi
         (group,) = self.param_groups
         for p in group["params"]:
             self.state[p]["phi"] = zeros_like(p)
 
-        # ALWAYS ENABLE ADAPTIVE MOMENTUM BY DEFAULT
-        self.p = 30  # Default lookback window
-        self._use_adaptive_beta = True  # Always enable adaptive momentum
-        print(f"DEBUG: SPRING adaptive momentum setup: p={self.p}, _use_adaptive_beta={self._use_adaptive_beta}", flush=True)
+        # ADDED NEW PART FOR ADAPTIVE MOMENTUM
+        self.p = int(lb_window)
+        self._use_adaptive_beta = self.p > 0
 
-        # Always initialize adaptive momentum
-        (dev,) = {p.device for p in group["params"]}
-        (dt,)  = {p.dtype  for p in group["params"]}
+        if self._use_adaptive_beta:
+            (dev,) = {p.device for p in group["params"]}
+            (dt,)  = {p.dtype  for p in group["params"]}
 
-        self._res_buffer = torch.zeros(2 * self.p, device=dev, dtype=dt)
-        self._buf_idx = 0
-        self._r_hat = torch.tensor(1.0, device=dev, dtype=dt)
-        self._checkpoint_idx = torch.tensor(1, device=dev)  # int-like tensor
+            self._res_buffer = torch.zeros(2 * self.p, device=dev, dtype=dt)
+            self._buf_idx = 0
+            self._r_hat = torch.tensor(1.0, device=dev, dtype=dt)
+            self._checkpoint_idx = torch.tensor(1, device=dev)  # int-like tensor
 
-        # Use default initial momentum factor
-        group["decay_factor"] = 0.9
-        print(f"DEBUG: SPRING adaptive momentum initialized with beta0=0.9, buffer size={2 * self.p}", flush=True)
+            # seed beta (decay_factor) for the very first steps
+            group["decay_factor"] = float(beta0)
 
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
@@ -224,21 +203,13 @@ class SPRING(Optimizer):
         Returns:
             Tuple of the interior and boundary loss before taking the step.
         """
-        try:
-            print(f"SPRING step() method called - step {self.steps}", flush=True)
-            
-            (group,) = self.param_groups
-            params = group["params"]
-            lr = group["lr"]
-            damping = group["damping"]
-            decay_factor = group["decay_factor"]
-            norm_constraint = group["norm_constraint"]
+        (group,) = self.param_groups
+        params = group["params"]
+        lr = group["lr"]
+        damping = group["damping"]
+        decay_factor = group["decay_factor"]
+        norm_constraint = group["norm_constraint"]
 
-            #DEBUG:
-            print(f"SPRING step {self.steps}: decay_factor={decay_factor}, damping={damping}", flush=True)
-        except Exception as e:
-            print(f"SPRING step() EXCEPTION: {e}", flush=True)
-            raise
         # compute OOT
         (
             interior_loss,
@@ -274,6 +245,7 @@ class SPRING(Optimizer):
 
         # ADAPTIVE PART 
         if self._use_adaptive_beta:
+        # Using the √N-normalized concatenated residual (scale cancels in the ratio)
             res_norm = epsilon.norm()  # scalar
             self._res_buffer[self._buf_idx % (2 * self.p)] = res_norm
             self._buf_idx += 1

@@ -588,22 +588,14 @@ def main():  # noqa: C901
     print(f"Number of parameters: {sum(p.numel() for p in model.parameters())}")
 
     # OPTIMIZER
-    print("DEBUG: Setting up optimizer")
     optimizer, optimizer_args = set_up_optimizer(
         layers, args.optimizer, equation, verbose=True
     )
     check_all_args_parsed()
 
     # check that the equation was correctly passed to PDE-aware optimizers
-    if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
+    if isinstance(optimizer, (KFAC, ENGD, RNGD)):
         assert optimizer.equation == equation
-        
-        # Debug SPRING adaptive momentum initialization
-        if isinstance(optimizer, SPRING):
-            use_adaptive = getattr(optimizer, '_use_adaptive_beta', None)
-            p = getattr(optimizer, 'p', None) 
-            buf_idx = getattr(optimizer, '_buf_idx', None)
-            print(f"DEBUG: SPRING initialization - adaptive_beta={use_adaptive}, p={p}, buf_idx={buf_idx}", flush=True)
 
     config = vars(args) | vars(optimizer_args) | {"cmd": cmd}
 
@@ -632,25 +624,6 @@ def main():  # noqa: C901
         optimizer.zero_grad()
 
         if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
-            # If it's SPRING, check the momentum-related attributes
-            if isinstance(optimizer, SPRING):
-                print(f"DEBUG: SPRING optimizer step {getattr(optimizer, 'steps', 'unknown')}", flush=True)
-                if hasattr(optimizer, 'param_groups') and optimizer.param_groups:
-                    group = optimizer.param_groups[0]
-                    decay_factor = group.get('decay_factor', 'unknown')
-                    damping = group.get('damping', 'unknown')
-                    print(f"DEBUG: SPRING decay_factor={decay_factor}, damping={damping}", flush=True)
-                
-                # Debug adaptive momentum
-                if hasattr(optimizer, '_use_adaptive_beta') and hasattr(optimizer, 'p') and hasattr(optimizer, '_buf_idx'):
-                    use_adaptive = getattr(optimizer, '_use_adaptive_beta', False)
-                    p = getattr(optimizer, 'p', 0)
-                    buf_idx = getattr(optimizer, '_buf_idx', 0)
-                    steps = getattr(optimizer, 'steps', 0)
-                    
-                    if steps > 0 and steps % 10 == 0:  # Print every 10 steps to avoid spam
-                        print(f"DEBUG: SPRING adaptive_beta={use_adaptive}, p={p}, buf_idx={buf_idx}, should_update={(steps % p == 0) and (buf_idx >= 2 * p)}", flush=True)
-            
             loss_interior, loss_boundary = optimizer.step(
                 X_Omega, y_Omega, X_dOmega, y_dOmega
             )

@@ -38,7 +38,6 @@ def set_up_optimizer(
     Returns:
         The optimizer and the parsed arguments.
     """
-    print("DEBUG: Inside setup  optimizer")
     cls, parser_func = {
         "KFAC": (KFAC, parse_KFAC_args),
         "SGD": (SGD, parse_SGD_args),
@@ -66,13 +65,6 @@ def set_up_optimizer(
             )
         args_dict["equation"] = equation
 
-    # Add adaptive momentum parameters for SPRING optimizer
-    if optimizer == "SPRING":
-        args_dict["lb_window"] = 30  # Enable adaptive momentum with 30-step lookback
-        args_dict["beta0"] = 0.9     # Initial momentum factor
-        if verbose:
-            print(f"Adding SPRING adaptive momentum: lb_window=30, beta0=0.9")
-
     if optimizer in {"KFAC", "SPRING", "RNGD", "HessianFreeCached"}:
         param_representation = layers
     elif optimizer == "ENGD":
@@ -80,13 +72,4 @@ def set_up_optimizer(
     else:
         param_representation = sum((list(layer.parameters()) for layer in layers), [])
 
-    print(f"DEBUG: About to create optimizer {optimizer} using class {cls} with args {args_dict}", flush=True)
-    
-    # Extra debug for SPRING
-    if optimizer == "SPRING":
-        print(f"DEBUG: SPRING args being passed: {args_dict}")
-        
-    optimizer_instance = cls(param_representation, **args_dict)
-    print(f"DEBUG: Created optimizer instance: {type(optimizer_instance)} from {type(optimizer_instance).__module__}", flush=True)
-    
-    return optimizer_instance, args
+    return cls(param_representation, **args_dict), args
