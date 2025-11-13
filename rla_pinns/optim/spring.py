@@ -209,6 +209,10 @@ class SPRING(Optimizer):
         damping = group["damping"]
         decay_factor = group["decay_factor"]
         norm_constraint = group["norm_constraint"]
+        
+        # Print current momentum every 10 steps to avoid spam
+        if self.steps % 10 == 0:
+            print(f"SPRING step {self.steps}: using decay_factor={decay_factor:.6f}")
 
         # compute OOT
         (
@@ -361,6 +365,9 @@ class SPRING(Optimizer):
 
             group["decay_factor"] = float(beta_new.item())   # used next step
             self._checkpoint_idx = n_new
+            
+            # Print the updated adaptive momentum
+            print(f"SPRING adaptive momentum updated at step {self.steps}: beta={beta_new.item():.6f}, r_hat={self._r_hat.item():.6f}, rho={rho.item():.6f}")
 
     def _eval_loss(self, X: Tensor, y: Tensor, loss_type: str) -> Tensor:
         """Evaluate the loss.
