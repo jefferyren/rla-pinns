@@ -123,11 +123,10 @@ class SPRING(Optimizer):
         layers: List[Module],
         lr: float,
         damping: float = 1e-3,
-        momentum: float = 0.99,
+        momentum: float = 0.99, # initial momentum factor
         norm_constraint: float = 1e-3,
         equation: str = "poisson",
         lb_window: int = 30,  # lookback window, 0 = no momentum
-        beta0: float = 0.9,  # initial momentum factor
     ):
         """Set up the SPRING optimizer.
 
@@ -187,7 +186,7 @@ class SPRING(Optimizer):
             self._checkpoint_idx = torch.tensor(1, device=dev)  # int-like tensor
 
             # seed beta (decay_factor) for the very first steps
-            group["decay_factor"] = float(beta0)
+            group["decay_factor"] = float(momentum)
 
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
@@ -211,8 +210,8 @@ class SPRING(Optimizer):
         norm_constraint = group["norm_constraint"]
         
         # Print current momentum every 10 steps to avoid spam
-        if self.steps % 10 == 0:
-            print(f"SPRING step {self.steps}: using decay_factor={decay_factor:.6f}")
+        # if self.steps % 10 == 0:
+        #     print(f"SPRING step {self.steps}: using decay_factor={decay_factor:.6f}")
 
         # compute OOT
         (
@@ -251,7 +250,10 @@ class SPRING(Optimizer):
         if self._use_adaptive_beta:
         # Using the √N-normalized concatenated residual (scale cancels in the ratio)
             res_norm = epsilon.norm()  # scalar
-            self._res_buffer[self._buf_idx % (2 * self.p)] = res_norm
+            # self._res_buffer[self._buf_idx % (2 * self.p)] = res_norm
+            
+            # Slide the buffer: shift left and append new value
+            self._res_buffer = torch.cat([self._res_buffer[1:], res_norm.unsqueeze(0)])
             self._buf_idx += 1
 
         O_phi = apply_joint_J(
@@ -317,8 +319,12 @@ class SPRING(Optimizer):
 
     def _maybe_update_beta(self):
         with torch.no_grad():
-            """Update group['decay_factor'] (beta) every p steps after a 2p warm-up"""
-            if (self.steps % self.p != 0) or (self._buf_idx < 2 * self.p):
+            # """Update group['decay_factor'] (beta) every p steps after a 2p warm-up"""
+            # if (self.steps % self.p != 0) or (self._buf_idx < 2 * self.p):
+            #     return
+            
+            """Update group['decay_factor'] (beta) every step after a 2p warm-up"""
+            if self._buf_idx < 2 * self.p:
                 return
 
             (group,) = self.param_groups
@@ -328,16 +334,23 @@ class SPRING(Optimizer):
             dev = self._res_buffer.device
             dt  = self._res_buffer.dtype
 
-            # last p entries (t) vs previous p entries (t-p)
-            t_idx  = torch.arange(1, p + 1, device=dev)
-            tp_idx = torch.arange(p + 1, 2 * p + 1, device=dev)
-            idxs_t  = (idx - t_idx)  % two_p
-            idxs_tp = (idx - tp_idx) % two_p
+            # # last p entries (t) vs previous p entries (t-p)
+            # t_idx  = torch.arange(1, p + 1, device=dev)
+            # tp_idx = torch.arange(p + 1, 2 * p + 1, device=dev)
+            # idxs_t  = (idx - t_idx)  % two_p
+            # idxs_tp = (idx - tp_idx) % two_p
 
-            eps_t  = (self._res_buffer.index_select(0, idxs_t)  ** 2).sum()
-            eps_tp = (self._res_buffer.index_select(0, idxs_tp) ** 2).sum()
-            # numerical guard
-            eps_tp = torch.clamp(eps_tp, min=torch.finfo(dt).eps)
+            # eps_t  = (self._res_buffer.index_select(0, idxs_t)  ** 2).sum()
+            # eps_tp = (self._res_buffer.index_select(0, idxs_tp) ** 2).sum()
+            # # numerical guard
+            # eps_tp = torch.clamp(eps_tp, min=torch.finfo(dt).eps)
+
+            # last p entries (most recent) vs previous p entries
+            # Buffer now contains [oldest...newest], so:
+            # - Previous p entries: buffer[0:p] 
+            # - Most recent p entries: buffer[p:2p]
+            eps_tp = (self._res_buffer[:p] ** 2).sum()   # previous p entries (t-p)
+            eps_t  = (self._res_buffer[p:] ** 2).sum()   # most recent p entries (t)
 
             r_ip = eps_t / eps_tp
             r_ip = torch.minimum(torch.tensor(1.0, device=dev, dtype=dt), r_ip)
