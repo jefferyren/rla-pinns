@@ -768,16 +768,21 @@ def main():  # noqa: C901
                 flush=True,
             )
             if args.wandb:
-                wandb.log(
-                    {
-                        "step": step,
-                        "loss": loss,
-                        "loss_interior": loss_interior,
-                        "loss_boundary": loss_boundary,
-                        "l2_error": l2,
-                        "time": elapsed,
-                    }
-                )
+                log_dict = {
+                    "step": step,
+                    "loss": loss,
+                    "loss_interior": loss_interior,
+                    "loss_boundary": loss_boundary,
+                    "l2_error": l2,
+                    "time": elapsed,
+                }
+                
+                # Add decay_factor for SPRING optimizer
+                if isinstance(optimizer, SPRING):
+                    decay_factor = optimizer.param_groups[0]["decay_factor"]
+                    log_dict["decay_factor"] = decay_factor
+                
+                wandb.log(log_dict)
 
         if args.save_checkpoints:
             should_checkpoint = (
