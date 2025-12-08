@@ -177,8 +177,9 @@ class SPRING(Optimizer):
         self._use_adaptive_beta = self.p > 0
 
         if self._use_adaptive_beta:
-            (dev,) = {p.device for p in group["params"]}
-            (dt,)  = {p.dtype  for p in group["params"]}
+            p0 = group["params"][0]
+            dev = p0.device
+            dt = p0.dtype
 
             self._res_buffer = torch.zeros(2 * self.p, device=dev, dtype=dt)
             self._buf_idx = 0
@@ -320,12 +321,12 @@ class SPRING(Optimizer):
     def _maybe_update_beta(self):
         with torch.no_grad():
             # """Update group['decay_factor'] (beta) every p steps after a 2p warm-up"""
-            # if (self.steps % self.p != 0) or (self._buf_idx < 2 * self.p):
-            #     return
+            if (self.steps % self.p != 0) or (self._buf_idx < 2 * self.p):
+                 return
             
-            """Update group['decay_factor'] (beta) every step after a 2p warm-up"""
-            if self._buf_idx < 2 * self.p:
-                return
+            # """Update group['decay_factor'] (beta) every step after a 2p warm-up"""
+            # if self._buf_idx < 2 * self.p:
+            #     return
 
             (group,) = self.param_groups
             p = self.p
