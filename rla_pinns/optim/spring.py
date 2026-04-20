@@ -123,7 +123,7 @@ class SPRING(Optimizer):
         layers: List[Module],
         lr: float,
         damping: float = 1e-3,
-        momentum: float = 0.99, # initial momentum factor
+        momentum: float = 0.9, # initial momentum factor
         norm_constraint: float = 1e-3,
         equation: str = "poisson",
         lb_window: int = 30,  # lookback window, 0 = no momentum

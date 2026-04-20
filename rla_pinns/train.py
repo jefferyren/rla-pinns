@@ -45,6 +45,7 @@ from rla_pinns.optim.engd import ENGD
 from rla_pinns.optim.hessianfree_cached import HessianFreeCached
 from rla_pinns.optim.kfac import KFAC
 from rla_pinns.optim.spring import SPRING
+from rla_pinns.optim.same_sampled_spring import SameSampledSPRING
 from rla_pinns.optim.rngd import RNGD
 from rla_pinns.parse_utils import (
     check_all_args_parsed,
@@ -63,6 +64,7 @@ SUPPORTED_OPTIMIZERS = {
     "HessianFree",
     "HessianFreeCached",
     "SPRING",
+    "SameSampledSPRING",
     "RNGD",
 }
 SUPPORTED_EQUATIONS = {
@@ -623,7 +625,7 @@ def main():  # noqa: C901
 
         optimizer.zero_grad()
 
-        if isinstance(optimizer, (KFAC, ENGD, SPRING, RNGD)):
+        if isinstance(optimizer, (KFAC, ENGD, SPRING, SameSampledSPRING, RNGD)):
             loss_interior, loss_boundary = optimizer.step(
                 X_Omega, y_Omega, X_dOmega, y_dOmega
             )
@@ -777,8 +779,8 @@ def main():  # noqa: C901
                     "time": elapsed,
                 }
                 
-                # Add decay_factor for SPRING optimizer
-                if isinstance(optimizer, SPRING):
+                # Add decay_factor for SPRING / SameSampledSPRING optimizers
+                if isinstance(optimizer, (SPRING, SameSampledSPRING)):
                     decay_factor = optimizer.param_groups[0]["decay_factor"]
                     log_dict["decay_factor"] = decay_factor
                 
