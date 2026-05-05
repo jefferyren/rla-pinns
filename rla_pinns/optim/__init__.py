@@ -21,6 +21,7 @@ from rla_pinns.optim.kfac import KFAC, parse_KFAC_args
 from rla_pinns.optim.lbfgs import parse_LBFGS_args
 from rla_pinns.optim.sgd import parse_SGD_args
 from rla_pinns.optim.rngd import RNGD, parse_randomized_args
+from rla_pinns.optim.prime_sr import PRIMESR, parse_PRIMESR_args
 from rla_pinns.optim.same_sampled_spring import (
     SameSampledSPRING,
     parse_SameSampledSPRING_args,
@@ -52,6 +53,7 @@ def set_up_optimizer(
         "HessianFreeCached": (HessianFreeCached, parse_HessianFreeCached_args),
         "SPRING": (SPRING, parse_SPRING_args),
         "SameSampledSPRING": (SameSampledSPRING, parse_SameSampledSPRING_args),
+        "PRIMESR": (PRIMESR, parse_PRIMESR_args),
         "RNGD": (RNGD, parse_randomized_args),
     }[optimizer]
 
@@ -69,6 +71,7 @@ def set_up_optimizer(
         "RNGD",
         "SPRING",
         "SameSampledSPRING",
+        "PRIMESR",
     }:
         if verbose:
             print(
@@ -81,6 +84,7 @@ def set_up_optimizer(
         "KFAC",
         "SPRING",
         "SameSampledSPRING",
+        "PRIMESR",
         "RNGD",
         "HessianFreeCached",
     }:

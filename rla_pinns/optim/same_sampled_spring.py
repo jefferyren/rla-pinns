@@ -199,7 +199,7 @@ class SameSampledSPRING(Optimizer):
         for p in group["params"]:
             self.state[p]["x_star"].div_(total + 1e-12)
 
-        # adaptive-β probe-residual buffer
+        # adaptive-beta probe-residual buffer
         p0 = group["params"][0]
         dev, dt = p0.device, p0.dtype
         self._res_buffer = zeros(2 * self.p, device=dev, dtype=dt)
@@ -223,9 +223,8 @@ class SameSampledSPRING(Optimizer):
         damping = group["damping"]
         decay_factor = group["decay_factor"]
 
-        step_idx = self.steps  # matches JAX's step_idx (0-indexed)
+        step_idx = self.steps  
 
-        # forward + capture layer inputs / grad outputs for joint J
         (
             interior_loss,
             boundary_loss,
@@ -239,7 +238,6 @@ class SameSampledSPRING(Optimizer):
             self.layers, X_Omega, y_Omega, X_dOmega, y_dOmega, self.equation
         )
 
-        # JJ^T (√N-normalized) without damping — cloned per variant below
         OOT_raw = compute_joint_JJT(
             interior_inputs,
             interior_grad_outputs,
@@ -261,7 +259,6 @@ class SameSampledSPRING(Optimizer):
         boundary_r = boundary_residual.detach() / sqrt(N_dOmega)
         epsilon = -cat([interior_r, boundary_r]).flatten()
 
-        # zeta = epsilon − β · (O · φ)
         O_phi = apply_joint_J(
             interior_inputs,
             interior_grad_outputs,
@@ -284,11 +281,10 @@ class SameSampledSPRING(Optimizer):
             )
         ]
 
-        # φ ← β · φ + step
         for p, s in zip(params, step_ps):
             self.state[p]["phi"].mul_(decay_factor).add_(s)
 
-        # parameter update — JAX does plain `params += η · φ`; keep line-search option
+        #no norm constraint
         if isinstance(lr, float):
             for p in params:
                 p.data.add_(self.state[p]["phi"], alpha=lr)
@@ -334,7 +330,6 @@ class SameSampledSPRING(Optimizer):
         # v = (AA^T + λ_p I)^{-1} (A z − b)
         v = cholesky_solve((Az_old - b_tau).unsqueeze(-1), L_probe)
 
-        # w = A^T v  (per-parameter)
         w_list = [
             s.squeeze(-1)
             for s in apply_joint_JT(
@@ -346,7 +341,7 @@ class SameSampledSPRING(Optimizer):
             )
         ]
 
-        # mtm ← β · (mtm − w);   z ← z − w + η_probe · mtm
+        #momentum update
         probe_eta = self._probe_lr
         for p_obj, w in zip(params, w_list):
             s = self.state[p_obj]
@@ -405,7 +400,7 @@ class SameSampledSPRING(Optimizer):
 
             n_old_f = torch.tensor(float(self._checkpoint_idx), device=dev, dtype=dt)
             n_new_f = n_old_f + 1.0
-            # JAX does n^{log n}; log(1)=0 → a_old = 1, matches exactly.
+            
             a_old = torch.pow(n_old_f, torch.log(n_old_f))
             a_new = torch.pow(n_new_f, torch.log(n_new_f))
             alph = a_old / a_new
