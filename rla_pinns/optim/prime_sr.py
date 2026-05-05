@@ -151,6 +151,13 @@ class PRIMESR(Optimizer):
         self._V_prev_alpha = None
         self._alpha_prev_ceil = None
 
+        # Most recent diagnostics, exposed for external logging.
+        self._last_mu = 0.0
+        self._last_alpha = 0.0
+        self._last_alpha_ceil = 0
+        self._last_rank = 0
+        self._last_beta_tilde = 0.0
+
     def step(
         self, X_Omega: Tensor, y_Omega: Tensor, X_dOmega: Tensor, y_dOmega: Tensor
     ) -> Tuple[Tensor, Tensor]:
@@ -303,6 +310,12 @@ class PRIMESR(Optimizer):
         if use_adaptive:
             self._V_prev_alpha = V_alpha.detach()
             self._alpha_prev_ceil = alpha_ceil
+
+        self._last_mu = mu_val
+        self._last_alpha = float(alpha_k.item())
+        self._last_alpha_ceil = alpha_ceil
+        self._last_rank = r_k
+        self._last_beta_tilde = beta_val
 
         if self._print_every > 0 and self.steps % self._print_every == 0:
             print(

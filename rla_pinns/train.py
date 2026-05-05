@@ -46,6 +46,7 @@ from rla_pinns.optim.hessianfree_cached import HessianFreeCached
 from rla_pinns.optim.kfac import KFAC
 from rla_pinns.optim.spring import SPRING
 from rla_pinns.optim.same_sampled_spring import SameSampledSPRING
+from rla_pinns.optim.prime_sr import PRIMESR
 from rla_pinns.optim.rngd import RNGD
 from rla_pinns.parse_utils import (
     check_all_args_parsed,
@@ -65,6 +66,7 @@ SUPPORTED_OPTIMIZERS = {
     "HessianFreeCached",
     "SPRING",
     "SameSampledSPRING",
+    "PRIMESR",
     "RNGD",
 }
 SUPPORTED_EQUATIONS = {
@@ -625,7 +627,7 @@ def main():  # noqa: C901
 
         optimizer.zero_grad()
 
-        if isinstance(optimizer, (KFAC, ENGD, SPRING, SameSampledSPRING, RNGD)):
+        if isinstance(optimizer, (KFAC, ENGD, SPRING, SameSampledSPRING, PRIMESR, RNGD)):
             loss_interior, loss_boundary = optimizer.step(
                 X_Omega, y_Omega, X_dOmega, y_dOmega
             )
@@ -783,6 +785,12 @@ def main():  # noqa: C901
                 if isinstance(optimizer, (SPRING, SameSampledSPRING)):
                     decay_factor = optimizer.param_groups[0]["decay_factor"]
                     log_dict["decay_factor"] = decay_factor
+                elif isinstance(optimizer, PRIMESR):
+                    log_dict["decay_factor"] = optimizer._last_mu
+                    log_dict["prime_sr_alpha"] = optimizer._last_alpha
+                    log_dict["prime_sr_alpha_ceil"] = optimizer._last_alpha_ceil
+                    log_dict["prime_sr_rank"] = optimizer._last_rank
+                    log_dict["prime_sr_beta_tilde"] = optimizer._last_beta_tilde
                 
                 wandb.log(log_dict)
 
