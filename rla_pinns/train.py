@@ -234,7 +234,13 @@ def parse_general_args(verbose: bool = False) -> Namespace:
         "--wandb_id",
         type=str,
         default=None,
-        help="Weights & Biases run name.",
+        help="Weights & Biases run ID (unique identifier, used for resuming).",
+    )
+    parser.add_argument(
+        "--wandb_name",
+        type=str,
+        default=None,
+        help="Weights & Biases run display name (editable in the UI).",
     )
     parser.add_argument(
         "--max_logs",
@@ -609,6 +615,7 @@ def main():  # noqa: C901
             entity=args.wandb_entity,
             project=args.wandb_project,
             id=args.wandb_id,
+            name=args.wandb_name,
         )
 
     # functions used to evaluate the interior and boundary/condition losses

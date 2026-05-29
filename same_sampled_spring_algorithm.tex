@@ -1,0 +1,73 @@
+% =============================================================================
+% Paper-ready pseudocode for Same-Sampled SPRING.
+% Companion to spring_algorithm.tex; uses the same notation and layout style.
+% Requires:
+%   \usepackage{algorithm}
+%   \usepackage{algpseudocode}    % from algorithmicx
+%   \usepackage{amsmath, amssymb, bm}
+% =============================================================================
+
+\documentclass[11pt]{article}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath, amssymb, bm}
+\usepackage[margin=1in]{geometry}
+
+% Match the simple-SPRING style.
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\algrenewcommand\algorithmiccomment[1]{\hfill\(\triangleright\) \textit{#1}}
+
+% Lightweight section divider inside an algorithm (algorithmicx has no built-in
+% LeftComment, so we define one).
+\algnewcommand{\LeftComment}[1]{\Statex \(\triangleright\)~\textit{#1}}
+
+\begin{document}
+
+\begin{algorithm}[t]
+\caption{Same-Sampled SPRING}
+\label{alg:same-sampled-spring}
+\begin{algorithmic}[1]
+  \Require initial parameters $\bm\theta_0$;
+           SPRING learning rate $\eta$, damping $\lambda$;
+           probe step $\eta_{\mathrm p}$, probe damping $\lambda_{\mathrm p}$;
+           initial momentum $\beta_0 \in [0,1)$, momentum cap $\beta_{\max}$;
+           lookback window $p$;
+           number of iterations $K$
+  \Ensure trained parameters $\bm\theta$
+  \State $\bm\theta \gets \bm\theta_0$;\enspace $\bm\varphi_0,\bm z_0,\bm m_0 \gets \bm 0$;\enspace sample fixed $\bm x^\star \in \mathbb{R}^D$ with $\lVert \bm x^\star \rVert = 1$
+  \State $\beta \gets \beta_0$,\enspace $\hat r \gets 1$,\enspace $n \gets 1$;\enspace ring buffer $\bm B \in \mathbb{R}^{2p}$
+  \For{$k = 1, 2, \dots, K$}
+    \State Sample mini-batch; form joint Jacobian $\bm J_k$ and residual $\bm r_k$ ($\sqrt{N}$-normalized)
+    \LeftComment{\emph{SPRING direction}}
+    \State $\bm\zeta_k \gets \bm r_k - \beta\, \bm J_k\, \bm\varphi_{k-1}$
+        \Comment{shifted residual}
+    \State Solve $\bigl(\bm J_k \bm J_k^{\!\top} + \lambda \bm I\bigr)\bm u_k = \bm\zeta_k$
+        \Comment{Cholesky / Woodbury form of damped ENGD}
+    \State $\bm\varphi_k \gets \bm J_k^{\!\top}\bm u_k + \beta\, \bm\varphi_{k-1}$
+        \Comment{ENGD step + momentum}
+    \State $\bm\theta \gets \bm\theta - \eta_k\, \bm\varphi_k$
+        \Comment{$\eta_k = \eta$ or grid line search}
+    \LeftComment{\emph{Kaczmarz$^{++}$ probe (reuses $\bm J_k$)}}
+    \State $\bm b_k \gets \bm J_k\, \bm x^\star$
+        \Comment{scale-free target}
+    \State Solve $\bigl(\bm J_k \bm J_k^{\!\top} + \lambda_{\mathrm p} \bm I\bigr)\bm v_k = \bm J_k\, \bm z_{k-1} - \bm b_k$
+    \State $\bm w_k \gets \bm J_k^{\!\top}\bm v_k$
+    \State $\bm m_k \gets \beta\,(\bm m_{k-1} - \bm w_k)$
+    \State $\bm z_k \gets \bm z_{k-1} - \bm w_k + \eta_{\mathrm p}\, \bm m_k$
+    \State Push $\;\lVert \bm J_k\, \bm z_k - \bm b_k\rVert \,/\, \lVert \bm b_k\rVert\;$ into $\bm B$
+        \Comment{probe residual}
+    \LeftComment{\emph{Adaptive momentum (every $p$ steps after $2p$-step warm-up)}}
+    \If{$k \ge 2p$ \textbf{and} $k \bmod p = 0$}
+      \State $\varepsilon_{\mathrm{new}}, \varepsilon_{\mathrm{old}} \gets$ sum of squares of newest $p$ / preceding $p$ entries of $\bm B$
+      \State $\alpha \gets n^{\log n} / (n+1)^{\log(n+1)}$
+      \State $\hat r \gets \alpha\,\hat r + (1-\alpha)\,\min\!\bigl(1,\, \varepsilon_{\mathrm{new}}/\varepsilon_{\mathrm{old}}\bigr)$
+      \State $\rho \gets \max\!\bigl(0,\, 1 - \hat r^{\,1/p}\bigr)$
+      \State $\beta \gets \min\!\bigl(\beta_{\max},\, (1-\rho)/(1+\rho)\bigr)$;\enspace $n \gets n+1$
+    \EndIf
+  \EndFor
+  \State \Return $\bm\theta$
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}
