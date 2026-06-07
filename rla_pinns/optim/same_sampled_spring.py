@@ -357,15 +357,10 @@ class SameSampledSPRING(Optimizer):
             boundary_grad_outputs,
             [self.state[p]["z_probe"].unsqueeze(-1) for p in params],
         ).squeeze(-1)
-        num = (Az_new - b_tau).norm()
-        den = b_tau.norm() + 1e-12
-        probe_res_norm = num / den
-        one = torch.tensor(
-            1.0, device=probe_res_norm.device, dtype=probe_res_norm.dtype
-        )
-        probe_res_norm = torch.where(
-            torch.isfinite(probe_res_norm), probe_res_norm, one
-        )
+        # Paper-faithful contraction signal (Section 5.4, eq. 5.3): raw
+        # sub-sampled residual norm. The constant n/s rescaling from the
+        # paper cancels in the eps_t / eps_tp ratio, so it's omitted.
+        probe_res_norm = (Az_new - b_tau).norm()
 
         # append to the probe-residual log (no ring overwrite)
         self._probe_residuals.append(probe_res_norm.detach())
