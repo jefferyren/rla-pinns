@@ -13,7 +13,7 @@ from math import sqrt
 from typing import List, Tuple
 
 import torch
-from torch import Tensor, arange, cat, cholesky_solve, randn_like, zeros, zeros_like
+from torch import Tensor, arange, cat, cholesky_solve, randn_like, zeros_like
 from torch.linalg import cholesky
 from torch.nn import Module
 from torch.optim import Optimizer
@@ -199,11 +199,12 @@ class SameSampledSPRING(Optimizer):
         for p in group["params"]:
             self.state[p]["x_star"].div_(total + 1e-12)
 
-        # adaptive-beta probe-residual buffer
+        # adaptive-beta probe-residual log (plain list; sliced [t-p:t] / [t-2p:t-p]
+        # in _maybe_update_beta so windows end one step BEFORE the current step
+        # and the entry needed by the older window can never be overwritten).
         p0 = group["params"][0]
         dev, dt = p0.device, p0.dtype
-        self._res_buffer = zeros(2 * self.p, device=dev, dtype=dt)
-        self._buf_idx = 0
+        self._probe_residuals: List[Tensor] = []
         self._r_hat = torch.tensor(1.0, device=dev, dtype=dt)
         self._checkpoint_idx = 1
 
@@ -366,10 +367,8 @@ class SameSampledSPRING(Optimizer):
             torch.isfinite(probe_res_norm), probe_res_norm, one
         )
 
-        # ring-buffer write (mirrors JAX `buffer.at[buffer_index % 2p].set(...)`)
-        with torch.no_grad():
-            self._res_buffer[self._buf_idx % (2 * self.p)] = probe_res_norm.detach()
-        self._buf_idx += 1
+        # append to the probe-residual log (no ring overwrite)
+        self._probe_residuals.append(probe_res_norm.detach())
 
         # β update — uses step_idx *before* self.steps is incremented (matches JAX)
         self._maybe_update_beta(step_idx)
@@ -384,18 +383,19 @@ class SameSampledSPRING(Optimizer):
         with torch.no_grad():
             (group,) = self.param_groups
             p = self.p
-            two_p = 2 * p
-            buf_idx = self._buf_idx
-            dev = self._res_buffer.device
-            dt = self._res_buffer.dtype
+            dev = self._r_hat.device
+            dt = self._r_hat.dtype
 
-            idxs_t = (buf_idx - torch.arange(1, p + 1, device=dev)) % two_p
-            idxs_tp = (
-                buf_idx - torch.arange(p + 1, 2 * p + 1, device=dev)
-            ) % two_p
-
-            eps_t = (self._res_buffer[idxs_t] ** 2).sum()
-            eps_tp = (self._res_buffer[idxs_tp] ** 2).sum()
+            # 2p-long window ending one step BEFORE step_idx (matches the
+            # standalone kaczmarz() slicing: residuals[t-p:t] / [t-2p:t-p]).
+            window_t = torch.stack(
+                self._probe_residuals[step_idx - p : step_idx]
+            )
+            window_tp = torch.stack(
+                self._probe_residuals[step_idx - 2 * p : step_idx - p]
+            )
+            eps_t = (window_t ** 2).sum()
+            eps_tp = (window_tp ** 2).sum()
             r_ip = eps_t / (eps_tp + 1e-12)
 
             n_old_f = torch.tensor(float(self._checkpoint_idx), device=dev, dtype=dt)
