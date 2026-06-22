@@ -26,6 +26,10 @@ from rla_pinns.optim.same_sampled_spring import (
     SameSampledSPRING,
     parse_SameSampledSPRING_args,
 )
+from rla_pinns.optim.same_sampled_spring_unified import (
+    SameSampledSPRINGUnified,
+    parse_SameSampledSPRINGUnified_args,
+)
 from rla_pinns.optim.spring import SPRING, parse_SPRING_args
 
 
@@ -53,6 +57,10 @@ def set_up_optimizer(
         "HessianFreeCached": (HessianFreeCached, parse_HessianFreeCached_args),
         "SPRING": (SPRING, parse_SPRING_args),
         "SameSampledSPRING": (SameSampledSPRING, parse_SameSampledSPRING_args),
+        "SameSampledSPRINGUnified": (
+            SameSampledSPRINGUnified,
+            parse_SameSampledSPRINGUnified_args,
+        ),
         "PRIMESR": (PRIMESR, parse_PRIMESR_args),
         "RNGD": (RNGD, parse_randomized_args),
     }[optimizer]
@@ -71,6 +79,7 @@ def set_up_optimizer(
         "RNGD",
         "SPRING",
         "SameSampledSPRING",
+        "SameSampledSPRINGUnified",
         "PRIMESR",
     }:
         if verbose:
@@ -84,6 +93,7 @@ def set_up_optimizer(
         "KFAC",
         "SPRING",
         "SameSampledSPRING",
+        "SameSampledSPRINGUnified",
         "PRIMESR",
         "RNGD",
         "HessianFreeCached",
