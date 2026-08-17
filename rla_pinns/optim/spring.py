@@ -60,6 +60,16 @@ def parse_SPRING_args(verbose: bool = False, prefix="SPRING_") -> Namespace:
         default=0.99,
     )
     parser.add_argument(
+        f"--{prefix}lb_window",
+        type=int,
+        help=(
+            "Lookback window p for the adaptive-momentum controller. "
+            "0 disables adaptation, giving plain SPRING with a fixed decay factor "
+            "equal to --%smomentum. Default 30 (adaptive)." % prefix
+        ),
+        default=30,
+    )
+    parser.add_argument(
         f"--{prefix}norm_constraint",
         type=float,
         help="Norm constraint on the natural gradient.",
