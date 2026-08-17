@@ -75,8 +75,21 @@ fi
 if [[ "$DRY_RUN" != "1" ]]; then
   # --- Environment setup ---
   # Batch jobs do NOT read .bashrc by default, so conda must be initialized here.
+  #
+  # `set -u` MUST be off across this block. A stock ~/.bashrc opens with
+  # `[ -z "$PS1" ] && return`, and PS1 is unbound in a non-interactive shell, so
+  # under `set -u` the source aborts the job instantly with exit 1 and 00:00:00
+  # elapsed. conda's own shell functions trip the same way. Strictness is
+  # restored immediately afterwards, where it actually protects the grid logic.
+  set +eu
   source ~/.bashrc
-  conda activate rla_pinns || { echo "ERROR: conda activate failed"; exit 1; }
+  conda activate rla_pinns
+  conda_status=$?
+  set -eu
+  if [[ $conda_status -ne 0 ]]; then
+    echo "ERROR: conda activate rla_pinns failed (status $conda_status)" >&2
+    exit 1
+  fi
 
   cd ~/rla-pinns-use/rla_pinns || { echo "ERROR: cd failed"; exit 1; }
 fi
