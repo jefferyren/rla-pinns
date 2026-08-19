@@ -21,7 +21,9 @@
 #     (b) tasks 1-6 also give the measured s/step per (arm, PDE), which is what
 #         sizes --time for E2 and E3. Do not size --time from --num_seconds.
 #     (c) task 7: produce ONE checkpoint from which the offline noise floor of
-#         l2_error is measured (runs/e1_noise_floor.py). That number is the
+#         l2_error is measured (runs/e1_noise_floor.py). Written to ../ckpt_noise
+#         so it lands at the repo root next to logs/, not inside the package dir
+#         (python runs with cwd=~/rla-pinns-use/rla_pinns). That number is the
 #         minimum reportable difference in Tab A -- if E3's SS-SPRING vs tuned
 #         SPRING gap lands inside it, C2 is not established.
 #
@@ -99,7 +101,7 @@ else
   # corrupts logging cadence in wall-clock mode cannot fire.
   ARM=a1_spring; PDE=p100; CFG="$P100"
   BUDGET="--num_steps=200"
-  EXTRA="--save_checkpoints --checkpoint_steps 199 --checkpoint_dir=ckpt_noise"
+  EXTRA="--save_checkpoints --checkpoint_steps 199 --checkpoint_dir=../ckpt_noise"
   TAG="ckpt_${ARM}_${PDE}"
 fi
 
