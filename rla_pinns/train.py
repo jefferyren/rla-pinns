@@ -548,6 +548,24 @@ def main():  # noqa: C901
             print("Checkpointing all logged steps.")
 
     # DATA LOADERS
+    #
+    # NOTE: `--data_seed` currently has NO effect. The data loaders below are
+    # lazy -- they draw nothing until the first `next()` in the training loop --
+    # and `manual_seed(args.model_seed)` further down reseeds the global RNG
+    # before any batch is ever drawn. Both the training batches and the
+    # evaluation set therefore derive from `model_seed` alone. Rather than let
+    # the flag silently lie (it would otherwise appear in the wandb config and
+    # in the paper's hyperparameter table as if it did something), refuse to run
+    # when it is set to anything but its default. Vary `--model_seed` to obtain
+    # independent replicates; it perturbs the network init and the data
+    # together, which is what a seed-averaged result should report.
+    if args.data_seed != 0:
+        raise ValueError(
+            f"--data_seed={args.data_seed} has no effect: manual_seed(model_seed)"
+            " reseeds the global RNG before any batch is drawn, so the training"
+            " and evaluation data depend only on --model_seed. Vary --model_seed"
+            " instead (and leave --data_seed at its default of 0)."
+        )
     manual_seed(args.data_seed)
     equation, condition = args.equation, args.boundary_condition
     dim_Omega, N_Omega, N_dOmega = args.dim_Omega, args.N_Omega, args.N_dOmega

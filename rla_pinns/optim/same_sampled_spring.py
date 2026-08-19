@@ -190,7 +190,23 @@ class SameSampledSPRING(Optimizer):
             self.state[p]["phi"] = zeros_like(p)
             self.state[p]["z_probe"] = zeros_like(p)
             self.state[p]["mtm_probe"] = zeros_like(p)
-            self.state[p]["x_star"] = randn_like(p)
+
+        # Draw x_star from a PRIVATE RNG stream so that constructing this
+        # optimizer does not shift the global torch RNG, which train.py uses to
+        # draw the training and evaluation batches AFTER the optimizer is built.
+        # See the same fix in same_sampled_spring_unified.py.
+        _cpu_rng_state = torch.get_rng_state()
+        _cuda_rng_state = (
+            torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
+        )
+        try:
+            torch.manual_seed(0)
+            for p in group["params"]:
+                self.state[p]["x_star"] = randn_like(p)
+        finally:
+            torch.set_rng_state(_cpu_rng_state)
+            if _cuda_rng_state is not None:
+                torch.cuda.set_rng_state_all(_cuda_rng_state)
 
         # globally normalize x_star to unit norm (matches JAX's flat-vector init)
         total = sum(

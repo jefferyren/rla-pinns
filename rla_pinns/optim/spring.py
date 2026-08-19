@@ -82,6 +82,12 @@ def parse_SPRING_args(verbose: bool = False, prefix="SPRING_") -> Namespace:
         help="The equation to solve.",
         default="poisson",
     )
+    parser.add_argument(
+        f"--{prefix}beta_max",
+        type=float,
+        help="Upper clamp on the adaptively chosen beta. `1.0` leaves it uncapped.",
+        default=1.0,
+    )
 
     args = parse_known_args_and_remove_from_argv(parser)
 
@@ -136,7 +142,8 @@ class SPRING(Optimizer):
         momentum: float = 0.9, # initial momentum factor
         norm_constraint: float = 1e-3,
         equation: str = "poisson",
-        lb_window: int = 30,  # lookback window, 0 = no momentum
+        lb_window: int = 30,  # lookback window, 0 = no adaptive beta
+        beta_max: float = 1.0,  # upper clamp on the adaptive beta; 1.0 = uncapped
     ):
         """Set up the SPRING optimizer.
 
@@ -185,6 +192,9 @@ class SPRING(Optimizer):
         # ADDED NEW PART FOR ADAPTIVE MOMENTUM
         self.p = int(lb_window)
         self._use_adaptive_beta = self.p > 0
+        if not 0.0 < beta_max <= 1.0:
+            raise ValueError(f"beta_max must lie in (0, 1], got {beta_max}.")
+        self._beta_max = float(beta_max)
 
         if self._use_adaptive_beta:
             p0 = group["params"][0]
@@ -363,6 +373,9 @@ class SPRING(Optimizer):
             eps_tp = (self._res_buffer[:p] ** 2).sum()   # previous p entries (t-p)
             eps_t  = (self._res_buffer[p:] ** 2).sum()   # most recent p entries (t)
 
+            # numerical guard: a fully converged probe drives eps_tp to zero,
+            # which would make the ratio inf/NaN and silently poison beta.
+            eps_tp = torch.clamp(eps_tp, min=torch.finfo(dt).eps)
             r_ip = eps_t / eps_tp
             r_ip = torch.minimum(torch.tensor(1.0, device=dev, dtype=dt), r_ip)
 
@@ -382,16 +395,20 @@ class SPRING(Optimizer):
 
             # ρ = max(0, 1 - r_hat^{1/p});  β = (1-ρ)/(1+ρ)
             rho = torch.clamp(1.0 - torch.pow(self._r_hat, 1.0 / float(p)), min=0.0, max=1.0)
-            beta_new = (1.0 - rho) / (1.0 + rho)  # in [0,1)
-
-            # Optional safety clamp (uncomment if desired):
-            # beta_new = torch.clamp(beta_new, 0.0, 0.999)
+            beta_new = (1.0 - rho) / (1.0 + rho)  # in [0,1]
+            beta_new = torch.clamp(beta_new, 0.0, self._beta_max)
 
             group["decay_factor"] = float(beta_new.item())   # used next step
             self._checkpoint_idx = n_new
-            
-            # Print the updated adaptive momentum
-            print(f"SPRING adaptive momentum updated at step {self.steps}: beta={beta_new.item():.6f}, r_hat={self._r_hat.item():.6f}, rho={rho.item():.6f}")
+
+            # Parsed offline by runs/harvest_diagnosis.py (RE_BETA) so the
+            # diagnosis figure can be built with no wandb auth. Keep the ASCII
+            # "step N: beta=..., r_hat=..., rho=..." shape if you edit this.
+            print(
+                f"SPRING adaptive momentum updated at step {self.steps}: "
+                f"beta={beta_new.item():.6f}, r_hat={self._r_hat.item():.6f}, "
+                f"rho={rho.item():.6f}"
+            )
 
     def _eval_loss(self, X: Tensor, y: Tensor, loss_type: str) -> Tensor:
         """Evaluate the loss.

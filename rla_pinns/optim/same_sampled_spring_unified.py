@@ -23,8 +23,9 @@ iterate's eta adapts; ``adaptive_probe=True`` makes the probe step adaptive too.
 """
 
 from argparse import ArgumentParser, Namespace
+from collections import deque
 from math import sqrt
-from typing import List, Tuple
+from typing import Deque, List, Tuple
 
 import torch
 from torch import Tensor, arange, cat, cholesky_solve, randn_like, zeros_like
@@ -116,6 +117,26 @@ def parse_SameSampledSPRINGUnified_args(
         help="Make the probe step adaptive as well (uses η_main).",
         default=False,
     )
+    parser.add_argument(
+        f"--{prefix}beta_max",
+        type=float,
+        help="Upper clamp on the adaptively chosen β. `1.0` leaves it uncapped.",
+        default=0.99,
+    )
+    parser.add_argument(
+        f"--{prefix}norm_constraint",
+        type=float,
+        help="Trust region C on the parameter update: the effective step is"
+        " min(η, sqrt(C)/||φ||), matching SPRING. `0` disables it.",
+        default=1e-3,
+    )
+    parser.add_argument(
+        f"--{prefix}probe_seed",
+        type=int,
+        help="Seed for the fixed probe target x_star. Drawn from a private RNG"
+        " stream so it cannot perturb the global torch RNG.",
+        default=0,
+    )
 
     args = parse_known_args_and_remove_from_argv(parser)
 
@@ -172,6 +193,9 @@ class SameSampledSPRINGUnified(Optimizer):
         probe_damping: float = None,
         adaptive_eta: bool = False,
         adaptive_probe: bool = False,
+        beta_max: float = 0.99,
+        norm_constraint: float = 1e-3,
+        probe_seed: int = 0,
     ):
         defaults = dict(lr=lr, damping=damping, decay_factor=momentum)
         params = sum((list(layer.parameters()) for layer in layers), [])
@@ -188,6 +212,14 @@ class SameSampledSPRINGUnified(Optimizer):
             )
         if lb_window <= 0:
             raise ValueError("lb_window must be a positive integer.")
+        if not 0.0 < beta_max <= 1.0:
+            raise ValueError(f"beta_max must lie in (0, 1], got {beta_max}.")
+        if norm_constraint < 0.0:
+            raise ValueError(
+                f"norm_constraint must be non-negative, got {norm_constraint}."
+            )
+        self._beta_max = float(beta_max)
+        self._norm_constraint = float(norm_constraint)
 
         self.equation = equation
         self.layers = layers
@@ -226,7 +258,26 @@ class SameSampledSPRINGUnified(Optimizer):
             self.state[p]["phi"] = zeros_like(p)
             self.state[p]["z_probe"] = zeros_like(p)
             self.state[p]["phi_probe"] = zeros_like(p)
-            self.state[p]["x_star"] = randn_like(p)
+
+        # Draw x_star from a PRIVATE RNG stream. train.py seeds the global RNG
+        # with `model_seed`, builds the net, builds the optimizer, and only THEN
+        # draws the training and evaluation batches. Sampling x_star from the
+        # global stream therefore shifts every batch drawn afterwards, so runs
+        # using this optimizer would see different data (and a different eval
+        # set) than e.g. SPRING runs at identical seeds. Save/restore keeps the
+        # global stream untouched and is device-agnostic.
+        _cpu_rng_state = torch.get_rng_state()
+        _cuda_rng_state = (
+            torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
+        )
+        try:
+            torch.manual_seed(int(probe_seed))
+            for p in group["params"]:
+                self.state[p]["x_star"] = randn_like(p)
+        finally:
+            torch.set_rng_state(_cpu_rng_state)
+            if _cuda_rng_state is not None:
+                torch.cuda.set_rng_state_all(_cuda_rng_state)
 
         # globally normalize x_star to unit norm (matches the standalone
         # flat-vector init: x_star = x_star / ||x_star||)
@@ -236,12 +287,15 @@ class SameSampledSPRINGUnified(Optimizer):
         for p in group["params"]:
             self.state[p]["x_star"].div_(total)
 
-        # adaptive-beta probe-residual log (plain growing list; sliced
-        # [t-p+1:t+1] / [t-2p+1:t-p+1] in _maybe_update_beta to match the
-        # standalone reference's windows, which include the current step).
+        # Adaptive-beta probe-residual log. Only the most recent 2p entries are
+        # ever read, so this is a bounded ring rather than a list that grows for
+        # the whole run (a 40k-step run held ~40k live tensors before this).
+        # After appending step t the deque holds steps [t-2p+1, t]; the first p
+        # entries are the older window and the last p the newer one, which is
+        # exactly the reference's residuals[t-2p+1:t-p+1] / [t-p+1:t+1].
         p0 = group["params"][0]
         dev, dt = p0.device, p0.dtype
-        self._probe_residuals: List[Tensor] = []
+        self._probe_residuals: Deque[Tensor] = deque(maxlen=2 * self.p)
         self._r_hat = torch.tensor(1.0, device=dev, dtype=dt)
         self._checkpoint_idx = 1
 
@@ -328,8 +382,21 @@ class SameSampledSPRINGUnified(Optimizer):
             eta_main = (
                 1.0 - decay_factor * (1.0 - lr) if self._adaptive_eta else lr
             )
+            # SPRING's trust region, applied identically here so that the two
+            # methods are comparable at a fixed base learning rate: the
+            # effective step is min(eta, sqrt(C) / ||phi||). Note this caps the
+            # PARAMETER update only -- the probe keeps the unconstrained
+            # eta_main, since it tracks a linear system rather than the PDE.
+            eta_update = eta_main
+            if self._norm_constraint > 0.0:
+                norm_phi = sum(
+                    (self.state[p]["phi"] ** 2).sum() for p in params
+                ).sqrt()
+                eta_update = min(
+                    eta_main, (sqrt(self._norm_constraint) / norm_phi).item()
+                )
             for p in params:
-                p.data.add_(self.state[p]["phi"], alpha=eta_main)
+                p.data.add_(self.state[p]["phi"], alpha=eta_update)
         else:
             if lr[0] == "grid_line_search":
                 directions = [self.state[p]["phi"] for p in params]
@@ -431,16 +498,18 @@ class SameSampledSPRINGUnified(Optimizer):
             dev = self._r_hat.device
             dt = self._r_hat.dtype
 
-            # Windows including the current step, matching the standalone
-            # reference: residuals[t-p+1:t+1] / residuals[t-2p+1:t-p+1].
-            window_t = torch.stack(
-                self._probe_residuals[step_idx - p + 1 : step_idx + 1]
-            )
-            window_tp = torch.stack(
-                self._probe_residuals[step_idx - 2 * p + 1 : step_idx - p + 1]
-            )
-            eps_t = (window_t ** 2).sum()
-            eps_tp = (window_tp ** 2).sum()
+            # The deque holds exactly the 2p residuals for steps [t-2p+1, t],
+            # so the older window is the first p entries and the newer window
+            # the last p -- identical to the reference's
+            # residuals[t-2p+1:t-p+1] / residuals[t-p+1:t+1].
+            buf = list(self._probe_residuals)
+            assert len(buf) == 2 * p, f"probe buffer holds {len(buf)}, want {2 * p}"
+            eps_tp = (torch.stack(buf[:p]) ** 2).sum()
+            eps_t = (torch.stack(buf[p:]) ** 2).sum()
+
+            # numerical guard: a fully converged probe drives eps_tp to zero,
+            # which would make the ratio inf/NaN and silently poison beta.
+            eps_tp = torch.clamp(eps_tp, min=torch.finfo(dt).eps)
             r_ip = eps_t / eps_tp
 
             n_old_f = torch.tensor(float(self._checkpoint_idx), device=dev, dtype=dt)
@@ -454,17 +523,21 @@ class SameSampledSPRINGUnified(Optimizer):
             self._r_hat = alph * self._r_hat + (1.0 - alph) * torch.minimum(one, r_ip)
 
             rho = torch.clamp(
-                1.0 - torch.pow(self._r_hat, 1.0 / float(p)), min=0.0
+                1.0 - torch.pow(self._r_hat, 1.0 / float(p)), min=0.0, max=1.0
             )
             beta_new = (1.0 - rho) / (1.0 + rho)
+            beta_new = torch.clamp(beta_new, 0.0, self._beta_max)
 
             group["decay_factor"] = float(beta_new.item())
             self._checkpoint_idx += 1
 
+            # Parsed offline by runs/harvest_diagnosis.py (RE_BETA). Emitted in
+            # ASCII to match spring.py exactly -- the harvester previously had to
+            # accept both ascii and unicode spellings of beta/rho.
             print(
-                f"SameSampledSPRINGUnified β update @ step {self.steps}: "
-                f"β={beta_new.item():.6f}, r_hat={self._r_hat.item():.6f}, "
-                f"ρ={rho.item():.6f}"
+                f"SameSampledSPRINGUnified adaptive momentum updated at step "
+                f"{self.steps}: beta={beta_new.item():.6f}, "
+                f"r_hat={self._r_hat.item():.6f}, rho={rho.item():.6f}"
             )
 
     def _eval_loss(self, X: Tensor, y: Tensor, loss_type: str) -> Tensor:
