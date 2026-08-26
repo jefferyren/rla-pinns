@@ -114,6 +114,17 @@ if [[ "$DRY_RUN" != "1" ]]; then
   cd ~/rla-pinns-use/rla_pinns || { echo "ERROR: cd failed" >&2; exit 1; }
 fi
 
+# --- wandb entity -------------------------------------------------------------
+# Omitted by default: train.py passes entity=None to wandb.init, which resolves
+# to YOUR personal entity. Do NOT hard-code "rla-pinns" -- that is the original
+# authors' team and a non-member gets 403 Forbidden at wandb.init, which kills
+# the job ~11s in, after the model is built but before the first step.
+# To log to a team you belong to:  PINN_WANDB_ENTITY=my-team sbatch runs/<script>
+ENTITY_ARG=""
+if [[ -n "${PINN_WANDB_ENTITY:-}" ]]; then
+  ENTITY_ARG="--wandb_entity=${PINN_WANDB_ENTITY}"
+fi
+
 P100="--equation=poisson --boundary_condition=u_weinan_norm --dim_Omega=100 \
 --model=mlp-tanh-768-768-512-512 --N_Omega=200 --N_dOmega=100 \
 --N_eval=30000 --dtype=float64 --batch_frequency=1"
@@ -126,7 +137,7 @@ if [[ "$PDE" == "p100" ]]; then CFG="$P100"; else CFG="$LFP9"; fi
 
 TAG="${ARM}_${PDE}_m${MODEL_SEED}"
 COMMON="${CFG} --num_seconds=5000 --model_seed=${MODEL_SEED} --max_logs=150 \
---wandb --wandb_entity=rla-pinns --wandb_project=pinn_e3_final --wandb_name=${TAG}"
+--wandb ${ENTITY_ARG} --wandb_project=pinn_e3_final --wandb_name=${TAG}"
 
 case $ARM in
   a1_spring)

@@ -24,6 +24,17 @@ The scripts `cd` into the package themselves; `logs/` and `ckpt_noise/` land at 
 
 ---
 
+## wandb entity
+
+The scripts do **not** pass `--wandb_entity`, so runs land in your personal entity.
+Do not hard-code `rla-pinns` — that is the upstream authors' team, and a non-member gets
+`403 Forbidden` inside `wandb.init()`, which kills the job ~11 s in, *after* the model is
+built but before the first step. To log to a team you actually belong to:
+
+```bash
+PINN_WANDB_ENTITY=my-team sbatch runs/e1_smoke.sh
+```
+
 ## Step 0 — commit first (not optional)
 
 The working tree carries the private-RNG fix for `x_star`. Without it, `a3_ss` and
