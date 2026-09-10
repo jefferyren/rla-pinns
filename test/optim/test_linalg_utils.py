@@ -63,18 +63,44 @@ def test_zero_damping_escalates_from_a_relative_floor():
     assert allclose(L @ L.T, _damped(raw, lam))
 
 
-def test_diagonal_is_restored_from_raw_each_attempt():
-    """Escalation must not compound: lambda is applied to the RAW diagonal."""
+def test_diagonal_is_restored_from_raw_each_attempt(monkeypatch):
+    """Escalation must not compound: lambda is applied to the RAW diagonal.
+
+    The failures are forced rather than provoked with an ill-conditioned matrix.
+    Whether a given matrix is *numerically* positive definite is platform
+    dependent -- the same matrix and damping factorize under one LAPACK build
+    and not another, which is the entire reason `damped_cholesky` exists. An
+    earlier version of this test relied on that luck and passed on macOS /
+    torch 1.12 while going vacuous (n == 0) on Savio / torch 2.2.0.
+    """
+    import rla_pinns.optim.linalg_utils as mod
+
+    real_cholesky = mod.cholesky
+    calls = {"n": 0}
+
+    def fail_twice(M):
+        calls["n"] += 1
+        if calls["n"] <= 2:
+            raise RuntimeError(
+                "linalg.cholesky: The factorization could not be completed "
+                "because the input is not positive-definite (the leading minor "
+                "of order 7 is not positive-definite)."
+            )
+        return real_cholesky(M)
+
+    monkeypatch.setattr(mod, "cholesky", fail_twice)
+
     manual_seed(0)
     A = randn(80, 10, dtype=float64) * 10.0
     M = A @ A.T
     raw_diag = M.diag().clone()
 
-    L, lam, n = damped_cholesky(M, 1e-12, site="test")
+    _, lam, n = mod.damped_cholesky(M, 1e-12, site="test")
 
-    assert n >= 1
-    # If each retry had added lambda on top of the previous one, the final
-    # diagonal would exceed raw + lam.
+    assert n == 2
+    assert lam == 1e-12 * 10.0 * 10.0  # two x10 steps, not compounded
+    # Had each retry added lambda on top of the previous, the final diagonal
+    # would be raw + 1e-12 + 1e-11 + 1e-10 rather than raw + 1e-10.
     assert allclose(M.diag(), raw_diag + lam)
 
 
