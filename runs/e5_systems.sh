@@ -108,22 +108,22 @@ e5_paper_hparams() {
     p5)
       PAPER_ENGDW_LR=5.2289e-2;    PAPER_ENGDW_DAMPING=6.804474e-8
       PAPER_SPRING_LR=6.3502e-2;   PAPER_SPRING_DAMPING=6.811585e-10
-      PAPER_SPRING_MOMENTUM=8.26966e-1
+      PAPER_SPRING_MOMENTUM=8.26966e-1; PAPER_SPRING_NC=1e-3
       ;;
     p100)
       PAPER_ENGDW_LR=9.118e-2;     PAPER_ENGDW_DAMPING=6.233e-7
       PAPER_SPRING_LR=9.2362e-2;   PAPER_SPRING_DAMPING=3.0116e-2
-      PAPER_SPRING_MOMENTUM=9.8386e-1
+      PAPER_SPRING_MOMENTUM=9.8386e-1; PAPER_SPRING_NC=1e-3
       ;;
     heat4)
       PAPER_ENGDW_LR=9.939225e-2;  PAPER_ENGDW_DAMPING=1.139970e-7
       PAPER_SPRING_LR=8.663887e-2; PAPER_SPRING_DAMPING=2.081775e-7
-      PAPER_SPRING_MOMENTUM=9.078456e-1
+      PAPER_SPRING_MOMENTUM=9.078456e-1; PAPER_SPRING_NC=0
       ;;
     lfp9)
       PAPER_ENGDW_LR=6.029401e-2;  PAPER_ENGDW_DAMPING=8.638985e-4
       PAPER_SPRING_LR=4.473188e-2; PAPER_SPRING_DAMPING=8.377655e-3
-      PAPER_SPRING_MOMENTUM=9.760086e-1
+      PAPER_SPRING_MOMENTUM=9.760086e-1; PAPER_SPRING_NC=0
       ;;
     *)
       echo "ERROR: unknown system '$1' for paper hyperparameters" >&2
@@ -163,12 +163,28 @@ e5_arm_args() {
 --RNGD_norm_constraint=0"
       ;;
     spring)
-      # C = 1e-3, the value exp8_poisson5d_fixedlr and exp6_poisson100d_fixedlr
-      # request and the default every other optimizer in this repo carries. The
-      # paper requires C in Algorithm 1 but never states its value.
+      # C IS PER-SYSTEM. The paper requires C in Algorithm 1 but never states
+      # its value, and the right value is not the same on all four problems.
+      # Two independent sources agree exactly:
+      #
+      #   sweep YAMLs   exp8_poisson5d_fixedlr (2025-04-30) and
+      #                 exp6_poisson100d_fixedlr (2025-04-14) both pass
+      #                 RNGD_norm_constraint: 1e-3 -- they PREDATE commit
+      #                 bc9c0bb (2025-05-13), which deleted the flag.
+      #                 exp15_heat4d_fixed and exp19_log_fokker_planck_* are
+      #                 both 2025-07-30, POSTDATE it, and pass no such flag.
+      #
+      #   E5(a) smoke   with C=1e-3: p5 7.1e-6 (matches Fig 3), p100 1.0e-2
+      #                 (unchanged -- C never binds there), but heat4 1.655 and
+      #                 lfp9 37.6, both frozen at initialization.
+      #                 with C=0:    p5 1.415 (frozen), heat4 2.4e-4 and
+      #                 lfp9 0.250, both matching Fig 3.
+      #
+      # So Figure 3's SPRING used C=1e-3 on p5/p100 and no norm constraint on
+      # heat4/lfp9. Set from PAPER_SPRING_NC; E5_SPRING_NC overrides for A/B.
       ARM_ARGS="--optimizer=RNGD --RNGD_approximation=exact \
 --RNGD_lr=${lr} --RNGD_damping=${damping} --RNGD_momentum=${momentum} \
---RNGD_norm_constraint=${E5_SPRING_NC:-1e-3}"
+--RNGD_norm_constraint=${E5_SPRING_NC:-${PAPER_SPRING_NC:-1e-3}}"
       ;;
     primesr)
       # PRIME-SR sets its momentum per step from the sampled Gram matrix, so it
