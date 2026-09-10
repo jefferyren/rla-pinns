@@ -106,7 +106,18 @@ E5_ARMS=(engdw spring primesr ssspring)
 e5_paper_hparams() {
   case "$1" in
     p5)
-      PAPER_ENGDW_LR=5.2289e-2;    PAPER_ENGDW_DAMPING=6.804474e-8
+      # DAMPING DEVIATES FROM THE PAPER, DELIBERATELY. A.2.1 publishes
+      # 6.804474e-8. At that value ENGD-W's kernel is not numerically positive
+      # definite on this hardware: the unmodified code died in linalg.cholesky
+      # at step 277 (leading minor 2979 of 3500), and with damped_cholesky it
+      # escalated on 512+ of ~960 steps -- effectively every step, always by the
+      # same single factor of 10. Running at 10x the published value states that
+      # once, deterministically, instead of reporting a stochastic per-step
+      # escalation rate. Expect cholesky_escalations ~ 0 now; if it is not, this
+      # value is still too small and the deviation needs restating.
+      #
+      # This is the ONLY hyperparameter in E5 that departs from the paper.
+      PAPER_ENGDW_LR=5.2289e-2;    PAPER_ENGDW_DAMPING=6.804474e-7
       PAPER_SPRING_LR=6.3502e-2;   PAPER_SPRING_DAMPING=6.811585e-10
       PAPER_SPRING_MOMENTUM=8.26966e-1; PAPER_SPRING_NC=1e-3
       ;;
