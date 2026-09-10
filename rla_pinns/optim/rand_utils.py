@@ -3,6 +3,7 @@ from typing import List, Dict, Callable, Tuple
 from hessianfree.cg import cg
 from functools import partial
 from torch.linalg import qr, cholesky, solve_triangular, svd
+from rla_pinns.optim.linalg_utils import damped_cholesky
 from rla_pinns.optim.utils import (
     apply_joint_JJT,
     compute_joint_JJT,
@@ -145,11 +146,10 @@ def apply_inv_exact(
         boundary_grad_outputs,
     ).detach()
 
-    idx = arange(JJT.shape[0], device=dev)
-    JJT[idx, idx] = JJT.diag() + damping
-
-
-    L = cholesky(JJT)
+    # Escalating damping -- see optim/linalg_utils.py. At every step where the
+    # nominal `damping` factorizes this is exactly the old behaviour; only a
+    # step that would otherwise have raised is affected.
+    L, _, _ = damped_cholesky(JJT, damping, site="ENGD-W/SPRING")
 
     out = cholesky_solve(g.unsqueeze(1), L)
 

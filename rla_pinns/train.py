@@ -53,6 +53,7 @@ from rla_pinns.parse_utils import (
     check_all_args_parsed,
     parse_known_args_and_remove_from_argv,
 )
+from rla_pinns.optim.linalg_utils import escalation_total
 from rla_pinns.pinn_utils import evaluate_boundary_loss, l2_error
 from rla_pinns.poisson_equation import square_boundary
 from rla_pinns.train_utils import DataLoader, KillTrigger, LoggingTrigger
@@ -819,6 +820,11 @@ def main():  # noqa: C901
                     "time": elapsed,
                 }
                 
+                # How many steps so far needed their damping escalated to keep
+                # the Cholesky factorization alive (optim/linalg_utils.py).
+                # 0 => this run is bit-for-bit the unmodified behaviour.
+                log_dict["cholesky_escalations"] = escalation_total()
+
                 # Add decay_factor for SPRING / SameSampledSPRING optimizers
                 if isinstance(
                     optimizer, (SPRING, SameSampledSPRING, SameSampledSPRINGUnified)

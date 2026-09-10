@@ -28,8 +28,8 @@ from math import sqrt
 from typing import Deque, List, Tuple
 
 import torch
-from torch import Tensor, arange, cat, cholesky_solve, randn_like, zeros_like
-from torch.linalg import cholesky
+from torch import Tensor, cat, cholesky_solve, randn_like, zeros_like
+from rla_pinns.optim.linalg_utils import damped_cholesky
 from torch.nn import Module
 from torch.optim import Optimizer
 
@@ -336,13 +336,10 @@ class SameSampledSPRINGUnified(Optimizer):
             boundary_inputs,
             boundary_grad_outputs,
         ).detach()
-        N_total = OOT_raw.shape[0]
-        diag_idx = arange(N_total, device=OOT_raw.device)
 
-        # SPRING: OOT + λI
+        # SPRING: OOT + λI, with escalating damping (optim/linalg_utils.py).
         OOT = OOT_raw.clone()
-        OOT[diag_idx, diag_idx] = OOT.diag() + damping
-        L_spring = cholesky(OOT)
+        L_spring, _, _ = damped_cholesky(OOT, damping, site="SS-SPRING")
 
         # √N-normalized concatenated residual (negated, following SPRING convention)
         N_Omega = X_Omega.shape[0]
@@ -412,11 +409,14 @@ class SameSampledSPRINGUnified(Optimizer):
         # --- SPRING probe on the SAME sampled Jacobian, synthetic target ---
         probe_damping = self._probe_damping
         if probe_damping == damping:
+            # Reuse the main factor, including any escalation it needed -- the
+            # probe must see the SAME matrix, not silently a less-damped one.
             L_probe = L_spring
         else:
             OOT_probe = OOT_raw.clone()
-            OOT_probe[diag_idx, diag_idx] = OOT_probe.diag() + probe_damping
-            L_probe = cholesky(OOT_probe)
+            L_probe, _, _ = damped_cholesky(
+                OOT_probe, probe_damping, site="SS-SPRING/probe"
+            )
 
         # probe step size η_pr (uses η_main when adaptive_probe, else base η_probe)
         eta_pr = eta_main if self._adaptive_probe else self._probe_lr
