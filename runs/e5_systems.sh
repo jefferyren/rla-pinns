@@ -155,12 +155,20 @@ e5_arm_args() {
   local arm="$1" lr="$2" damping="$3" momentum="$4" nc="$5"
   case "$arm" in
     engdw)
+      # No norm constraint: Algorithm 1's C belongs to SPRING, and plain
+      # ENGD-Woodbury has none in the paper. Passed explicitly rather than
+      # left to the default so the hyperparameter table is unambiguous.
       ARM_ARGS="--optimizer=RNGD --RNGD_approximation=exact \
---RNGD_lr=${lr} --RNGD_damping=${damping} --RNGD_momentum=0.0"
+--RNGD_lr=${lr} --RNGD_damping=${damping} --RNGD_momentum=0.0 \
+--RNGD_norm_constraint=0"
       ;;
     spring)
+      # C = 1e-3, the value exp8_poisson5d_fixedlr and exp6_poisson100d_fixedlr
+      # request and the default every other optimizer in this repo carries. The
+      # paper requires C in Algorithm 1 but never states its value.
       ARM_ARGS="--optimizer=RNGD --RNGD_approximation=exact \
---RNGD_lr=${lr} --RNGD_damping=${damping} --RNGD_momentum=${momentum}"
+--RNGD_lr=${lr} --RNGD_damping=${damping} --RNGD_momentum=${momentum} \
+--RNGD_norm_constraint=${E5_SPRING_NC:-1e-3}"
       ;;
     primesr)
       # PRIME-SR sets its momentum per step from the sampled Gram matrix, so it

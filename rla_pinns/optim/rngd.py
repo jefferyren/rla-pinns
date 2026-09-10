@@ -68,6 +68,15 @@ def parse_randomized_args(verbose: bool = False, prefix="RNGD_") -> Namespace:
         default=0.0,
         help="Momentum parameter for the optimizer.",
     )
+    parser.add_argument(
+        f"--{prefix}norm_constraint",
+        type=float,
+        default=1e-3,
+        help="Norm constraint C on the SPRING step: the effective step size is"
+        " min(eta, sqrt(C)/||phi||), i.e. line 9 of Algorithm 1 in"
+        " arXiv:2505.12149. Applied only when momentum != 0 (plain ENGD-W has"
+        " no norm constraint). `0` disables it.",
+    )
 
     args = parse_known_args_and_remove_from_argv(parser)
 
@@ -125,6 +134,7 @@ class RNGD(Optimizer):
         approximation: str = "exact",
         rank_val: int = 0,
         momentum: float = 0.0,
+        norm_constraint: float = 1e-3,
         *,
         maximize: bool = False,
     ):
@@ -135,6 +145,7 @@ class RNGD(Optimizer):
             damping=damping,
             maximize=maximize,
             momentum=momentum,
+            norm_constraint=norm_constraint,
             approximation=approximation,
             rank_val=rank_val,
             equation=equation,
@@ -222,10 +233,29 @@ class RNGD(Optimizer):
         (group,) = self.param_groups
         lr = group["lr"]
         params = group["params"]
+        momentum = group["momentum"]
+        norm_constraint = group["norm_constraint"]
 
         if isinstance(lr, float):
+            # Algorithm 1, line 9 of arXiv:2505.12149:
+            #     theta <- theta - phi_k * min(eta_k, sqrt(C) / ||phi_k||)
+            # The paper lists the norm constraint C as a REQUIRED input to
+            # SPRING. It was present here until commit bc9c0bb ("Removed norm
+            # constraint, that was not the source of the strange behavior",
+            # 2025-05-13), which deleted it; eight sweep YAMLs in this repo
+            # still pass --RNGD_norm_constraint and cannot run without it.
+            # Without it, SPRING at the paper's published 5d Poisson damping
+            # (6.81e-10) does not train at all -- the loss sits at its
+            # initialization value for 1000+ steps.
+            #
+            # Gated on momentum, as in the original: plain ENGD-Woodbury
+            # (momentum == 0) has no norm constraint in the paper either.
+            scale = lr
+            if momentum != 0.0 and norm_constraint > 0.0:
+                norm_phi = sum((d**2).sum() for d in directions).sqrt()
+                scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
             for p, d in zip(params, directions):
-                p.data.add_(d, alpha=lr)
+                p.data.add_(d, alpha=scale)
 
         else:
             if lr[0] == "grid_line_search":

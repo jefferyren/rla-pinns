@@ -287,10 +287,15 @@ class PRIMESR(Optimizer):
 
         # Norm-constrained update (paper Eq. 2.15).
         if isinstance(lr, float):
-            norm_phi = sum(
-                (self.state[p]["phi"] ** 2).sum() for p in params
-            ).sqrt()
-            scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
+            # `0` disables the trust region, matching SameSampledSPRINGUnified.
+            # Without this guard min(lr, sqrt(0)/||phi||) == 0 and the optimizer
+            # freezes silently -- there is no way to express "off".
+            scale = lr
+            if norm_constraint > 0.0:
+                norm_phi = sum(
+                    (self.state[p]["phi"] ** 2).sum() for p in params
+                ).sqrt()
+                scale = min(lr, (sqrt(norm_constraint) / norm_phi).item())
             for p in params:
                 p.data.add_(self.state[p]["phi"], alpha=scale)
         else:
