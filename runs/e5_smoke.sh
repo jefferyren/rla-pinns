@@ -90,7 +90,13 @@ case $ARM in
   spring)   LR=$PAPER_SPRING_LR; DAMPING=$PAPER_SPRING_DAMPING; MOMENTUM=$PAPER_SPRING_MOMENTUM ;;
   *)        LR=$PAPER_SPRING_LR; DAMPING=$PAPER_SPRING_DAMPING; MOMENTUM=$PAPER_SPRING_MOMENTUM ;;
 esac
-NC=1e-3
+# Overridable so the trust region can be probed without editing the grid:
+#   E5_NC=1e12 ... -> sqrt(C)/||phi|| never binds, i.e. the trust region is OFF
+#                     and the arm steps at exactly lr, matching RNGD.
+# NEVER pass 0 to PRIMESR: unlike SameSampledSPRINGUnified (which guards with
+# `if norm_constraint > 0`), prime_sr.py computes min(lr, sqrt(0)/||phi||) = 0
+# unguarded and silently freezes.
+NC="${E5_NC:-1e-3}"
 
 if [[ "$DRY_RUN" != "1" ]]; then
   e5_activate
