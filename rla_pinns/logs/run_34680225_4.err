@@ -1,0 +1,40 @@
+wandb: Currently logged in as: ren27 (ren27-university-of-california-berkeley). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.27.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.3
+wandb: Run data is saved locally in /global/home/users/ren27/rla-pinns-use/rla_pinns/wandb/run-20260528_183313-kaoeg8oz
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run primesr_N200
+wandb: ⭐️ View project at https://wandb.ai/ren27-university-of-california-berkeley/rla-pinns-use-rla_pinns
+wandb: 🚀 View run at https://wandb.ai/ren27-university-of-california-berkeley/rla-pinns-use-rla_pinns/runs/kaoeg8oz
+wandb: - 0.002 MB of 0.002 MB uploadedwandb: \ 0.002 MB of 0.002 MB uploadedwandb: | 0.002 MB of 0.002 MB uploadedwandb: / 0.002 MB of 0.002 MB uploadedwandb: - 0.009 MB of 0.031 MB uploaded (0.002 MB deduped)wandb: \ 0.012 MB of 0.034 MB uploaded (0.002 MB deduped)wandb: | 0.034 MB of 0.034 MB uploaded (0.002 MB deduped)wandb: 
+wandb: Run history:
+wandb:        decay_factor ▁███████████████████████████████████████
+wandb:            l2_error █████████▇▇▇▇▇▇▇▇▇▇▇▆▆▆▅▅▄▃▃▂▂▁▁▁▁▁▁▁▁▁▁
+wandb:                loss █████▇▇▇▇▇▇▇▇▇▇▆▆▆▆▆▅▅▄▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       loss_boundary ██████▇▇▇▇▇▇▇▇▇▆▆▆▆▆▅▅▄▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       loss_interior █████▇▇▇▇▇▇▇▇▇▇▆▆▆▆▆▅▅▄▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:      prime_sr_alpha ██████▇▇▇▇▇▆▆▆▆▆▆▆▇▆▆▆▆▅▅▆▇▇▆▄▃▂▁▁▁▂▃█▅▁
+wandb: prime_sr_alpha_ceil ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: prime_sr_beta_tilde ▁███████████████████████████████████████
+wandb:       prime_sr_rank ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▃▃▄▄▅▆█
+wandb:                time ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▃▃▄▄▅▆█
+wandb: 
+wandb: Run summary:
+wandb:        decay_factor 0.9973
+wandb:            l2_error 0.0063
+wandb:                loss 5e-05
+wandb:       loss_boundary 2e-05
+wandb:       loss_interior 2e-05
+wandb:      prime_sr_alpha 1.12545
+wandb: prime_sr_alpha_ceil 2
+wandb: prime_sr_beta_tilde 1.40407
+wandb:       prime_sr_rank 300
+wandb:                step 5216
+wandb:                time 7001.0083
+wandb: 
+wandb: 🚀 View run primesr_N200 at: https://wandb.ai/ren27-university-of-california-berkeley/rla-pinns-use-rla_pinns/runs/kaoeg8oz
+wandb: ️⚡ View job at https://wandb.ai/ren27-university-of-california-berkeley/rla-pinns-use-rla_pinns/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjc1NjY0ODU2MQ==/version_details/v18
+wandb: Synced 6 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260528_183313-kaoeg8oz/logs
