@@ -5,8 +5,8 @@ from math import sqrt
 from typing import List, Tuple
 
 import torch
-from torch import Tensor, arange, cat, cholesky_solve, zeros_like
-from torch.linalg import cholesky, inv
+from torch import Tensor, cat, cholesky_solve, zeros_like
+from rla_pinns.optim.linalg_utils import damped_cholesky
 from torch.nn import Module
 from torch.optim import Optimizer
 
@@ -253,9 +253,6 @@ class SPRING(Optimizer):
             boundary_inputs,
             boundary_grad_outputs,
         ).detach()
-        # apply damping
-        idx = arange(OOT.shape[0], device=OOT.device)
-        OOT[idx, idx] = OOT.diag() + damping
 
         # update zeta
         # compute the residual
@@ -286,8 +283,16 @@ class SPRING(Optimizer):
         ).squeeze(-1)
         zeta = epsilon - O_phi.mul_(decay_factor)
 
-        # apply inverse of damped OOT to zeta
-        step = cholesky_solve(zeta.unsqueeze(-1), cholesky(OOT))
+        # Apply the inverse of the damped OOT to zeta. Escalating damping --
+        # see optim/linalg_utils.py. A bare cholesky(OOT + lambda I) RAISES once
+        # the kernel's effective rank falls below N, which is what killed
+        # ENGD-Woodbury and SS-SPRING on the 5d Poisson benchmark in E5(a),
+        # mid-convergence, at step 277. This class backs both a1_spring and
+        # a2_adaptive, so an unguarded factorization here can take out two of
+        # E3's three arms. Behaviour is unchanged on every step where the
+        # nominal damping factorizes.
+        L_spring, _, _ = damped_cholesky(OOT, damping, site="SPRING")
+        step = cholesky_solve(zeta.unsqueeze(-1), L_spring)
 
         # apply OT
         step = [

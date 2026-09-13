@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --gres=gpu:GTX2080TI:1
 #SBATCH --time=00:20:00
-#SBATCH --array=1-7
+#SBATCH --array=1-11
 #SBATCH --output=logs/e1_%A_%a.out
 #SBATCH --error=logs/e1_%A_%a.err
 # =============================================================================
@@ -20,6 +20,22 @@
 #         `decay_factor` (= beta) actually appear in wandb?
 #     (b) tasks 1-6 also give the measured s/step per (arm, PDE), which is what
 #         sizes --time for E2 and E3. Do not size --time from --num_seconds.
+#     (d) tasks 8-11: NORM-CONSTRAINT PROBE on lfp9 for a3_ss, at
+#         C in {1e-1, 1e1, 1e3, 0}, with task 6 supplying the C=1e-3 cell.
+#         THIS IS THE ONE THAT CAN INVALIDATE E3.
+#         e2_tune.sh and e3_final.sh both hard-code norm_constraint=1e-3 and
+#         never sweep it. In E5(b)/E5(c) that exact value FROZE SS-SPRING on
+#         log-Fokker-Planck -- L2 37.6, stuck at its initialization, against
+#         1.55e-3 at the tuned C=1000. A factor of 24000.
+#         E3's lfp9 is not E5's (N_Omega=300 vs 3000, so a smaller and better
+#         conditioned kernel) and may well not freeze. But it is the same
+#         optimizer, the same PDE and the same pinned constant, and if it does
+#         freeze then E3 reports a dead run as the method's performance and C2
+#         dies of a configuration bug rather than a scientific result.
+#         READ THIS BEFORE E2: if C=1e-3 is not competitive here, add
+#         norm_constraint to E2's swept knobs before spending 52 GPU-h.
+#         The E5 precedent: the same probe cost 4 tasks and 20 minutes and
+#         caught a freeze that would have wasted ~50 GPU-h of tuning draws.
 #     (c) task 7: produce ONE checkpoint from which the offline noise floor of
 #         l2_error is measured (runs/e1_noise_floor.py). Written to ../ckpt_noise
 #         so it lands at the repo root next to logs/, not inside the package dir
@@ -33,7 +49,7 @@
 #   Without it every comparison in E3 is confounded. See section 3.
 #
 # DRY RUN -- verify all 7 command lines without touching the cluster:
-#   for i in $(seq 1 7); do SLURM_ARRAY_TASK_ID=$i DRY_RUN=1 bash runs/e1_smoke.sh; done
+#   for i in $(seq 1 11); do SLURM_ARRAY_TASK_ID=$i DRY_RUN=1 bash runs/e1_smoke.sh; done
 # =============================================================================
 
 set -euo pipefail
@@ -105,6 +121,20 @@ if [[ $SLURM_ARRAY_TASK_ID -le 6 ]]; then
   BUDGET="--num_seconds=600"
   EXTRA=""
   TAG="smoke_${ARM}_${PDE}"
+elif [[ $SLURM_ARRAY_TASK_ID -ge 8 ]]; then
+  # Tasks 8-11: norm-constraint probe. a3_ss on lfp9 only -- lfp9 is the PDE
+  # E5 saw freeze, and a3_ss is the arm whose C is pinned. Same 600s budget and
+  # same model_seed as tasks 1-6, so the C=1e-3 cell is directly comparable to
+  # task 6 and the probe costs one extra comparison, not a new baseline.
+  # 1e-3 is deliberately ABSENT: task 6 is already a3_ss on lfp9 at C=1e-3 with
+  # the same seed and budget, so repeating it here would buy nothing. Read task
+  # 6 as the C=1e-3 cell; these four extend the grid around it.
+  NC_VALUES=(1e-1 1e1 1e3 0)
+  NC=${NC_VALUES[$(( SLURM_ARRAY_TASK_ID - 8 ))]}
+  ARM=a3_ss; PDE=lfp9; CFG="$LFP9"
+  BUDGET="--num_seconds=600"
+  EXTRA=""
+  TAG="ncprobe_${ARM}_${PDE}_C${NC}"
 else
   # Task 7: checkpoint producer for the offline metric-noise floor.
   # Step-budgeted with an EXPLICIT --checkpoint_steps on purpose: in that mode
@@ -149,7 +179,7 @@ ${COMMON}"
 --SameSampledSPRINGUnified_lb_window=30 \
 --SameSampledSPRINGUnified_probe_lr=${LR} \
 --SameSampledSPRINGUnified_probe_damping=${DAMPING} \
---SameSampledSPRINGUnified_norm_constraint=1e-3 \
+--SameSampledSPRINGUnified_norm_constraint=${NC:-1e-3} \
 --SameSampledSPRINGUnified_beta_max=0.99 \
 --SameSampledSPRINGUnified_probe_seed=0 \
 --SameSampledSPRINGUnified_adaptive_eta \
@@ -159,7 +189,7 @@ ${COMMON}"
   *) echo "ERROR: unknown arm '${ARM}'" >&2; exit 1 ;;
 esac
 
-echo "=== E1 task ${SLURM_ARRAY_TASK_ID}: arm=${ARM} pde=${PDE} ==="
+echo "=== E1 task ${SLURM_ARRAY_TASK_ID}: arm=${ARM} pde=${PDE} nc=${NC:-1e-3} ==="
 echo "ARGS: ${ARGS}"
 
 if [[ "$DRY_RUN" == "1" ]]; then
