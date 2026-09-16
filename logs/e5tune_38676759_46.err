@@ -1,0 +1,40 @@
+wandb: Currently logged in as: ren27 (ren27-university-of-california-berkeley). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.30.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.3
+wandb: Run data is saved locally in /global/home/users/ren27/rla-pinns-use/rla_pinns/wandb/run-20260909_235028-wyyji4cg
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ssspring_p100_d22
+wandb: ⭐️ View project at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_tune
+wandb: 🚀 View run at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_tune/runs/wyyji4cg
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 2.2 seconds.), retrying request
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 4.8 seconds.), retrying request
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 2.2 seconds.), retrying request
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 4.4 seconds.), retrying request
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 2.5 seconds.), retrying request
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 4.6 seconds.), retrying request
+wandb: - 0.002 MB of 0.002 MB uploadedwandb: \ 0.002 MB of 0.002 MB uploadedwandb: | 0.002 MB of 0.030 MB uploadedwandb: / 0.030 MB of 0.030 MB uploadedwandb: 
+wandb: Run history:
+wandb: cholesky_escalations ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         decay_factor ▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▅▅▃▁▆████▆▆▆▆▆▇▆▇▇
+wandb:             l2_error █▇▇▆▆▅▄▄▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                 loss █▆▅▄▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_boundary █▆▅▄▄▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_interior █▆▅▄▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                 step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▃▃▄▄▅▆▇█
+wandb:                 time ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▃▃▄▄▅▆▇█
+wandb: 
+wandb: Run summary:
+wandb: cholesky_escalations 0
+wandb:         decay_factor 0.98536
+wandb:             l2_error 0.00875
+wandb:                 loss 4e-05
+wandb:        loss_boundary 2e-05
+wandb:        loss_interior 1e-05
+wandb:                 step 2152
+wandb:                 time 2000.90399
+wandb: 
+wandb: 🚀 View run ssspring_p100_d22 at: https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_tune/runs/wyyji4cg
+wandb: ️⚡ View job at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_tune/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjE0Nzc0NDI0MzY=/version_details/v11
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260909_235028-wyyji4cg/logs

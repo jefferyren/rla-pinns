@@ -1,0 +1,100 @@
+wandb: Currently logged in as: ren27 (ren27-university-of-california-berkeley). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.30.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.3
+wandb: Run data is saved locally in /global/home/users/ren27/rla-pinns-use/rla_pinns/wandb/run-20260910_144145-j76v3bq3
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run primesr_p100_m1
+wandb: ⭐️ View project at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_final
+wandb: 🚀 View run at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_final/runs/j76v3bq3
+wandb: - 0.002 MB of 0.002 MB uploadedwandb: \ 0.002 MB of 0.039 MB uploadedwandb: | 0.039 MB of 0.039 MB uploadedwandb: 
+wandb: Run history:
+wandb: cholesky_escalations ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         decay_factor ▁███████████████████████████████████████
+wandb:             l2_error ██▇▆▆▆▅▅▅▅▄▄▄▃▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                 loss █▇▆▅▅▄▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_boundary █▇▇▅▅▄▄▃▃▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_interior █▇▆▅▅▄▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       prime_sr_alpha ▆▆▄▃▃▂▂▂▂▂▂▂▂▂▂▃▄▅▆▄▃▂▂▂▃▂▃▄▇██▆▃▂▁▁▂▄▇▃
+wandb:  prime_sr_alpha_ceil ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  prime_sr_beta_tilde ▁███████████████████████████████████████
+wandb:        prime_sr_rank ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                 step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▃▃▄▄▅▇█
+wandb:                 time ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▃▃▄▄▅▇█
+wandb: 
+wandb: Run summary:
+wandb: cholesky_escalations 0
+wandb:         decay_factor 0.99915
+wandb:             l2_error 0.00547
+wandb:                 loss 2e-05
+wandb:        loss_boundary 2e-05
+wandb:        loss_interior 0.0
+wandb:       prime_sr_alpha 1.36001
+wandb:  prime_sr_alpha_ceil 2
+wandb:  prime_sr_beta_tilde 1.41073
+wandb:        prime_sr_rank 150
+wandb:                 step 16711
+wandb:                 time 10000.28283
+wandb: 
+wandb: 🚀 View run primesr_p100_m1 at: https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_final/runs/j76v3bq3
+wandb: ️⚡ View job at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_final/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjE0ODE5MjY3NDU=/version_details/v3
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260910_144145-j76v3bq3/logs
+Exception in thread NetStatThr:
+Traceback (most recent call last):
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/threading.py", line 980, in _bootstrap_inner
+Exception in thread IntMsgThr:
+Traceback (most recent call last):
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/threading.py", line 980, in _bootstrap_inner
+    self.run()
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/threading.py", line 917, in run
+    self.run()
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/threading.py", line 917, in run
+    self._target(*self._args, **self._kwargs)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/wandb_run.py", line 300, in check_internal_messages
+    self._target(*self._args, **self._kwargs)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/wandb_run.py", line 268, in check_network_status
+    self._loop_check_status(
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/wandb_run.py", line 224, in _loop_check_status
+    self._loop_check_status(
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/wandb_run.py", line 224, in _loop_check_status
+    local_handle = request()
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/interface/interface.py", line 800, in deliver_internal_messages
+    local_handle = request()
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/interface/interface.py", line 792, in deliver_network_status
+    return self._deliver_internal_messages(internal_message)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/interface/interface_shared.py", line 506, in _deliver_internal_messages
+    return self._deliver_network_status(status)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/interface/interface_shared.py", line 500, in _deliver_network_status
+    return self._deliver_record(record)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/interface/interface_shared.py", line 449, in _deliver_record
+    return self._deliver_record(record)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/interface/interface_shared.py", line 449, in _deliver_record
+    handle = mailbox._deliver_record(record, interface=self)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/mailbox.py", line 455, in _deliver_record
+    handle = mailbox._deliver_record(record, interface=self)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/mailbox.py", line 455, in _deliver_record
+    interface._publish(record)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/interface/interface_sock.py", line 51, in _publish
+    interface._publish(record)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/interface/interface_sock.py", line 51, in _publish
+    self._sock_client.send_record_publish(record)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/sock_client.py", line 221, in send_record_publish
+    self._sock_client.send_record_publish(record)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/sock_client.py", line 221, in send_record_publish
+    self.send_server_request(server_req)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/sock_client.py", line 155, in send_server_request
+    self.send_server_request(server_req)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/sock_client.py", line 155, in send_server_request
+    self._send_message(msg)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/sock_client.py", line 152, in _send_message
+    self._send_message(msg)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/sock_client.py", line 152, in _send_message
+    self._sendall_with_error_handle(header + data)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/sock_client.py", line 130, in _sendall_with_error_handle
+    self._sendall_with_error_handle(header + data)
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/lib/sock_client.py", line 130, in _sendall_with_error_handle
+    sent = self._sock.send(data)
+BrokenPipeError: [Errno 32] Broken pipe
+    sent = self._sock.send(data)
+BrokenPipeError: [Errno 32] Broken pipe

@@ -1,0 +1,44 @@
+wandb: Currently logged in as: ren27 (ren27-university-of-california-berkeley). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.30.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.3
+wandb: Run data is saved locally in /global/home/users/ren27/rla-pinns-use/rla_pinns/wandb/run-20260909_182810-cr2asvf8
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run engdw_p5_smoke
+wandb: ⭐️ View project at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke
+wandb: 🚀 View run at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke/runs/cr2asvf8
+Traceback (most recent call last):
+  File "/global/home/users/ren27/rla-pinns-use/rla_pinns/train.py", line 878, in <module>
+    main()
+  File "/global/home/users/ren27/rla-pinns-use/rla_pinns/train.py", line 669, in main
+    loss_interior, loss_boundary = optimizer.step(
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/torch/optim/optimizer.py", line 385, in wrapper
+    out = func(*args, **kwargs)
+  File "/global/home/users/ren27/rla-pinns-use/rla_pinns/optim/rngd.py", line 202, in step
+    directions = self._get_directions(
+  File "/global/home/users/ren27/rla-pinns-use/rla_pinns/optim/rngd.py", line 292, in _get_directions
+    step = self.STEP_FUNCTIONS[self._approximation](
+  File "/global/home/users/ren27/rla-pinns-use/rla_pinns/optim/rand_utils.py", line 152, in apply_inv_exact
+    L = cholesky(JJT)
+torch._C._LinAlgError: linalg.cholesky: The factorization could not be completed because the input is not positive-definite (the leading minor of order 2979 is not positive-definite).
+wandb: - 0.002 MB of 0.002 MB uploadedwandb: \ 0.002 MB of 0.002 MB uploadedwandb: | 0.002 MB of 0.002 MB uploadedwandb: / 0.008 MB of 0.008 MB uploadedwandb: - 0.025 MB of 0.025 MB uploadedwandb: 
+wandb: Run history:
+wandb:      l2_error ██▇▇▆▆▅▅▅▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▂▁
+wandb:          loss ▁█▅▅█▅▃▃▄▃▃▂▂▂▂▂▁▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: loss_boundary ▁█▆▅▅▄▄▄▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: loss_interior ▁█▅▅█▅▃▃▄▃▃▂▂▂▂▂▁▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:          step ▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▃▃▄▄▅▅▆▇█
+wandb:          time ▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▃▃▄▄▅▅▆▇█
+wandb: 
+wandb: Run summary:
+wandb:      l2_error 0.04307
+wandb:          loss 47.09614
+wandb: loss_boundary 0.00082
+wandb: loss_interior 47.09531
+wandb:          step 277
+wandb:          time 162.39357
+wandb: 
+wandb: 🚀 View run engdw_p5_smoke at: https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke/runs/cr2asvf8
+wandb: ️⚡ View job at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjE0NzU4OTY4NDQ=/version_details/v0
+wandb: Synced 6 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260909_182810-cr2asvf8/logs

@@ -1,0 +1,43 @@
+wandb: Currently logged in as: ren27 (ren27-university-of-california-berkeley). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.30.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.3
+wandb: Run data is saved locally in /global/home/users/ren27/rla-pinns-use/rla_pinns/wandb/run-20260909_203333-dhcl5yz3
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run primesr_p100_smoke
+wandb: ⭐️ View project at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke
+wandb: 🚀 View run at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke/runs/dhcl5yz3
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 2.3 seconds.), retrying request
+wandb: - 0.002 MB of 0.002 MB uploadedwandb: \ 0.002 MB of 0.002 MB uploadedwandb: | 0.002 MB of 0.002 MB uploadedwandb: / 0.009 MB of 0.027 MB uploaded (0.002 MB deduped)wandb: - 0.028 MB of 0.028 MB uploaded (0.002 MB deduped)wandb: 
+wandb: Run history:
+wandb: cholesky_escalations ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         decay_factor ▁███████████████████████████████████████
+wandb:             l2_error ███████████▇▇▇▇▇▇▇▇▇▇▇▇▇▆▆▆▆▅▅▄▃▃▂▂▁▁▁▁▁
+wandb:                 loss █████▇▇▇▇▇▇▇▇▇▇▇▇▆▆▆▆▆▆▆▅▅▄▄▃▃▂▂▂▁▁▁▁▁▁▁
+wandb:        loss_boundary █████▇▇▇▇▇▇▇▇▇▆▇▆▆▆▆▆▆▆▆▅▅▄▄▄▃▂▂▂▁▁▁▁▁▁▁
+wandb:        loss_interior ██████▇▇▇▇▇▇▇▇▇▇▇▆▆▆▆▆▆▆▅▅▄▄▃▃▂▂▂▁▁▁▁▁▁▁
+wandb:       prime_sr_alpha ▇▇▇▇▇▇▇▇▇▇▆▆▆▆▆▆▆▆▅▆▆▅▅▅▆▅▅▅▄▄▄▆▇█▇▆▄▂▁▁
+wandb:  prime_sr_alpha_ceil ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  prime_sr_beta_tilde ▁███████████████████████████████████████
+wandb:        prime_sr_rank ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                 step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▃▃▃▄▅▅▆▇█
+wandb:                 time ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▃▃▃▄▅▅▆▇█
+wandb: 
+wandb: Run summary:
+wandb: cholesky_escalations 0
+wandb:         decay_factor 0.99966
+wandb:             l2_error 0.02057
+wandb:                 loss 0.00053
+wandb:        loss_boundary 0.00023
+wandb:        loss_interior 0.0003
+wandb:       prime_sr_alpha 1.17974
+wandb:  prime_sr_alpha_ceil 2
+wandb:  prime_sr_beta_tilde 1.41283
+wandb:        prime_sr_rank 150
+wandb:                 step 964
+wandb:                 time 600.14321
+wandb: 
+wandb: 🚀 View run primesr_p100_smoke at: https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke/runs/dhcl5yz3
+wandb: ️⚡ View job at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjE0NzU4OTY4NDQ=/version_details/v8
+wandb: Synced 6 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260909_203333-dhcl5yz3/logs

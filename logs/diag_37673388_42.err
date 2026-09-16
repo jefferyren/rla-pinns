@@ -1,0 +1,32 @@
+wandb: Currently logged in as: ren27 (ren27-university-of-california-berkeley). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.28.2 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.3
+wandb: Run data is saved locally in /global/home/users/ren27/rla-pinns-use/rla_pinns/wandb/run-20260817_184048-mglglgn0
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ss_spring_k60_s2
+wandb: ⭐️ View project at https://wandb.ai/ren27-university-of-california-berkeley/spring_diagnosis
+wandb: 🚀 View run at https://wandb.ai/ren27-university-of-california-berkeley/spring_diagnosis/runs/mglglgn0
+wandb: - 0.002 MB of 0.033 MB uploadedwandb: \ 0.002 MB of 0.033 MB uploadedwandb: | 0.033 MB of 0.033 MB uploadedwandb: 
+wandb: Run history:
+wandb:  decay_factor ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇██████▆▄▅▄▁▂▁▃▂▂▅▅▃▃
+wandb:      l2_error █▇▆▅▅▅▄▄▄▄▄▄▄▄▄▄▅▅▅▅▄▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁
+wandb:          loss █▆▄▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: loss_boundary █▆▄▄▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: loss_interior █▆▄▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:          step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▃▃▃▄▅▅▆█
+wandb:          time ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▃▃▃▄▅▅▆█
+wandb: 
+wandb: Run summary:
+wandb:  decay_factor 0.96673
+wandb:      l2_error 0.03335
+wandb:          loss 0.00041
+wandb: loss_boundary 0.00025
+wandb: loss_interior 0.00017
+wandb:          step 3546
+wandb:          time 7000.44054
+wandb: 
+wandb: 🚀 View run ss_spring_k60_s2 at: https://wandb.ai/ren27-university-of-california-berkeley/spring_diagnosis/runs/mglglgn0
+wandb: ️⚡ View job at https://wandb.ai/ren27-university-of-california-berkeley/spring_diagnosis/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjEyNzE4OTQ4MTU=/version_details/v1
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260817_184048-mglglgn0/logs

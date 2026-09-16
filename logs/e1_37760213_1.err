@@ -1,0 +1,15 @@
+wandb: Currently logged in as: ren27. Use `wandb login --relogin` to force relogin
+wandb: ERROR Error while calling W&B API: permission denied (<Response [403]>)
+wandb: ERROR It appears that you do not have permission to access the requested resource. Please reach out to the project owner to grant you access. If you have the correct permissions, verify that there are no issues with your networking setup.(Error 403: Forbidden)
+Traceback (most recent call last):
+  File "/global/home/users/ren27/rla-pinns-use/rla_pinns/train.py", line 878, in <module>
+    main()
+  File "/global/home/users/ren27/rla-pinns-use/rla_pinns/train.py", line 633, in main
+    wandb.init(
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/wandb_init.py", line 1195, in init
+    raise e
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/wandb_init.py", line 1176, in init
+    run = wi.init()
+  File "/global/home/users/ren27/.conda/envs/rla_pinns/lib/python3.9/site-packages/wandb/sdk/wandb_init.py", line 785, in init
+    raise error
+wandb.errors.CommError: It appears that you do not have permission to access the requested resource. Please reach out to the project owner to grant you access. If you have the correct permissions, verify that there are no issues with your networking setup.(Error 403: Forbidden)

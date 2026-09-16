@@ -1,0 +1,39 @@
+wandb: Currently logged in as: ren27 (ren27-university-of-california-berkeley). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.30.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.3
+wandb: Run data is saved locally in /global/home/users/ren27/rla-pinns-use/rla_pinns/wandb/run-20260909_211506-yvxn0juw
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ssspring_heat4_smoke
+wandb: ⭐️ View project at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke
+wandb: 🚀 View run at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke/runs/yvxn0juw
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 2.1 seconds.), retrying request
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 2.2 seconds.), retrying request
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 4.3 seconds.), retrying request
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 2.1 seconds.), retrying request
+wandb: 429 encountered (Filestream rate limit exceeded, retrying in 4.7 seconds.), retrying request
+wandb: - 0.002 MB of 0.002 MB uploadedwandb: \ 0.002 MB of 0.018 MB uploadedwandb: | 0.013 MB of 0.019 MB uploadedwandb: 
+wandb: Run history:
+wandb: cholesky_escalations ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         decay_factor ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█████
+wandb:             l2_error ██████████████████▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▆▆▅▄▃▂▁
+wandb:                 loss ▇▇▆▇▆▇▇▇▇▇▇▆▇▆▆▇▆▇▇▆█▇▆▇▆▆▅▆▇▆▇▇▅▆▆▅▅▃▂▁
+wandb:        loss_boundary ▇▇▆▇▆▇▇▇▇▇▇▆▇▆▆▇▆▇▇▆█▇▆▇▆▆▅▆▇▆▇▇▅▆▆▅▅▃▂▁
+wandb:        loss_interior ████▇▇█▇▇▇▆▆▆▆▅▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▃▃▂▂▂▂▁
+wandb:                 step ▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▃▃▃▃▃▃▃▃▃▃▃▄▄▄▄▄▅▅▅▆▇▇█
+wandb:                 time ▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▃▃▃▃▃▃▃▃▃▃▃▄▄▄▄▄▄▅▅▆▇▇█
+wandb: 
+wandb: Run summary:
+wandb: cholesky_escalations 0
+wandb:         decay_factor 0.99
+wandb:             l2_error 1.76168
+wandb:                 loss 2.3988
+wandb:        loss_boundary 2.3988
+wandb:        loss_interior 0.0
+wandb:                 step 100
+wandb:                 time 605.91828
+wandb: 
+wandb: 🚀 View run ssspring_heat4_smoke at: https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke/runs/yvxn0juw
+wandb: ️⚡ View job at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_smoke/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjE0NzU4OTY4NDQ=/version_details/v24
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260909_211506-yvxn0juw/logs

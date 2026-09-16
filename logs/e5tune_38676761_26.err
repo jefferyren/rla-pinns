@@ -1,0 +1,34 @@
+wandb: Currently logged in as: ren27 (ren27-university-of-california-berkeley). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.30.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.3
+wandb: Run data is saved locally in /global/home/users/ren27/rla-pinns-use/rla_pinns/wandb/run-20260910_013047-0bah6s7p
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ssspring_lfp9_d2
+wandb: ⭐️ View project at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_tune
+wandb: 🚀 View run at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_tune/runs/0bah6s7p
+wandb: - 0.002 MB of 0.018 MB uploadedwandb: \ 0.019 MB of 0.019 MB uploadedwandb: 
+wandb: Run history:
+wandb: cholesky_escalations ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         decay_factor ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁████████
+wandb:             l2_error █▄▃▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃
+wandb:                 loss ▁▁▁▁▁▁▁▁▁▁▁▁▂▁▄▂▁▁▁▁▁▁▁▂▂▁▂▁▁▁▁▁▃▂▁▁█▁▁▁
+wandb:        loss_boundary █▅▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_interior ▁▁▁▁▁▁▁▁▁▁▁▁▂▁▄▂▁▁▁▁▁▁▁▂▂▁▂▁▁▁▁▁▃▂▁▁█▁▁▁
+wandb:                 step ▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▃▃▃▃▃▃▃▄▄▄▅▆▇▇█
+wandb:                 time ▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▃▃▃▃▃▃▃▄▄▄▅▆▇▇█
+wandb: 
+wandb: Run summary:
+wandb: cholesky_escalations 0
+wandb:         decay_factor 0.99
+wandb:             l2_error 14.00076
+wandb:                 loss 10793655.61255
+wandb:        loss_boundary 41.58005
+wandb:        loss_interior 10793614.0325
+wandb:                 step 147
+wandb:                 time 1204.82413
+wandb: 
+wandb: 🚀 View run ssspring_lfp9_d2 at: https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_tune/runs/0bah6s7p
+wandb: ️⚡ View job at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_tune/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjE0Nzc0NDI0MzY=/version_details/v11
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260910_013047-0bah6s7p/logs

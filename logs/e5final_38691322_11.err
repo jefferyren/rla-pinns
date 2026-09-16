@@ -1,0 +1,34 @@
+wandb: Currently logged in as: ren27 (ren27-university-of-california-berkeley). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.30.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.3
+wandb: Run data is saved locally in /global/home/users/ren27/rla-pinns-use/rla_pinns/wandb/run-20260910_125645-9vm92zd2
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ssspring_p5_m2
+wandb: ⭐️ View project at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_final
+wandb: 🚀 View run at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_final/runs/9vm92zd2
+wandb: - 0.002 MB of 0.002 MB uploadedwandb: \ 0.002 MB of 0.060 MB uploadedwandb: | 0.060 MB of 0.060 MB uploadedwandb: / 0.060 MB of 0.060 MB uploadedwandb: 
+wandb: Run history:
+wandb: cholesky_escalations ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         decay_factor ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁██▇█▇▇▅▇██████████████
+wandb:             l2_error █████▇▇▆▅▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                 loss ███▇▇▇▆▅▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_boundary ███▇▇▆▆▅▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_interior ███▇▇▇▆▅▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                 step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▃▃▃▄▅▆█
+wandb:                 time ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▃▃▃▄▅▆█
+wandb: 
+wandb: Run summary:
+wandb: cholesky_escalations 0
+wandb:         decay_factor 0.98597
+wandb:             l2_error 0.0
+wandb:                 loss 0.0
+wandb:        loss_boundary 0.0
+wandb:        loss_interior 0.0
+wandb:                 step 10212
+wandb:                 time 7000.265
+wandb: 
+wandb: 🚀 View run ssspring_p5_m2 at: https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_final/runs/9vm92zd2
+wandb: ️⚡ View job at https://wandb.ai/ren27-university-of-california-berkeley/pinn_e5_final/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjE0ODE5MjY3NDU=/version_details/v2
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260910_125645-9vm92zd2/logs
