@@ -83,6 +83,9 @@ if [[ "$DRY_RUN" != "1" ]]; then
     exit 1
   fi
   cd ~/rla-pinns-use/rla_pinns || { echo "ERROR: cd failed" >&2; exit 1; }
+  # Die loudly if this task cannot see a GPU (see train.py). E1 task 2 ran on
+  # CPU for 600s and looked like a bad optimizer; it must look like a FAILED job.
+  export PINN_REQUIRE_CUDA=1
 fi
 
 # --- Candidate set: draw 1 = inherited anchor, draws 2-13 = fixed random sample

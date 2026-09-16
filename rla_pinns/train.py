@@ -6,6 +6,7 @@ python train.py --help
 ```
 """
 
+from os import environ
 from argparse import ArgumentParser, Namespace
 from functools import partial
 from itertools import count
@@ -540,6 +541,17 @@ def main():  # noqa: C901
     args = parse_general_args(verbose=True)
     dev, dt = device("cuda" if cuda.is_available() else "cpu"), args.dtype
     print(f"Running on device {str(dev)} in dtype {dt}.")
+    # A silent CPU fallback is worse than a crash. E1 job 38771115 task 2 lost
+    # its GPU to a node-level CUDA glitch, ran 13x slower than the identical arm
+    # next to it, and produced a plausible-looking "this optimizer is bad" curve
+    # with nothing in stderr or wandb to say why. Every cluster script sets
+    # PINN_REQUIRE_CUDA=1; a task that cannot see a GPU must die loudly so it
+    # shows up as FAILED in sacct instead of as a data point.
+    if environ.get("PINN_REQUIRE_CUDA") == "1" and dev.type != "cuda":
+        raise RuntimeError(
+            "PINN_REQUIRE_CUDA=1 but torch.cuda.is_available() is False. "
+            "Refusing to run on CPU -- resubmit this task."
+        )
     if args.save_checkpoints:
         print(f"Saving checkpoints in {args.checkpoint_dir}.")
         makedirs(args.checkpoint_dir, exist_ok=True)

@@ -243,6 +243,9 @@ e5_activate() {
     exit 1
   fi
   cd "${E5_REPO}/rla_pinns" || { echo "ERROR: cd ${E5_REPO}/rla_pinns failed" >&2; exit 1; }
+  # Die loudly if this task cannot see a GPU (see train.py). E1 task 2 ran on
+  # CPU for 600s and looked like a bad optimizer; it must look like a FAILED job.
+  export PINN_REQUIRE_CUDA=1
 }
 
 # --- wandb entity ------------------------------------------------------------
